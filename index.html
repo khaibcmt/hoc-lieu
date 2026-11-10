@@ -444,7 +444,7 @@ body.hs-mode header,body.hs-mode footer,body.hs-mode .exam-banner,body.hs-mode #
   <section class="page" id="sec-game">
     <h2 class="ptitle">🏆 Phòng thi online — Game Rung chuông vàng &amp; thi trực tuyến thời gian thực</h2>
     <p class="pdesc">Game thi đấu kiểu game show theo <b>luật trochoi</b>: ⚡ <b>Ai Nhanh Hơn</b> (đua tốc độ — cược bản lĩnh 3 mức, thưởng tốc độ/chuỗi, First Blood, 🌟 Câu Hỏi Vàng x2, 🎁 Rương Bí Ẩn) &amp; 🔔 <b>Rung Chuông Vàng</b> (3 ❤️ — sai mất mạng, đúng 3 câu liên tiếp +1 mạng, cứu trợ hồi sinh), cùng 2 chế độ cổ điển 🪢 Kéo co &amp; 👹 Diệt Boss (cược điểm, trợ giúp 50:50, Gương thần kỳ...). Phương án được <b>trộn riêng cho từng học sinh</b>; <b>2 giây cuối</b> mỗi câu tự hiện đáp án đúng và khoá trả lời. Chơi 1 người ngay trên máy này, hoặc mở <b>Phòng thi trực tuyến</b> cho cả lớp cùng thi qua Firebase (thời gian thực).</p>
-    <div class="guidebox"><p>📌 <b>Chỉ dẫn:</b> Chơi 1 người ngay trên máy này, hoặc mở <b>Phòng thi trực tuyến</b>: thầy nhập bài thi, tạo phòng, học sinh quét mã QR / nhập mã phòng để vào thi — kết quả hiện trực tiếp trên màn hình của thầy. (Ô dán cấu hình Firebase nằm ngay trong tab Phòng thi bên dưới — dán là chạy online; chưa có cấu hình thì phòng thi chờ kết nối.)</p></div>
+    <div class="guidebox"><p>📌 <b>Chỉ dẫn:</b> Chơi 1 người ngay trên máy này, hoặc mở <b>Phòng thi trực tuyến</b>: thầy nhập bài thi, tạo phòng, học sinh quét mã QR / nhập mã phòng để vào thi — kết quả hiện trực tiếp trên màn hình của thầy. (Web đã tích hợp sẵn Firebase (project edumaster-online) — phòng thi đã sẵn sàng online: cứ tạo phòng, học sinh quét QR là vào thi; ô dán cấu hình trong tab Phòng thi bên dưới chỉ là dự phòng.)</p></div>
 
     <div class="gtabs">
       <button class="gtab active" id="gtabSolo" onclick="gameTab('solo')">🎮 Chơi 1 người</button>
@@ -473,7 +473,7 @@ body.hs-mode header,body.hs-mode footer,body.hs-mode .exam-banner,body.hs-mode #
     <!-- ===== PHÒNG THI TRỰC TUYẾN ===== -->
     <div id="gRoomPane" style="display:none">
       <div id="hsBar"><span>🎓 Chế độ học sinh — vào phòng thi</span><button type="button" onclick="exitStudentMode()">Thoát chế độ học sinh</button></div>
-      <div class="guidebox" id="roomGuide" style="margin-bottom:14px"><p>📌 <b>Chỉ dẫn phòng thi:</b> ① Nhập <b>bài thi</b> ở ô ngay bên dưới (hoặc bỏ qua — phòng sẽ dùng Ngân hàng câu hỏi) → ② Chỉnh luật chơi rồi bấm <b>Tạo phòng thi</b> → ③ Học sinh quét mã QR là vào thẳng phòng thi, <b>không cần đăng nhập</b> (hoặc nhập mã phòng) → ④ Thầy bấm <b>Bắt đầu thi</b> → ⑤ Xem kết quả trực tiếp ở <b>Bảng kết quả chi tiết</b> phía dưới; khi kết thúc phòng có nút tải kết quả (.csv). <span id="roomGuideFb">Phòng thi chạy qua Firebase — nếu chưa có cấu hình, thầy xem hướng dẫn 5 bước ngay bên dưới.</span></p></div>
+      <div class="guidebox" id="roomGuide" style="margin-bottom:14px"><p>📌 <b>Chỉ dẫn phòng thi:</b> ① Nhập <b>bài thi</b> ở ô ngay bên dưới (hoặc bỏ qua — phòng sẽ dùng Ngân hàng câu hỏi) → ② Chỉnh luật chơi rồi bấm <b>Tạo phòng thi</b> → ③ Học sinh quét mã QR là vào thẳng phòng thi, <b>không cần đăng nhập</b> (hoặc nhập mã phòng) → ④ Thầy bấm <b>Bắt đầu thi</b> → ⑤ Xem kết quả trực tiếp ở <b>Bảng kết quả chi tiết</b> phía dưới; khi kết thúc phòng có nút tải kết quả (.csv). <span id="roomGuideFb">Phòng thi chạy qua Firebase đã tích hợp sẵn (project edumaster-online) — cứ tạo phòng và cho học sinh quét QR là thi.</span></p></div>
       <div id="roomNoFb" class="card" style="margin-bottom:14px;display:none">
         <h3 style="margin:0 0 6px">🔥 Phòng thi trực tuyến cần Firebase (miễn phí)</h3>
         <p class="note" style="margin:0">Tính năng online đồng bộ qua <b>Firebase Realtime Database</b> bằng project Firebase của chính thầy. Cách làm (khoảng 3 phút):</p>
@@ -490,7 +490,7 @@ body.hs-mode header,body.hs-mode footer,body.hs-mode .exam-banner,body.hs-mode #
 
       <div class="card fb-config-box" id="hlFbCard" style="margin-bottom:14px">
         <h3 style="margin:0 0 4px">🔥 Kết nối Firebase — dán cấu hình là phòng thi chạy online</h3>
-        <p class="note" style="margin:0 0 8px">Phòng thi đồng bộ thời gian thực qua <b>Firebase Realtime Database</b> (project của thầy, gói Spark miễn phí). Dán đoạn <b>firebaseConfig</b> vào ô dưới rồi bấm Lưu — cấu hình chỉ lưu trong trình duyệt này (khoá riêng của Học Liệu VIP). Chưa có cấu hình thì phòng thi chưa kết nối được Internet; phần <b>Chơi 1 người</b> vẫn chạy bình thường ngay trên máy này. Trạng thái: <b id="setFbStatus">Chưa có Firebase config</b></p>
+        <p class="note" style="margin:0 0 8px">Phòng thi đồng bộ thời gian thực qua <b>Firebase Realtime Database</b> (project của thầy, gói Spark miễn phí). Web đã tích hợp sẵn Firebase (project <b>edumaster-online</b>) nên phòng thi đã sẵn sàng online — ô này chỉ là dự phòng: dán <b>firebaseConfig</b> khác vào rồi bấm Lưu sẽ được ưu tiên dùng trước (chỉ lưu trong trình duyệt này, khoá riêng của Học Liệu VIP). Phần <b>Chơi 1 người</b> vẫn chạy bình thường ngay trên máy này. Trạng thái: <b id="setFbStatus">✅ Web đã tích hợp sẵn Firebase — thầy không cần dán cấu hình nữa</b></p>
         <textarea id="setFbConfig" rows="4" placeholder='Dán firebaseConfig dạng JSON vào đây, ví dụ: {"apiKey":"...","authDomain":"...","databaseURL":"https://...","projectId":"..."}' autocomplete="off" spellcheck="false"></textarea>
         <div class="btnrow">
           <button class="btn" type="button" onclick="saveFbConfig()">💾 Lưu cấu hình</button>
@@ -618,7 +618,7 @@ body.hs-mode header,body.hs-mode footer,body.hs-mode .exam-banner,body.hs-mode #
 
 <footer>
   <b>Học Liệu VIP</b> — Thầy Hồ Tấn Khải • Trường THPT Mang Thít<br>
-  Tài liệu chỉ để <b>XEM</b> — muốn tải về, liên hệ tác giả • Phòng thi online chạy ngay trong trang • Phiên bản v5
+  Tài liệu chỉ để <b>XEM</b> — muốn tải về, liên hệ tác giả • Phòng thi online chạy ngay trong trang • Phiên bản v6
 </footer>
 
 <div id="viewerModal" role="dialog" aria-modal="true">
@@ -1996,12 +1996,22 @@ function fbParseConfig(txt){
 }
 
 /* ===== CẤU HÌNH FIREBASE NHÚNG SẴN — CHỖ CẮM DUY NHẤT =====
-   Học Liệu VIP: hiện để null (thầy Khải sẽ gửi firebaseConfig của project mới tối nay).
-   Khi có cấu hình: dán vào ô "Kết nối Firebase" trong section Phòng thi (lưu localStorage
-   hoclieu_firebase_config) hoặc nhờ nhúng sẵn tại dòng dưới đây. Đây là thông tin kết nối
-   CÔNG KHAI phía máy khách của Firebase, không phải mật khẩu hay key Gemini.
+   Học Liệu VIP: ĐÃ NHÚNG firebaseConfig của project "edumaster-online" (thầy Khải tự tạo
+   và gửi ngày 10/11/2026) — phòng thi trực tuyến ĐÃ SẴN SÀNG ONLINE trên mọi thiết bị.
+   Đây là thông tin kết nối CÔNG KHAI phía máy khách của Firebase, không phải mật khẩu
+   hay key Gemini. Ô "Kết nối Firebase" trong section Phòng thi vẫn giữ làm DỰ PHÒNG:
+   dán cấu hình khác vào đó (lưu localStorage hoclieu_firebase_config) sẽ được ưu tiên.
    Thứ tự ưu tiên: (1) config dán trong trang (localStorage), (2) cấu hình nhúng. */
-var FIREBASE_EMBEDDED_CONFIG = null; /* V20: bo han Firebase/Google theo y thay — web chay doc lap, khoa bang ma khan cap; khong con cau hinh nhung, khong tai SDK Google */
+var FIREBASE_EMBEDDED_CONFIG = {
+  apiKey: "AIzaSyC9FJ3oib8fXa3GkJoriESlQExzdErFC10",
+  authDomain: "edumaster-online.firebaseapp.com",
+  databaseURL: "https://edumaster-online-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "edumaster-online",
+  storageBucket: "edumaster-online.firebasestorage.app",
+  messagingSenderId: "919675671313",
+  appId: "1:919675671313:web:cafbbaf26a4d24401c72b0",
+  measurementId: "G-VYTRR69RRF"
+};
 function fbNormalizeEmbedded(){
   if (!FIREBASE_EMBEDDED_CONFIG) return null;
   try { return fbParseConfig(typeof FIREBASE_EMBEDDED_CONFIG === 'string' ? FIREBASE_EMBEDDED_CONFIG : JSON.stringify(FIREBASE_EMBEDDED_CONFIG)); } catch(e){ return null; }
