@@ -443,7 +443,7 @@ body.hs-mode header,body.hs-mode footer,body.hs-mode .exam-banner,body.hs-mode #
   </div>
   <section class="page" id="sec-game">
     <h2 class="ptitle">🏆 Phòng thi online — Game Rung chuông vàng &amp; thi trực tuyến thời gian thực</h2>
-    <p class="pdesc">Game thi đấu kiểu game show: trộn đáp án, cược điểm, trợ giúp 50:50 / Đổi câu / Hỏi khán giả, chuỗi đúng liên tiếp, Gương thần kỳ, hạ gục &amp; hồi sinh... Chơi 1 người ngay trên máy này, hoặc mở <b>Phòng thi trực tuyến</b> cho cả lớp cùng thi qua Firebase (thời gian thực).</p>
+    <p class="pdesc">Game thi đấu kiểu game show theo <b>luật trochoi</b>: ⚡ <b>Ai Nhanh Hơn</b> (đua tốc độ — cược bản lĩnh 3 mức, thưởng tốc độ/chuỗi, First Blood, 🌟 Câu Hỏi Vàng x2, 🎁 Rương Bí Ẩn) &amp; 🔔 <b>Rung Chuông Vàng</b> (3 ❤️ — sai mất mạng, đúng 3 câu liên tiếp +1 mạng, cứu trợ hồi sinh), cùng 2 chế độ cổ điển 🪢 Kéo co &amp; 👹 Diệt Boss (cược điểm, trợ giúp 50:50, Gương thần kỳ...). Phương án được <b>trộn riêng cho từng học sinh</b>; <b>2 giây cuối</b> mỗi câu tự hiện đáp án đúng và khoá trả lời. Chơi 1 người ngay trên máy này, hoặc mở <b>Phòng thi trực tuyến</b> cho cả lớp cùng thi qua Firebase (thời gian thực).</p>
     <div class="guidebox"><p>📌 <b>Chỉ dẫn:</b> Chơi 1 người ngay trên máy này, hoặc mở <b>Phòng thi trực tuyến</b>: thầy nhập bài thi, tạo phòng, học sinh quét mã QR / nhập mã phòng để vào thi — kết quả hiện trực tiếp trên màn hình của thầy. (Ô dán cấu hình Firebase nằm ngay trong tab Phòng thi bên dưới — dán là chạy online; chưa có cấu hình thì phòng thi chờ kết nối.)</p></div>
 
     <div class="gtabs">
@@ -455,7 +455,7 @@ body.hs-mode header,body.hs-mode footer,body.hs-mode .exam-banner,body.hs-mode #
     <div id="gSoloPane">
       <div class="card" style="margin-bottom:14px">
         <h3 style="margin:0 0 4px">🎛️ Panel Luật chơi (chế độ 1 người)</h3>
-        <p class="note" style="margin:0 0 10px">Chọn luật cho ván đấu rồi bấm Bắt đầu. Mỗi quyền trợ giúp chỉ dùng được <b>1 lần duy nhất</b> trong cả ván. Điểm khởi đầu: <b>100 điểm</b>.</p>
+        <p class="note" style="margin:0 0 10px">Chọn luật cho ván đấu rồi bấm Bắt đầu. ⚡ Ai Nhanh Hơn &amp; 🔔 Rung Chuông Vàng dùng <b>luật trochoi</b> (bắt đầu từ <b>0 điểm</b>); 🪢 Kéo co &amp; 👹 Diệt Boss dùng luật cổ điển (điểm khởi đầu <b>100 điểm</b>, mỗi quyền trợ giúp 1 lần/ván).</p>
         <div id="sRules"></div>
         <p class="note" style="margin:10px 0 0">🤖 Riêng chế độ <b>Kéo co (1 người)</b>: máy đóng vai đội Xanh — độ khó của máy:
           <select id="s-botLevel"><option value="0.4">😊 Dễ (máy đúng ~40%)</option><option value="0.6" selected>😐 Trung bình (máy đúng ~60%)</option><option value="0.8">😤 Khó (máy đúng ~80%)</option></select></p>
@@ -618,7 +618,7 @@ body.hs-mode header,body.hs-mode footer,body.hs-mode .exam-banner,body.hs-mode #
 
 <footer>
   <b>Học Liệu VIP</b> — Thầy Hồ Tấn Khải • Trường THPT Mang Thít<br>
-  Tài liệu chỉ để <b>XEM</b> — muốn tải về, liên hệ tác giả • Phòng thi online chạy ngay trong trang • Phiên bản v4
+  Tài liệu chỉ để <b>XEM</b> — muốn tải về, liên hệ tác giả • Phòng thi online chạy ngay trong trang • Phiên bản v5
 </footer>
 
 <div id="viewerModal" role="dialog" aria-modal="true">
@@ -1273,6 +1273,7 @@ function rtStatusText(p){
   if (p.out === 'zero') return '💀 Bị hạ gục';
   if (p.out === 'wrong') return '☠️ Bị loại (sai liên tiếp)';
   if (p.out === 'boss') return '💔 Hết tim — khán giả cổ vũ';
+  if (p.out === 'bell') return '🔔 Hết mạng — khán giả cổ vũ';
   var s = '🟢 Đang thi';
   if ((p.rescues || 0) > 0) s += ' • 🆘 đã cứu trợ ×' + p.rescues;
   if ((p.revives || 0) > 0) s += ' • 🌟 đã hồi sinh ×' + p.revives;
@@ -1282,7 +1283,16 @@ function csvCell(v){
   v = String(v === null || v === undefined ? '' : v);
   return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
 }
-function buildResultsCSV(players, answersMap){
+function buildResultsCSV(players, answersMap, mode){
+  if (tcIsMode(mode)){
+    var tarr = tcSorted(players || {}, mode);
+    var tlines = ['Họ tên,Số câu đã trả lời,Số câu đúng,Điểm,Điểm quy đổi (thang 10)'];
+    tarr.forEach(function(p, i){
+      var c = playerCounts(p, answersMap);
+      tlines.push([csvCell(p.name || ''), c.answered, c.correct, (p.score || 0), tcGradeByRank(i + 1)].join(','));
+    });
+    return tlines.join('\n');
+  }
   var arr = _eduSorted(players || {});
   var lines = ['Họ tên,Số câu đã trả lời,Số câu đúng,Điểm,Huy hiệu'];
   arr.forEach(function(p){
@@ -1292,6 +1302,142 @@ function buildResultsCSV(players, answersMap){
   return lines.join('\n');
 }
 /* == EDU_ROOM_PURE_END == */
+/* == TC_PURE_BEGIN == */
+/* --- Máy điểm LUẬT TROCHOI cho 2 chế độ ⚡ Ai Nhanh Hơn (fast) & 🔔 Rung Chuông Vàng (bell) ---
+   Nguồn luật: code web trochoi (khaibcmt/trochoi: StudentMobileView + App + HostArenaView + GrandFinaleScreen).
+   Điểm đúng: gốc theo cược bản lĩnh (An toàn x1 = 1.000đ / Liều lĩnh x1.5 = 1.500đ / Tất Tay x2.5 = 2.500đ;
+   cược lớn chỉ dùng 1 lần/trận) + thưởng tốc độ (≤5s +300đ, ≤10s +150đ) + thưởng chuỗi (≥3 +200đ, ≥5 +400đ);
+   Câu Hỏi Vàng (câu thứ 4, 8, 12... và câu cuối, khi ván > 2 câu) nhân đôi; First Blood +500đ cho người đúng đầu tiên.
+   PHẠT (thầy Khải chốt lại — THAY thang trừ của trochoi gốc): sai CÓ chọn đáp án trừ 1.000đ × hệ số cược
+   (An toàn −1.000 / Liều lĩnh −1.500 / Tất Tay −2.500); hết giờ không trả lời: FAST −1.000đ phẳng, BELL mất 1 mạng.
+   BELL: mỗi HS 3 mạng, sai/hết giờ mất 1 mạng, hết mạng = khán giả; đúng 3 câu liên tiếp +1 mạng (tối đa 5);
+   Khiên Bất Tử đỡ 1 câu sai (không trừ điểm, không mất mạng); GV Cứu trợ hồi sinh toàn bộ với ít nhất 1 mạng.
+   Rương Bí Ẩn: đúng liên tiếp 5 câu mở rương (1 lần/trận): 25% +1.500đ / 25% +900đ & hút 500đ Top 1 /
+   25% +500đ & +1 mạng / 25% +300đ & Khiên Bất Tử. Xếp hạng BELL theo code trochoi: chưa loại → nhiều mạng →
+   điểm → số câu đúng → ít câu sai. Quy đổi điểm theo hạng: 1–3 = 10, 4–6 = 9, 7–10 = 8, 11–15 = 7, còn lại 6.
+   2 giây cuối mỗi câu: tự hiện đáp án đúng + KHOÁ trả lời (TC_REVEAL_SEC). */
+var TC_REVEAL_SEC = 2;
+var TC_WAGER_BASE = { '1': 1000, '1.5': 1500, '2.5': 2500 };
+var TC_NOANSWER_PENALTY = 1000;
+function tcIsMode(mode){ return mode === 'fast' || mode === 'bell'; }
+function tcIsGolden(qIndex, total){
+  total = total || 0;
+  return total > 2 && (qIndex === total - 1 || (qIndex > 0 && (qIndex + 1) % 4 === 0));
+}
+function tcShouldLock(leftSec){ return leftSec <= TC_REVEAL_SEC && leftSec > 0; }
+function tcGradeByRank(rank){
+  if (rank >= 1 && rank <= 3) return 10;
+  if (rank <= 6) return 9;
+  if (rank <= 10) return 8;
+  if (rank <= 15) return 7;
+  return 6;
+}
+function tcSpeedBonus(elapsed){ return elapsed <= 5 ? 300 : (elapsed <= 10 ? 150 : 0); }
+/* Trạng thái máy điểm 1 người chơi fast/bell (điểm tuyệt đối do engine ngoài giữ; hàm chấm trả delta) */
+function tcNewState(mode){
+  return { mode: mode, streak: 0, lifeStreak: 0, lives: mode === 'bell' ? 3 : 0, shield: false,
+    usedSpec: false, chestOpened: false, chestAvail: false, correct: 0, wrong: 0, out: false };
+}
+/* Chấm 1 câu. o = {mode, correct, timeout, wager, elapsed, qIndex, total, isFirstBlood, isLast} */
+function tcScoreAnswer(st, o){
+  var mode = o.mode, wager = TC_WAGER_BASE[o.wager] ? o.wager : 1;
+  var base = TC_WAGER_BASE[wager];
+  var r = { delta: 0, base: 0, speed: 0, streakBonus: 0, golden: false, firstBlood: false,
+            penalty: 0, lifeLost: 0, lifeBonus: 0, chestUnlock: false, shieldUsed: false, eliminated: false };
+  if (st.out) return r;
+  if (o.timeout){
+    st.streak = 0; st.lifeStreak = 0; st.wrong++;
+    if (mode === 'bell'){
+      st.lives = Math.max(0, st.lives - 1); r.lifeLost = 1;
+      if (st.lives <= 0){ st.out = true; r.eliminated = true; }
+    } else {
+      r.penalty = TC_NOANSWER_PENALTY; r.delta = -TC_NOANSWER_PENALTY;
+    }
+    return r;
+  }
+  if (wager > 1) st.usedSpec = true;
+  if (o.correct){
+    st.streak++; st.correct++;
+    r.base = base;
+    r.speed = tcSpeedBonus(Math.max(0.2, o.elapsed || 0));
+    r.streakBonus = st.streak >= 5 ? 400 : (st.streak >= 3 ? 200 : 0);
+    var gained = r.base + r.speed + r.streakBonus;
+    if (tcIsGolden(o.qIndex, o.total)){ gained *= 2; r.golden = true; }
+    if (o.isFirstBlood){ gained += 500; r.firstBlood = true; }
+    r.delta = gained;
+    if (mode === 'bell'){
+      st.lifeStreak++;
+      if (st.lifeStreak >= 3){
+        st.lifeStreak = 0;
+        if (st.lives < 5){ st.lives++; r.lifeBonus = 1; }
+      }
+    }
+    if (st.streak === 5 && !st.chestOpened && !o.isLast){ st.chestAvail = true; r.chestUnlock = true; }
+    return r;
+  }
+  /* Sai CÓ chọn đáp án: trừ 1.000đ × hệ số cược (thầy chốt) */
+  st.streak = 0; st.lifeStreak = 0; st.wrong++;
+  if (st.shield){
+    st.shield = false; r.shieldUsed = true;
+    return r;
+  }
+  r.penalty = base; r.delta = -base;
+  if (mode === 'bell'){
+    st.lives = Math.max(0, st.lives - 1); r.lifeLost = 1;
+    if (st.lives <= 0){ st.out = true; r.eliminated = true; }
+  }
+  return r;
+}
+/* Mở Rương Bí Ẩn — roll ∈ [0,1), mỗi kết quả 25% như trochoi */
+function tcOpenChest(st, roll){
+  st.chestOpened = true; st.chestAvail = false;
+  if (roll < 0.25) return { delta: 1500, steal: 0, kind: 'diamond', label: '💎 NỔ HŨ KIM CƯƠNG: +1.500đ!' };
+  if (roll < 0.50) return { delta: 900, steal: 500, kind: 'steal', label: '🥷 ĐẠO CHÍCH: +900đ và hút 500đ của Top 1!' };
+  if (roll < 0.75){
+    var revived = false;
+    if (st.mode === 'bell' || st.out){
+      st.lives = Math.min(5, (st.lives || 0) + 1);
+      if (st.out && st.lives > 0){ st.out = false; revived = true; }
+    }
+    return { delta: 500, steal: 0, kind: 'heart', revived: revived, label: '💖 TIM VÀNG: +500đ và +1 ❤️!' };
+  }
+  st.shield = true;
+  return { delta: 300, steal: 0, kind: 'shield', label: '🛡️ KHIÊN BẤT TỬ: +300đ — đỡ 1 câu sai tiếp theo (không trừ điểm, không mất mạng)!' };
+}
+/* Cứu trợ Rung Chuông Vàng: hồi sinh TOÀN BỘ người bị loại, mỗi em ít nhất 1 mạng (lives = max(lives, 1)) */
+function tcRescueAll(players){
+  var n = 0;
+  Object.keys(players || {}).forEach(function(id){
+    var p = players[id];
+    if (p && p.tc && p.tc.out){
+      p.tc.out = false;
+      p.tc.lives = Math.max(p.tc.lives || 0, 1);
+      n++;
+    }
+  });
+  return n;
+}
+/* Xếp hạng: fast → điểm, số đúng, ít sai. bell (code trochoi GrandFinale) → chưa loại, mạng, điểm, số đúng, ít sai */
+function tcSorted(players, mode){
+  var arr = Object.keys(players || {}).map(function(id){
+    var p = players[id]; p._id = id; return p;
+  });
+  arr.sort(function(a, b){
+    if (mode === 'bell'){
+      var ao = (a.tc && a.tc.out) ? 1 : 0, bo = (b.tc && b.tc.out) ? 1 : 0;
+      if (ao !== bo) return ao - bo;
+      var al = (a.tc && a.tc.lives) || 0, bl = (b.tc && b.tc.lives) || 0;
+      if (bl !== al) return bl - al;
+    }
+    if ((b.score || 0) !== (a.score || 0)) return (b.score || 0) - (a.score || 0);
+    var ac = (typeof a.correct === 'number') ? a.correct : 0, bc = (typeof b.correct === 'number') ? b.correct : 0;
+    if (bc !== ac) return bc - ac;
+    var aw = (typeof a.wrong === 'number') ? a.wrong : 0, bw = (typeof b.wrong === 'number') ? b.wrong : 0;
+    return aw - bw;
+  });
+  return arr;
+}
+/* == TC_PURE_END == */
 function badgeOf(score){ return _eduBadge(score); }
 function showAnnounce(txt, ms){
   var a = document.getElementById('gAnnounce');
@@ -1316,17 +1462,18 @@ function confettiBurst(){
   }
 }
 function sortedPlayers(players){ return _eduSorted(players); }
-function lbHTML(players, myId){
-  var arr = sortedPlayers(players);
+function lbHTML(players, myId, mode){
+  var arr = tcIsMode(mode) ? tcSorted(players, mode) : sortedPlayers(players);
   if (!arr.length) return '<p class="note">Chưa có người chơi.</p>';
   return arr.map(function(p, i){
     var bd = badgeOf(p.score || 0);
-    var st = p.out === 'zero' ? ' 💀' : (p.out === 'wrong' ? ' ☠️' : (p.out === 'boss' ? ' 💔' : ''));
+    var st = p.out === 'zero' ? ' 💀' : (p.out === 'wrong' ? ' ☠️' : (p.out === 'boss' ? ' 💔' : (p.out === 'bell' ? ' 🔔' : '')));
     return '<div class="lb-row' + (p._id === myId ? ' me' : '') + (p.out ? ' out' : '') + '">' +
       '<span class="rk">' + (i + 1) + '</span>' +
       '<span class="nm">' + esc(p.name || '...') + st +
       (p.team ? ' <span class="badge">' + (p.team === 'red' ? '🔴 Đỏ' : '🔵 Xanh') + '</span>' : '') +
       (typeof p.hearts === 'number' ? ' <span class="note">❤️×' + Math.max(0, p.hearts) + '</span>' : '') +
+      (p.tc && p.tc.mode === 'bell' ? ' <span class="note">❤️×' + Math.max(0, p.tc.lives || 0) + '</span>' : '') +
       (typeof p.dmg === 'number' && p.dmg > 0 ? ' <span class="note">⚔️' + p.dmg + '</span>' : '') +
       (bd ? ' <span class="badge">' + bd + '</span>' : '') +
       (p.out === 'wrong' ? ' <span class="note">(Sai liên tiếp)</span>' : '') +
@@ -1338,7 +1485,8 @@ function rulesHTML(p){
   function chk(id, on, label){ return '<label><input type="checkbox" id="' + p + '-' + id + '"' + (on ? ' checked' : '') + '><span>' + label + '</span></label>'; }
   function num(id, val, mn, mx){ return '<input type="number" id="' + p + '-' + id + '" value="' + val + '" min="' + mn + '" max="' + mx + '">'; }
   return '<div class="rules">' +
-    '<label><span><b>🎮 Chế độ chơi:</b> <select id="' + p + '-mode"><option value="rcv">🔔 Rung chuông vàng (cổ điển)</option><option value="tug">🪢 Kéo co — 2 đội Đỏ / Xanh</option><option value="boss">👹 Diệt Boss — cả lớp hợp sức</option></select></span></label>' +
+    '<label><span><b>🎮 Chế độ chơi:</b> <select id="' + p + '-mode"><option value="fast">⚡ Ai Nhanh Hơn — đua tốc độ (luật trochoi)</option><option value="bell">🔔 Rung Chuông Vàng — 3 ❤️ (luật trochoi)</option><option value="tug">🪢 Kéo co — 2 đội Đỏ / Xanh</option><option value="boss">👹 Diệt Boss — cả lớp hợp sức</option></select></span></label>' +
+    '<p class="note" style="margin:2px 0 8px">⚡ <b>Ai Nhanh Hơn</b> và 🔔 <b>Rung Chuông Vàng</b> dùng <b>luật trochoi</b>: cược bản lĩnh 3 mức (đúng +1.000/+1.500/+2.500đ; sai trừ 1.000đ × hệ số cược; cược lớn 1 lần/trận), thưởng tốc độ/chuỗi, First Blood +500đ, 🌟 Câu Hỏi Vàng x2, 🎁 Rương Bí Ẩn, 2 giây cuối hiện đáp án &amp; khoá trả lời; Rung Chuông Vàng thêm hệ 3 ❤️ + cứu trợ. Các tuỳ chọn bên dưới (cược kiểu cũ, trợ giúp 50:50, Gương thần kỳ, hạ gục/hồi sinh...) chỉ áp dụng cho 🪢 Kéo co và 👹 Diệt Boss.</p>' +
     '<label><span><b>👹 Máu của Boss</b> (chỉ áp dụng chế độ Diệt Boss): ' + num('bossHp', 1000, 100, 10000) + ' HP • mỗi người chơi có 3 ❤️ — sai mất 1 tim, hết tim thành khán giả cổ vũ</span></label>' +
     chk('bet', true, '<b>🎲 Cược điểm</b> — chọn mức cược') +
     '<label><span>Hình thức cược: <select id="' + p + '-betMode"><option value="question">Trước mỗi câu</option><option value="round">Theo vòng (5 câu)</option></select></span></label>' +
@@ -1351,14 +1499,14 @@ function rulesHTML(p){
     '<label><span><b>🔮 Gương thần kỳ</b>: <input type="checkbox" id="' + p + '-mirror" checked> bật &nbsp;•&nbsp; mở khoá khi đúng liên tiếp ' + num('mirrorStreak', 5, 2, 10) + ' câu</span></label>' +
     '<label><span><b>💀 Hạ gục &amp; Hồi sinh</b>: <input type="checkbox" id="' + p + '-kill" checked> bật &nbsp;•&nbsp; điểm về 0 là bị hạ gục; hồi sinh tối đa ' + num('reviveMax', 2, 0, 3) + ' lần/ván, điểm khi hồi sinh ' + num('reviveScore', 100, 0, 1000) + '</span></label>' +
     '<label><span><b>☠️ Loại khi sai liên tiếp</b>: <input type="checkbox" id="' + p + '-wrongOut" checked> bật &nbsp;•&nbsp; sai liên tiếp ' + num('wrongLimit', 3, 2, 6) + ' câu là bị loại</span></label>' +
-    '<label><span>🆘 Điểm <b>cứu trợ</b> của giáo viên: ' + num('rescueScore', 100, 0, 1000) + ' &nbsp;•&nbsp; ⏱ Thời gian mỗi câu: ' + num('qtime', 15, 5, 60) + ' giây</span></label>' +
+    '<label><span>🆘 Điểm <b>cứu trợ</b> của giáo viên: ' + num('rescueScore', 100, 0, 1000) + ' &nbsp;•&nbsp; ⏱ Thời gian mỗi câu: ' + num('qtime', 30, 5, 120) + ' giây</span></label>' +
   '</div>';
 }
 function readRules(p){
   function c(id){ var e = document.getElementById(p + '-' + id); return e ? !!e.checked : false; }
   function n(id, d){ var e = document.getElementById(p + '-' + id); var v = e ? parseInt(e.value, 10) : NaN; return isNaN(v) ? d : v; }
   function s(id){ var e = document.getElementById(p + '-' + id); return e ? e.value : ''; }
-  return {
+  var _R = {
     bet: c('bet'), betMode: s('betMode') || 'question',
     penalty: c('penalty'), penaltyMode: s('penaltyMode') || 'half',
     lifelines: c('lifelines'), accel: c('accel'), streak: c('streak'),
@@ -1366,11 +1514,19 @@ function readRules(p){
     mirror: c('mirror'), mirrorStreak: Math.max(2, n('mirrorStreak', 5)),
     kill: c('kill'), reviveMax: Math.min(3, Math.max(0, n('reviveMax', 2))), reviveScore: n('reviveScore', 100),
     wrongOut: c('wrongOut'), wrongLimit: Math.max(2, n('wrongLimit', 3)),
-    rescueScore: n('rescueScore', 100), qtime: Math.min(60, Math.max(5, n('qtime', 15))),
-    mode: s('mode') || 'rcv', bossHp: Math.min(10000, Math.max(100, n('bossHp', 1000)))
+    rescueScore: n('rescueScore', 100), qtime: Math.min(120, Math.max(5, n('qtime', 30))),
+    mode: s('mode') || 'fast', bossHp: Math.min(10000, Math.max(100, n('bossHp', 1000)))
   };
+  if (tcIsMode(_R.mode)){
+    /* Hai chế độ luật trochoi dùng máy điểm riêng — tắt toàn bộ cơ chế cũ để không chảy lẫn */
+    _R.bet = false; _R.penalty = false; _R.lifelines = false; _R.accel = false; _R.streak = false;
+    _R.bonus = false; _R.mirror = false; _R.kill = false; _R.wrongOut = false;
+  }
+  return _R;
 }
 function rulesSummaryHTML(R){
+  if (R.mode === 'fast') return '<span class="note">📜 Luật ván này: ⚡ AI NHANH HƠN (luật trochoi) — cược bản lĩnh 🛡️ An toàn 1.000đ / ⚡ Liều lĩnh 1.500đ / 🔥 Tất Tay 2.500đ (cược lớn 1 lần/trận); đúng nhanh ≤5s +300đ, ≤10s +150đ; chuỗi đúng ≥3 +200đ, ≥5 +400đ; đúng đầu tiên mỗi câu +500đ (First Blood); câu 4, 8, 12... và câu cuối là 🌟 Câu Hỏi Vàng x2; đúng 5 câu liên tiếp mở 🎁 Rương Bí Ẩn; sai trừ 1.000đ × hệ số cược; hết giờ −1.000đ; 2 giây cuối hiện đáp án &amp; khoá trả lời.</span>';
+  if (R.mode === 'bell') return '<span class="note">📜 Luật ván này: 🔔 RUNG CHUÔNG VÀNG (luật trochoi) — mỗi em 3 ❤️, sai hoặc hết giờ mất 1 mạng, hết mạng thành khán giả cổ vũ; đúng 3 câu liên tiếp +1 ❤️ (tối đa 5); máy điểm như Ai Nhanh Hơn (cược bản lĩnh 3 mức, thưởng tốc độ/chuỗi, First Blood, 🌟 Câu Vàng x2, 🎁 Rương Bí Ẩn); sai trừ 1.000đ × hệ số cược; thầy/cô CỨU TRỢ hồi sinh toàn bộ bạn bị loại (ít nhất 1 ❤️); 2 giây cuối hiện đáp án &amp; khoá trả lời.</span>';
   var on = [];
   if (R.mode === 'tug') on.push('🪢 Chế độ KÉO CO 2 đội Đỏ/Xanh');
   else if (R.mode === 'boss') on.push('👹 Chế độ DIỆT BOSS (' + R.bossHp + ' HP — mỗi em 3 ❤️)');
@@ -1409,7 +1565,8 @@ function gameTab(which){
   if (which === 'room') roomPaneInit();
 }
 function soloNewState(R){
-  return { R: R, qs: shuffle(QUESTIONS).slice(0, 10), idx: 0, score: START_SCORE,
+  return { R: R, qs: shuffle(QUESTIONS).slice(0, 10), idx: 0, score: tcIsMode(R.mode) ? 0 : START_SCORE,
+    tc: tcIsMode(R.mode) ? tcNewState(R.mode) : null, wager: 1, locked: false, qStartAt: 0, timedOut: false,
     streak: 0, wrongStreak: 0, out: '', revives: 0, ll: { f: 0, s: 0, a: 0 },
     mirrorReady: false, bet: 0, roundBet: 0, cur: null, answered: true, bonusDone: false, over: false,
     tug: 0, tugOver: false, botP: 0.6, hearts: 3, bossHp: (R.mode === 'boss' ? R.bossHp : 0), bossDmg: 0, bossWin: false, _lastGain: 0,
@@ -1462,7 +1619,7 @@ function soloBonusQ(){
 }
 function soloInfoUpdate(extra){
   document.getElementById('soloInfo').textContent = (extra ? extra + ' • ' : '') +
-    '⭐ Điểm: ' + S.score + ' • 🔥 Chuỗi đúng: ' + S.streak + (S.mirrorReady ? ' • 🔮 Gương thần kỳ đã mở!' : '');
+    '⭐ Điểm: ' + S.score + ' • 🔥 Chuỗi đúng: ' + (S.tc ? S.tc.streak : S.streak) + (S.tc && S.R.mode === 'bell' ? ' • ❤️ ' + S.tc.lives : '') + (S.tc && S.tc.shield ? ' • 🛡️' : '') + (S.mirrorReady ? ' • 🔮 Gương thần kỳ đã mở!' : '');
 }
 function soloModeBarHTML(){
   if (!S) return '';
@@ -1470,16 +1627,29 @@ function soloModeBarHTML(){
   if (R.mode === 'tug') return tugBarHTML(S.tug);
   if (R.mode === 'boss') return bossBarHTML(S.bossHp, R.bossHp, S.bossDmg) +
     '<p class="note" style="margin:2px 0 8px">❤️ Tim của em: ' + '❤️'.repeat(Math.max(0, S.hearts)) + '🤍'.repeat(Math.max(0, 3 - S.hearts)) + ' — sai là mất 1 tim, hết tim thành khán giả!</p>';
+  if (R.mode === 'bell' && S.tc) return '<p class="note" style="margin:2px 0 8px">❤️ Mạng của em: ' + '❤️'.repeat(Math.max(0, S.tc.lives)) + ' — sai hoặc hết giờ mất 1 mạng, hết mạng thành khán giả cổ vũ! Đúng 3 câu liên tiếp được +1 ❤️.</p>';
   return '';
 }
 function soloModeBarUpdate(){ var el = document.getElementById('soloModeBar'); if (el) el.innerHTML = soloModeBarHTML(); }
 function soloRenderQ(isBonus){
   var area = document.getElementById('soloArea'), R = S.R, cur = S.cur;
-  S.answered = false;
+  S.answered = false; S.locked = false; S.timedOut = false; S.qStartAt = Date.now();
   var tag = isBonus ? '<span class="phase-tag">🌟 CÂU THÁCH ĐỐ — ' + BONUS_VALUE + ' điểm</span>'
     : (soloIsAccel() ? '<span class="phase-tag">⚡ VÒNG TĂNG TỐC x2</span>' : '<span class="phase-tag blue">Câu ' + (S.idx + 1) + ' / ' + S.qs.length + '</span>');
+  if (S.tc){
+    tag = tcIsGolden(S.idx, S.qs.length)
+      ? '<span class="phase-tag">🌟 CÂU HỎI VÀNG x2 — Câu ' + (S.idx + 1) + ' / ' + S.qs.length + '</span>'
+      : '<span class="phase-tag blue">Câu ' + (S.idx + 1) + ' / ' + S.qs.length + '</span>';
+    if (S.tc.shield) tag += ' <span class="phase-tag green">🛡️ Khiên Bất Tử đang bật</span>';
+  }
   var betHTML = '';
-  if (R.bet && R.betMode === 'question' && !isBonus){
+  if (S.tc){
+    betHTML = '<p class="note" style="margin:6px 0">🎲 <b>Cược bản lĩnh</b> cho câu này (đúng ăn theo mức — sai trừ 1.000đ × hệ số cược):</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">' +
+      [[1, '🛡️ An toàn x1 • 1.000đ'], [1.5, '⚡ Liều lĩnh x1.5 • 1.500đ'], [2.5, '🔥 Tất Tay x2.5 • 2.500đ']].map(function(w){
+        var dis = w[0] > 1 && S.tc.usedSpec;
+        return '<button class="chip' + (S.wager === w[0] ? ' sel' : '') + '" onclick="soloSetWager(' + w[0] + ',this)"' + (dis ? ' disabled' : '') + '>' + w[1] + (dis ? ' (đã dùng lượt cược lớn)' : '') + '</button>';
+      }).join('') + '</div>';
+  } else if (R.bet && R.betMode === 'question' && !isBonus){
     betHTML = '<p class="note" style="margin:6px 0">🎲 Cược cho câu này: </p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">' +
       [0, 10, 20, 50].map(function(v){ return '<button class="chip' + (S.bet === v ? ' sel' : '') + '" onclick="soloSetBet(' + v + ',this)">' + (v ? v + 'đ' : 'Không cược') + '</button>'; }).join('') +
       '<button class="chip" onclick="soloSetBet(' + Math.floor(S.score * 0.25) + ',this)">25% (' + Math.floor(S.score * 0.25) + 'đ)</button>' +
@@ -1508,6 +1678,25 @@ function soloSetBet(v, btn){
   chips.forEach(function(c){ c.classList.remove('sel'); });
   btn.classList.add('sel');
 }
+function soloSetWager(v, btn){
+  if (!S || S.answered || !S.tc) return;
+  if (v > 1 && S.tc.usedSpec) return;
+  S.wager = v;
+  var chips = btn.parentNode.querySelectorAll('.chip');
+  chips.forEach(function(c){ c.classList.remove('sel'); });
+  btn.classList.add('sel');
+}
+/* 2 giây cuối (luật trochoi): hiện đáp án đúng + KHOÁ trả lời ở chế độ 1 người */
+function soloRevealLock(){
+  if (!S || !S.cur) return;
+  var btns = document.querySelectorAll('#soloOpts .opt-big');
+  btns.forEach(function(b, j){
+    b.disabled = true;
+    if (S.cur.disp[j] === S.cur.correctText) b.classList.add('correct');
+  });
+  var fb = document.getElementById('soloFb');
+  if (fb && !S.answered) fb.innerHTML = '🔒 <b>2 giây cuối</b> — đáp án đúng đã hiện, khoá trả lời!';
+}
 function soloStartTimer(isBonus){
   stopSoloTimer();
   var dur = S.R.qtime, left = dur;
@@ -1515,22 +1704,24 @@ function soloStartTimer(isBonus){
   bar.style.width = '100%';
   soloTimer = setInterval(function(){
     left -= 0.1;
+    if (S.tc && !S.answered && !S.locked && tcShouldLock(left)){ S.locked = true; soloRevealLock(); }
     if (left <= 0){ stopSoloTimer(); bar.style.width = '0%'; if (!S.answered) soloTimeout(); return; }
     bar.style.width = (left / dur * 100) + '%';
   }, 100);
 }
 function soloTimeout(){
-  S.answered = true;
+  S.answered = true; S.timedOut = true;
   soloApplyResult(false, -1);
 }
 function soloPick(pos){
-  if (!S || S.answered || S.cur.hidden[pos]) return;
+  if (!S || S.answered || S.locked || S.cur.hidden[pos]) return;
   S.answered = true; stopSoloTimer();
   var correct = S.cur.disp[pos] === S.cur.correctText;
   soloApplyResult(correct, pos);
 }
 function soloApplyResult(correct, pos){
   var R = S.R, cur = S.cur, isBonus = !!cur.isBonus;
+  if (S.tc){ soloTcApply(correct, pos); return; }
   var sc = scoreAnswer(R, isBonus, soloIsAccel() && !isBonus, S.bet);
   var msg = '';
   if (correct){
@@ -1589,6 +1780,79 @@ function soloApplyResult(correct, pos){
   else if (S.out){ btn.textContent = S.reviveLeft() ? '🌟 Làm câu hỏi HỒI SINH' : '🏁 Kết thúc ván'; btn.onclick = function(){ if (S.reviveLeft()) soloReviveOffer(); else soloEnd(); }; }
   else { btn.textContent = isBonus ? '🏁 Xem kết quả' : 'Câu tiếp theo ➡️'; btn.onclick = function(){ if (isBonus) soloEnd(); else { S.idx++; soloNext(); } }; }
   fb.appendChild(document.createElement('br')); fb.appendChild(btn);
+}
+/* Chấm 1 câu ở chế độ fast/bell (1 người) bằng máy điểm trochoi */
+function soloTcApply(correct, pos){
+  var mode = S.R.mode;
+  var elapsed = Math.max(0.2, (Date.now() - (S.qStartAt || Date.now())) / 1000);
+  var res = tcScoreAnswer(S.tc, { mode: mode, correct: correct, timeout: !!S.timedOut, wager: S.wager || 1,
+    elapsed: elapsed, qIndex: S.idx, total: S.qs.length, isFirstBlood: false, isLast: S.idx === S.qs.length - 1 });
+  S.score += res.delta;
+  var parts = [];
+  if (S.timedOut){
+    parts.push(mode === 'bell'
+      ? '⏰ Hết giờ — không trả lời nên mất 1 ❤️ (còn ' + S.tc.lives + '). Đáp án đúng: ' + esc(S.cur.correctText)
+      : '⏰ Hết giờ — không trả lời, trừ 1.000 điểm. Đáp án đúng: ' + esc(S.cur.correctText));
+  } else if (correct){
+    var det = ['gốc ' + res.base + 'đ'];
+    if (res.speed) det.push('⚡ tốc độ +' + res.speed + 'đ');
+    if (res.streakBonus) det.push('🔥 chuỗi +' + res.streakBonus + 'đ');
+    if (res.golden) det.push('🌟 Câu Vàng x2');
+    parts.push('✅ Chính xác! +' + res.delta + ' điểm (' + det.join(' • ') + ')');
+  } else if (res.shieldUsed){
+    parts.push('🛡️ KHIÊN BẤT TỬ đã đỡ đòn — sai nhưng KHÔNG trừ điểm' + (mode === 'bell' ? ', KHÔNG mất mạng' : '') + '! Đáp án đúng: ' + esc(S.cur.correctText));
+  } else {
+    parts.push('❌ Chưa đúng — trừ ' + Math.abs(res.delta) + ' điểm (1.000đ × hệ số cược). Đáp án đúng: ' + esc(S.cur.correctText));
+  }
+  if (mode === 'bell'){
+    if (res.lifeBonus) parts.push('🔔 Đúng 3 câu liên tiếp — thưởng +1 ❤️! Đang có ' + S.tc.lives + ' mạng.');
+    if (res.eliminated){ S.out = 'bell'; parts.push('🔔 Em đã HẾT MẠNG — bị loại khỏi ván!'); }
+  }
+  if (res.chestUnlock) parts.push('🎁 Đúng 5 câu liên tiếp — RƯƠNG BÍ ẨN đã mở! Hãy chọn 1 rương:');
+  var btns = document.getElementById('soloOpts').querySelectorAll('.opt-big');
+  btns.forEach(function(b, j){
+    b.disabled = true;
+    if (S.cur.disp[j] === S.cur.correctText) b.classList.add('correct');
+    else if (j === pos) b.classList.add('wrong');
+  });
+  var fb = document.getElementById('soloFb');
+  fb.innerHTML = parts.join('<br>');
+  soloInfoUpdate();
+  soloModeBarUpdate();
+  if (res.chestUnlock){
+    var cd = document.createElement('div');
+    cd.style.marginTop = '10px';
+    [0, 1, 2].forEach(function(i){
+      var cb = document.createElement('button');
+      cb.className = 'chip'; cb.style.marginRight = '8px'; cb.textContent = '🎁 Rương ' + (i + 1);
+      cb.onclick = function(){ soloChestPick(cd); };
+      cd.appendChild(cb);
+    });
+    fb.appendChild(cd);
+    return;
+  }
+  soloTcContinue(fb);
+}
+function soloTcContinue(fb){
+  var btn = document.createElement('button');
+  btn.className = 'btn'; btn.style.marginTop = '12px';
+  if (S.out || S.idx >= S.qs.length - 1){
+    btn.textContent = '🏁 Xem kết quả';
+    btn.onclick = function(){ soloEnd(); };
+  } else {
+    btn.textContent = 'Câu tiếp theo ➡️';
+    btn.onclick = function(){ S.idx++; soloNext(); };
+  }
+  fb.appendChild(document.createElement('br')); fb.appendChild(btn);
+}
+function soloChestPick(box){
+  var r = tcOpenChest(S.tc, Math.random());
+  S.score += r.delta;
+  /* Chơi 1 người không có đối thủ nên phần "hút 500đ Top 1" của Rương Đạo Chích chỉ tính +900đ */
+  box.innerHTML = '<b>' + r.label + '</b>';
+  showAnnounce(r.label, 4200);
+  soloInfoUpdate();
+  soloTcContinue(document.getElementById('soloFb'));
 }
 function soloReviveOffer(){
   var R = S.R;
@@ -1674,8 +1938,13 @@ function soloEnd(skipMsg){
       (S.bossWin ? '🏆 EM ĐÃ DIỆT ĐƯỢC BOSS!' : 'Boss còn ' + Math.max(0, S.bossHp) + ' HP — ' + (S.hearts <= 0 ? 'em đã hết tim nên phải dừng.' : 'hết câu hỏi mà Boss chưa gục.')) +
       ' Tổng sát thương của em: <b>' + S.bossDmg + '⚔️</b></p>';
   }
+  if (S.R.mode === 'bell' && S.tc){
+    modeTxt = '<p style="font-size:16px">🔔 <b>Rung Chuông Vàng:</b> em trả lời đúng <b>' + S.tc.correct + '</b> câu, còn <b>' + S.tc.lives + ' ❤️</b>' + (S.tc.out ? ' — đã bị loại trước khi hết ván.' : ' — trụ vững tới cuối ván! 🎉') + '</p>';
+  } else if (S.R.mode === 'fast' && S.tc){
+    modeTxt = '<p style="font-size:16px">⚡ <b>Ai Nhanh Hơn:</b> em trả lời đúng <b>' + S.tc.correct + '</b>/<b>' + S.qs.length + '</b> câu' + (S.tc.chestOpened ? ' • đã mở 🎁 Rương Bí Ẩn' : '') + '.</p>';
+  }
   document.getElementById('soloArea').innerHTML =
-    '<p class="score-big">' + (S.out ? 'Ván đấu kết thúc — em đã bị ' + (S.out === 'wrong' ? 'loại (sai liên tiếp)' : 'hạ gục') + '.' : '🏆 HOÀN THÀNH VÁN ĐẤU!') + '</p>' + modeTxt +
+    '<p class="score-big">' + (S.out ? 'Ván đấu kết thúc — em đã bị ' + (S.out === 'wrong' ? 'loại (sai liên tiếp)' : (S.out === 'bell' ? 'loại (hết mạng 🔔)' : 'hạ gục')) + '.' : '🏆 HOÀN THÀNH VÁN ĐẤU!') + '</p>' + modeTxt +
     '<p style="font-size:17px">Tổng điểm: <b>' + S.score + '</b>' + (bd ? ' • Huy hiệu: <b>' + bd + '</b>' : '') + '<br>Thang huy hiệu: 🥉 Đồng ≥300 • 🥈 Bạc ≥500 • 🥇 Vàng ≥1000 • 💎 Kim cương ≥2000</p>' +
     '<button class="btn" onclick="soloStart()">🔁 Chơi lại</button>';
   if (!S.out && S.score >= 500) confettiBurst();
@@ -1950,7 +2219,7 @@ function rtCreateRoom(){
     } else {
       var picked = shuffle(QUESTIONS);
       qs = picked.slice(0, 10).map(function(q){ return { q: q.q, bai: q.bai, opts: q.opts, ans: q.ans }; });
-      if (picked[10]) qs.push({ q: picked[10].q, bai: picked[10].bai, opts: picked[10].opts, ans: picked[10].ans, bonus: true });
+      if (picked[10] && !tcIsMode(R.mode)) qs.push({ q: picked[10].q, bai: picked[10].bai, opts: picked[10].opts, ans: picked[10].ans, bonus: true });
       revivePool = picked.slice(11, 14).map(function(q){ return { q: q.q, bai: q.bai, opts: q.opts, ans: q.ans }; });
       mainCount = 10;
     }
@@ -2042,7 +2311,15 @@ function rtRenderPlayers(){
   var outIds = ids.filter(function(id){ return players[id].out; });
   document.getElementById('rtOutList').innerHTML = outIds.length ? outIds.map(function(id){
     var p = players[id];
-    return '<div class="lb-row out"><span class="nm">' + (p.out === 'zero' ? '💀 ' : (p.out === 'boss' ? '💔 ' : '☠️ ')) + esc(p.name) + (p.out === 'wrong' ? ' <span class="note">(Sai ' + (T.R ? T.R.wrongLimit : 3) + ' câu liên tiếp)</span>' : (p.out === 'boss' ? ' <span class="note">(Hết tim — Diệt Boss)</span>' : ' <span class="note">(Điểm về 0)</span>')) + ' • Hồi sinh: ' + (p.revives || 0) + '/' + (T.R ? T.R.reviveMax : 2) + '</span>' +
+    var isBell = p.out === 'bell';
+    var note = isBell
+      ? ' <span class="note">(Hết 3 ❤️ — Rung Chuông Vàng)</span>'
+      : (p.out === 'wrong'
+        ? ' <span class="note">(Sai ' + (T.R ? T.R.wrongLimit : 3) + ' câu liên tiếp)</span> • Hồi sinh: ' + (p.revives || 0) + '/' + (T.R ? T.R.reviveMax : 2)
+        : (p.out === 'boss'
+          ? ' <span class="note">(Hết tim — Diệt Boss)</span>'
+          : ' <span class="note">(Điểm về 0)</span> • Hồi sinh: ' + (p.revives || 0) + '/' + (T.R ? T.R.reviveMax : 2)));
+    return '<div class="lb-row out"><span class="nm">' + (p.out === 'zero' ? '💀 ' : (p.out === 'boss' ? '💔 ' : (isBell ? '🔔 ' : '☠️ '))) + esc(p.name) + note + '</span>' +
       '<button class="btn sm" onclick="rtRescue(\'' + id + '\')">🆘 Cứu trợ</button></div>';
   }).join('') : '<p class="note">Chưa có em nào bị loại.</p>';
   rtRenderAnsCount();
@@ -2052,15 +2329,24 @@ function rtRenderPlayers(){
    dữ liệu người chơi hoặc answers thay đổi (thời gian thực qua 2 listener ở rtAttach). */
 function rtDetailTableHTML(){
   if (!T) return '';
-  var arr = sortedPlayers(T.players);
+  var mode = T.R ? T.R.mode : '';
+  var isTc = tcIsMode(mode);
+  var arr = isTc ? tcSorted(T.players, mode) : sortedPlayers(T.players);
   if (!arr.length) return '<p class="note">Chưa có học sinh nào trong phòng.</p>';
   var rows = arr.map(function(p, i){
     var c = playerCounts(p, T.answers);
+    var extra = '';
+    if (isTc){
+      extra = (mode === 'bell' ? '<td style="text-align:center">' + ((p.tc && p.tc.lives) || 0) + ' ❤️</td>' : '') +
+        '<td style="text-align:center"><b>' + tcGradeByRank(i + 1) + '</b></td>';
+    }
     return '<tr><td style="text-align:center">' + (i + 1) + '</td><td><b>' + esc(p.name || '...') + '</b></td>' +
       '<td style="text-align:center">' + c.answered + '</td><td style="text-align:center">' + c.correct + '</td>' +
-      '<td style="text-align:center"><b>' + (p.score || 0) + '</b></td><td>' + rtStatusText(p) + '</td></tr>';
+      '<td style="text-align:center"><b>' + (p.score || 0) + '</b></td>' + extra + '<td>' + rtStatusText(p) + '</td></tr>';
   }).join('');
-  return '<div style="overflow-x:auto"><table><tr><th style="width:40px">#</th><th>Họ tên</th><th>Đã trả lời</th><th>Đúng</th><th>Điểm</th><th>Trạng thái</th></tr>' + rows + '</table></div>';
+  var head = '<tr><th style="width:40px">#</th><th>Họ tên</th><th>Đã trả lời</th><th>Đúng</th><th>Điểm</th>' +
+    (isTc ? (mode === 'bell' ? '<th>Mạng</th>' : '') + '<th>Điểm quy đổi</th>' : '') + '<th>Trạng thái</th></tr>';
+  return '<div style="overflow-x:auto"><table>' + head + rows + '</table></div>';
 }
 function rtRenderDetail(){
   var box = document.getElementById('rtDetail');
@@ -2069,14 +2355,14 @@ function rtRenderDetail(){
 }
 function rtDownloadCSV(){
   if (!T) return;
-  var csv = buildResultsCSV(T.players, T.answers);
+  var csv = buildResultsCSV(T.players, T.answers, T.R ? T.R.mode : '');
   var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
   saveBlobFile(blob, 'Ket_qua_phong_' + T.code + '.csv');
   showToast('📥 Đã tải file kết quả (.csv)');
 }
 function rtCopyResults(){
   if (!T) return;
-  var txt = buildResultsCSV(T.players, T.answers);
+  var txt = buildResultsCSV(T.players, T.answers, T.R ? T.R.mode : '');
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function(){ showToast('✅ Đã sao chép kết quả'); }, function(){ showToast('⚠️ Không sao chép được — hãy tải file .csv thay thế'); });
   else showToast('⚠️ Trình duyệt không hỗ trợ sao chép — hãy tải file .csv thay thế');
 }
@@ -2088,6 +2374,10 @@ function rtRenderMeta(){
 }
 function rtPhaseOf(cur){
   if (!cur) return '';
+  if (T && T.R && tcIsMode(T.R.mode)){
+    if (tcIsGolden(cur.idx, T.mainCount || 10)) return '🌟 CÂU HỎI VÀNG x2 — Câu ' + (cur.idx + 1) + ' / ' + (T.mainCount || 10);
+    return 'Câu ' + (cur.idx + 1) + ' / ' + (T.mainCount || 10) + (T.R.mode === 'bell' ? ' — 🔔 Rung Chuông Vàng' : ' — ⚡ Ai Nhanh Hơn');
+  }
   if (cur.bonus) return '🌟 CÂU THÁCH ĐỐ — ' + BONUS_VALUE + ' điểm';
   if (cur.accel) return '⚡ VÒNG TĂNG TỐC x2';
   return 'Câu ' + (cur.idx + 1) + ' / ' + (T.mainCount || 10) + ' — Vòng thường';
@@ -2139,6 +2429,11 @@ function rtStartTick(){
     if (!src || !src.startAt){ el.textContent = '--'; return; }
     var left = src.duration - (fbNow() - src.startAt) / 1000;
     el.textContent = left > 0 ? Math.ceil(left) + 's' : '0s';
+    if (tcShouldLock(left) && T.meta.status === 'playing' && T.current){
+      /* 2 giây cuối (luật trochoi): đáp án đúng tự hiện trên màn hình giáo viên, phía HS đồng thời bị khoá */
+      var qt = T.questions[T.current.idx];
+      if (qt){ var bt = document.querySelector('#rtOpts .opt-big[data-tpos="' + qt.ans + '"]'); if (bt) bt.classList.add('correct'); }
+    }
     if (left <= 0){
       clearInterval(window._rtTick); window._rtTick = null;
       if (T.meta.status === 'playing' && T.current){
@@ -2157,13 +2452,19 @@ function rtStart(){
 function rtGotoQuestion(idx){
   var q = T.questions[idx]; if (!q) { rtFinish(); return; }
   var cur = { idx: idx, startAt: firebase.database.ServerValue.TIMESTAMP, duration: T.R.qtime,
-    bonus: !!q.bonus, accel: !!(T.R.accel && idx >= 3 && idx <= 5) };
+    bonus: !!q.bonus, accel: !!(T.R.accel && idx >= 3 && idx <= 5), golden: tcIsGolden(idx, T.mainCount || 10) };
   roomRef(T.code).child('current').set(cur);
   if (q.bonus) T.bonusPlayed = true;
 }
 function rtNext(){
   if (!T) return;
   if (T.meta.status === 'reviving'){ rtCloseRevive(); return; }
+  if (tcIsMode(T.R.mode)){
+    var nx = (T.current ? T.current.idx : -1) + 1;
+    if (nx < (T.mainCount || 10)) rtGotoQuestion(nx);
+    else rtFinish();
+    return;
+  }
   var next = (T.current ? T.current.idx : -1) + 1;
   if (T.R.kill && T.R.reviveMax > 0 && next > 0 && next % 5 === 0 && next < (T.mainCount || 10)){
     var hasOut = Object.keys(T.players).some(function(id){ var p = T.players[id]; return (p.out === 'zero' || p.out === 'wrong') && (p.revives || 0) < T.R.reviveMax; });
@@ -2207,6 +2508,17 @@ function rtCloseRevive(){
 }
 function rtRescue(pid){
   var p = T.players[pid]; if (!p) return;
+  if (T.R && T.R.mode === 'bell'){
+    /* Cứu trợ Rung Chuông Vàng (luật trochoi): hồi sinh với ít nhất 1 ❤️, điểm giữ nguyên */
+    var tc = p.tc || tcNewState('bell');
+    var upd = { out: '', rescues: (p.rescues || 0) + 1 };
+    upd['tc/lives'] = Math.max(tc.lives || 0, 1);
+    upd['tc/out'] = false;
+    roomRef(T.code).child('players/' + pid).update(upd).then(function(){
+      pushEvent(T.code, '🛟 Thầy/cô đã CỨU TRỢ ' + p.name + ' — hồi sinh với 1 ❤️, quay lại sàn đấu!', 'rescue');
+    });
+    return;
+  }
   roomRef(T.code).child('players/' + pid).update({ score: T.R.rescueScore, out: '', wrongStreak: 0, hearts: 3, rescues: (p.rescues || 0) + 1 }).then(function(){
     pushEvent(T.code, '🆘 Thầy/cô đã cứu trợ ' + p.name + ' quay lại ván đấu!', 'rescue');
   });
@@ -2223,7 +2535,7 @@ function rtFinish(){
 function rtShowFinal(){
   document.getElementById('rtLive').style.display = 'none';
   document.getElementById('rtBoards').style.display = 'grid';
-  var arr = sortedPlayers(T.players);
+  var arr = (T.R && tcIsMode(T.R.mode)) ? tcSorted(T.players, T.R.mode) : sortedPlayers(T.players);
   var top3 = arr.slice(0, 3);
   var medals = ['🥇', '🥈', '🥉'], heights = ['#ffd76e', '#cfd8dc', '#ffab7a'];
   var w = T.meta && T.meta.winner, modeBanner = '';
@@ -2233,6 +2545,12 @@ function rtShowFinal(){
     var byDmg = arr.slice().sort(function(a, b){ return (b.dmg || 0) - (a.dmg || 0); }).slice(0, 3);
     modeBanner = '<p class="score-big" style="text-align:center">' + (w === 'students' ? '🏆 CẢ LỚP ĐÃ DIỆT ĐƯỢC BOSS!' : '👹 BOSS CÒN SỐNG (' + Math.max(0, (T.boss && T.boss.hp) || 0) + ' HP) — BOSS THẮNG!') + '</p>' +
       ((byDmg.length && (byDmg[0].dmg || 0) > 0) ? '<p style="text-align:center;font-size:16px">⚔️ <b>Top Dũng Sĩ</b> (gây sát thương lên Boss): ' + byDmg.map(function(p, i){ return medals[i] + ' ' + esc(p.name) + ' — ' + (p.dmg || 0) + '⚔️'; }).join(' • ') + '</p>' : '');
+  }
+  if (T.R.mode === 'bell' && arr.length){
+    var champ = arr[0];
+    modeBanner = '<p class="score-big" style="text-align:center">🔔 QUÁN QUÂN RUNG CHUÔNG VÀNG: ' + esc(champ.name) + ' — còn ' + ((champ.tc && champ.tc.lives) || 0) + ' ❤️ • ' + (champ.score || 0) + ' điểm (quy đổi hạng 1: ' + tcGradeByRank(1) + ' điểm)</p>';
+  } else if (T.R.mode === 'fast' && arr.length){
+    modeBanner = '<p class="score-big" style="text-align:center">⚡ NHANH NHẤT PHÒNG: ' + esc(arr[0].name) + ' — ' + (arr[0].score || 0) + ' điểm</p>';
   }
   document.getElementById('rtFinal').innerHTML = '<div class="card"><h3 style="margin:0;text-align:center">🏆 VINH DANH TOP 3 — Phòng ' + T.code + '</h3>' + modeBanner +
     '<div class="podium">' + [1, 0, 2].map(function(k){
@@ -2277,8 +2595,11 @@ function rsJoin(){
       U = { code: code, pid: pid, name: name, R: (room.meta && room.meta.rules) || {}, meta: room.meta || {}, players: {}, me: null,
         current: null, revive: null, questions: room.questions || [], renderedKey: '', answered: false, bet: 0, roundBet: 0,
         cur: null, reviveAnswered: false, sessionStart: Date.now(), ended: false, tug: room.tug || 0, boss: room.boss || null };
-      var rec = { name: name, score: START_SCORE, streak: 0, wrongStreak: 0, out: '', revives: 0,
+      var isTcJoin = tcIsMode(U.R.mode);
+      var rec = { name: name, score: isTcJoin ? 0 : START_SCORE, streak: 0, wrongStreak: 0, out: '', revives: 0,
         ll: { f: 0, s: 0, a: 0 }, mirrorReady: false, joinedAt: firebase.database.ServerValue.TIMESTAMP };
+      if (isTcJoin){ rec.tc = tcNewState(U.R.mode); U.tc = tcNewState(U.R.mode); }
+      U.wager = 1; U.locked = false;
       if (U.R.mode === 'tug'){
         var nJoined = room.players ? Object.keys(room.players).length : 0;
         rec.team = (nJoined % 2 === 0) ? 'red' : 'blue'; /* chia đội cân bằng theo thứ tự vào phòng */
@@ -2305,7 +2626,7 @@ function rsRenderModeBar(){
 }
 function rsAttach(){
   var ref = roomRef(U.code);
-  ref.child('players').on('value', function(s){ U.players = s.val() || {}; U.me = U.players[U.pid] || U.me; rsRenderHead(); rsRender(); rsRenderModeBar(); });
+  ref.child('players').on('value', function(s){ U.players = s.val() || {}; U.me = U.players[U.pid] || U.me; if (U.me && U.me.tc) U.tc = U.me.tc; rsRenderHead(); rsRender(); rsRenderModeBar(); });
   ref.child('tug').on('value', function(s){ U.tug = s.val() || 0; rsRenderModeBar(); });
   ref.child('boss').on('value', function(s){ U.boss = s.val() || null; rsRenderModeBar(); });
   ref.child('meta').on('value', function(s){ U.meta = s.val() || {}; if (U.meta.rules) { U.R = U.meta.rules; document.getElementById('rsRulesInfo').innerHTML = rulesSummaryHTML(U.R); } rsRender(); });
@@ -2317,14 +2638,20 @@ function rsAttach(){
   });
 }
 function rsMyRank(){
-  var arr = sortedPlayers(U.players);
+  var arr = (U && tcIsMode(U.R.mode)) ? tcSorted(U.players, U.R.mode) : sortedPlayers(U.players);
   for (var i = 0; i < arr.length; i++) if (arr[i]._id === U.pid) return i + 1;
   return 0;
 }
 function rsRenderHead(){
   if (!U || !U.me) return;
   var bd = badgeOf(U.me.score || 0);
-  document.getElementById('rsHead').textContent = '🧑‍🎓 ' + U.name + ' • ⭐ ' + (U.me.score || 0) + 'đ • 🔥 Chuỗi: ' + (U.me.streak || 0) + (bd ? ' • ' + bd : '');
+  var tcTxt = '';
+  if (U.me.tc){
+    tcTxt = ' • 🔥 Chuỗi: ' + (U.me.tc.streak || 0);
+    if (U.me.tc.mode === 'bell') tcTxt += ' • ❤️ ' + (U.me.tc.lives || 0);
+    if (U.me.tc.shield) tcTxt += ' • 🛡️ Khiên Bất Tử';
+  }
+  document.getElementById('rsHead').textContent = '🧑‍🎓 ' + U.name + ' • ⭐ ' + (U.me.score || 0) + 'đ' + (U.me.tc ? tcTxt : ' • 🔥 Chuỗi: ' + (U.me.streak || 0)) + (bd ? ' • ' + bd : '');
   document.getElementById('rsRank').textContent = 'Hạng: ' + (rsMyRank() || '—') + ' / ' + Object.keys(U.players).length + ' • Phòng ' + U.code;
 }
 function rsSkillBarHTML(){
@@ -2356,8 +2683,9 @@ function rsRender(){
     if (U.me.out){
       var outMsg = U.me.out === 'zero' ? '💀 Em đã bị HẠ GỤC (điểm về 0)!'
         : U.me.out === 'boss' ? '💔 Em đã HẾT TIM — giờ là KHÁN GIẢ CỔ VŨ! Em vẫn xem được trận đấu, thanh máu Boss và bảng xếp hạng; chờ thầy/cô CỨU TRỢ (hồi đủ 3 tim) để quay lại chiến đấu.'
+        : U.me.out === 'bell' ? '🔔 Em đã HẾT 3 MẠNG — giờ em là KHÁN GIẢ CỔ VŨ! Hãy theo dõi các bạn thi đấu và chờ thầy/cô CỨU TRỢ hồi sinh (ít nhất 1 ❤️) để quay lại sàn nhé.'
         : '☠️ Em đã bị LOẠI vì sai ' + U.R.wrongLimit + ' câu liên tiếp!';
-      var outNote = U.me.out === 'boss' ? '' : '<br><span class="note">Chờ đợt HỒI SINH (còn ' + Math.max(0, U.R.reviveMax - (U.me.revives || 0)) + ' lượt) hoặc thầy/cô CỨU TRỢ để quay lại ván.</span>';
+      var outNote = (U.me.out === 'boss' || U.me.out === 'bell') ? '' : '<br><span class="note">Chờ đợt HỒI SINH (còn ' + Math.max(0, U.R.reviveMax - (U.me.revives || 0)) + ' lượt) hoặc thầy/cô CỨU TRỢ để quay lại ván.</span>';
       area.innerHTML = '<p class="wait-big">' + outMsg + outNote + '</p>' + rsSkillBarHTML() +
         '<div style="max-width:520px;margin:0 auto">' + lbHTML(U.players, U.pid) + '</div>';
       return;
@@ -2374,10 +2702,17 @@ function rsRenderQuestion(){
   if (!q){ area.innerHTML = '<p class="wait-big">⏳ Đang tải câu hỏi...</p>'; return; }
   var order = seededShuffle([0, 1, 2, 3], U.code + ':' + U.pid + ':' + cur.idx);
   U.cur = { q: q.q, disp: order.map(function(i){ return q.opts[i]; }), correctText: q.opts[q.ans], hidden: {}, bonus: !!cur.bonus, accel: !!cur.accel, idx: cur.idx };
-  U.answered = false;
+  U.answered = false; U.locked = false;
   U.bet = (U.R.betMode === 'round') ? U.roundBet : 0;
   var needRoundBet = U.R.bet && U.R.betMode === 'round' && cur.idx % 5 === 0 && !cur.bonus;
   var tag = cur.bonus ? '<span class="phase-tag">🌟 CÂU THÁCH ĐỐ — ' + BONUS_VALUE + ' điểm</span>' : (cur.accel ? '<span class="phase-tag">⚡ VÒNG TĂNG TỐC x2</span>' : '<span class="phase-tag blue">Câu ' + (cur.idx + 1) + ' / ' + ((U.meta && U.meta.qCount) || 10) + '</span>');
+  if (tcIsMode(U.R.mode)){
+    var totalQ = (U.meta && U.meta.qCount) || (U.questions || []).length || 10;
+    tag = tcIsGolden(cur.idx, totalQ)
+      ? '<span class="phase-tag">🌟 CÂU HỎI VÀNG x2 — Câu ' + (cur.idx + 1) + ' / ' + totalQ + '</span>'
+      : '<span class="phase-tag blue">Câu ' + (cur.idx + 1) + ' / ' + totalQ + '</span>';
+    if ((U.tc && U.tc.shield) || (U.me.tc && U.me.tc.shield)) tag += ' <span class="phase-tag green">🛡️ Khiên Bất Tử</span>';
+  }
   if (cur.bonus && (U.me.score || 0) < U.R.bonusMin){
     area.innerHTML = tag + '<p class="wait-big">🌟 Câu Thách đố cần tối thiểu ' + U.R.bonusMin + ' điểm — em chưa đủ điểm nên ngồi ngoài câu này nhé.</p>' + rsSkillBarHTML();
     U.answered = true; return;
@@ -2398,6 +2733,17 @@ function rsRenderQuestion(){
       betHTML = '<p class="note" style="margin:6px 0">🎲 Mức cược của vòng này: <b>' + U.roundBet + 'đ</b></p>';
     }
   }
+  if (tcIsMode(U.R.mode)){
+    var tcSt = U.tc || (U.me && U.me.tc) || {};
+    betHTML = '<p class="note" style="margin:6px 0">🎲 <b>Cược bản lĩnh</b> cho câu này (đúng ăn theo mức — sai trừ 1.000đ × hệ số cược):</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">' +
+      [[1, '🛡️ An toàn x1 • 1.000đ'], [1.5, '⚡ Liều lĩnh x1.5 • 1.500đ'], [2.5, '🔥 Tất Tay x2.5 • 2.500đ']].map(function(w){
+        var dis = w[0] > 1 && tcSt.usedSpec;
+        return '<button class="chip' + ((U.wager || 1) === w[0] ? ' sel' : '') + '" onclick="rsSetWager(' + w[0] + ',this)"' + (dis ? ' disabled' : '') + '>' + w[1] + (dis ? ' (đã dùng)' : '') + '</button>';
+      }).join('') + '</div>' +
+      (U.R.mode === 'bell'
+        ? '<p class="note" style="margin:2px 0 6px">❤️ Mạng của em: <b>' + '❤️'.repeat(Math.max(0, tcSt.lives || 0)) + '</b> — sai/hết giờ mất 1 mạng; đúng 3 câu liên tiếp +1 ❤️ (tối đa 5).</p>'
+        : '');
+  }
   var llHTML = '';
   if (U.R.lifelines){
     var ll = U.me.ll || {};
@@ -2410,12 +2756,22 @@ function rsRenderQuestion(){
     '<div id="rsOpts">' + U.cur.disp.map(function(op, j){
       return '<button class="opt-big" data-pos="' + j + '" onclick="rsPick(' + j + ')"' + (needRoundBet ? ' disabled' : '') + '>' + LETTERS[j] + '. ' + esc(op) + '</button>';
     }).join('') + '</div>' + llHTML + '<div id="rsFb" style="margin-top:12px;font-weight:700;font-size:16px"></div>';
+  if (U.pendingChest) rsShowChestBar();
 }
 function rsSetBet(v, btn, isRound){
   var cap = (U.me && U.me.score) || 0;
   v = Math.max(0, Math.min(v, cap));
   if (isRound){ U.roundBet = v; U.bet = v; var btns = document.querySelectorAll('#rsOpts .opt-big'); btns.forEach(function(b){ b.disabled = false; }); }
   else U.bet = v;
+  var chips = btn.parentNode.querySelectorAll('.chip');
+  chips.forEach(function(c){ c.classList.remove('sel'); });
+  btn.classList.add('sel');
+}
+function rsSetWager(v, btn){
+  if (!U || U.answered) return;
+  var tcSt = U.tc || (U.me && U.me.tc) || {};
+  if (v > 1 && tcSt.usedSpec) return;
+  U.wager = v;
   var chips = btn.parentNode.querySelectorAll('.chip');
   chips.forEach(function(c){ c.classList.remove('sel'); });
   btn.classList.add('sel');
@@ -2427,6 +2783,13 @@ function rsStartTick(){
     var left = U.current.duration - (fbNow() - U.current.startAt) / 1000;
     var bar = document.getElementById('rsBar');
     if (bar) bar.style.width = Math.max(0, left / U.current.duration * 100) + '%';
+    if (tcShouldLock(left) && !U.answered && !U.locked && U.meta.status === 'playing' && U.me && !U.me.out && U.cur){
+      /* 2 giây cuối (luật trochoi): tự hiện đáp án đúng + KHOÁ trả lời — gửi sau mốc này không được tính */
+      U.locked = true;
+      rsReveal();
+      var fbL = document.getElementById('rsFb');
+      if (fbL) fbL.innerHTML = '🔒 <b>2 giây cuối</b> — đáp án đúng đã hiện, khoá trả lời!';
+    }
     if (left <= 0){
       clearInterval(window._rsTick); window._rsTick = null;
       if (!U.answered && U.meta.status === 'playing' && U.me && !U.me.out) rsTimeout();
@@ -2444,11 +2807,12 @@ function rsTimeout(){
   rsSubmit(false, -1, true);
 }
 function rsPick(pos){
-  if (!U || U.answered || !U.cur || U.cur.hidden[pos]) return;
+  if (!U || U.answered || U.locked || !U.cur || U.cur.hidden[pos]) return;
   U.answered = true;
   rsSubmit(U.cur.disp[pos] === U.cur.correctText, pos, false);
 }
 function rsSubmit(correct, pos, isTimeout){
+  if (U && tcIsMode(U.R.mode)){ rsTcSubmit(correct, pos, isTimeout); return; }
   var R = U.R, me = U.me, pref = roomRef(U.code).child('players/' + U.pid);
   var sc = scoreAnswer(R, U.cur.bonus, U.cur.accel, U.bet);
   var streakAfter = correct ? (me.streak || 0) + 1 : 0;
@@ -2516,8 +2880,100 @@ function rsSubmit(correct, pos, isTimeout){
   if (fb) fb.innerHTML = correct ? '✅ Chính xác! ' + (delta >= 0 ? '+' + delta : delta) + ' điểm — chờ cả lớp trả lời xong / sang câu tiếp theo nhé.' :
     (isTimeout ? '⏰ Hết giờ! ' : '❌ Chưa đúng. ') + (delta < 0 ? 'Bị trừ ' + Math.abs(delta) + ' điểm. ' : '') + 'Đáp án đúng: ' + esc(U.cur.correctText) + ' — chờ câu tiếp theo nhé.';
 }
+/* Chấm bài phía HS cho 2 chế độ luật trochoi (fast/bell): máy điểm tcScoreAnswer + tranh First Blood bằng transaction */
+function rsTcSubmit(correct, pos, isTimeout){
+  var mode = U.R.mode, pref = roomRef(U.code).child('players/' + U.pid);
+  var st = U.tc || (U.tc = (U.me && U.me.tc) || tcNewState(mode));
+  var idx = U.cur.idx;
+  var total = (U.meta && U.meta.qCount) || (U.questions || []).length || 10;
+  var elapsed = (U.current && U.current.startAt) ? Math.max(0.2, (fbNow() - U.current.startAt) / 1000) : 99;
+  var wager = U.wager || 1;
+  function finalize(isFB){
+    var res = tcScoreAnswer(st, { mode: mode, correct: correct, timeout: !!isTimeout, wager: wager,
+      elapsed: elapsed, qIndex: idx, total: total, isFirstBlood: !!isFB, isLast: idx === total - 1 });
+    roomRef(U.code).child('answers/' + idx + '/' + U.pid).set({ correct: correct, pts: res.delta, wager: wager, timeout: !!isTimeout, fb: !!isFB, t: firebase.database.ServerValue.TIMESTAMP });
+    pref.child('answered').transaction(function(cur){ return (cur || 0) + 1; });
+    if (correct) pref.child('correct').transaction(function(cur){ return (cur || 0) + 1; });
+    pref.child('score').transaction(function(cur){ return (cur || 0) + res.delta; });
+    pref.child('tc').update({ streak: st.streak, lifeStreak: st.lifeStreak, lives: st.lives, shield: !!st.shield,
+      usedSpec: !!st.usedSpec, chestOpened: !!st.chestOpened, chestAvail: !!st.chestAvail, out: !!st.out, correct: st.correct, wrong: st.wrong });
+    if (mode === 'bell' && st.out) pref.update({ out: 'bell' });
+    if (isFB) pushEvent(U.code, '⚡ TIA CHỚP ĐẦU TIÊN: ' + U.name + ' trả lời đúng đầu tiên câu ' + (idx + 1) + ' (+500đ)!', 'info');
+    if (res.lifeBonus) pushEvent(U.code, '🔔 ' + U.name + ' đúng 3 câu liên tiếp — thưởng +1 ❤️!', 'info');
+    if (res.eliminated) pushEvent(U.code, '🔔 ' + U.name + ' đã hết mạng — trở thành khán giả cổ vũ!', 'out');
+    if (res.chestUnlock){ U.pendingChest = true; pushEvent(U.code, '🎁 ' + U.name + ' đúng 5 câu liên tiếp — RƯƠNG BÍ ẨN đã mở!', 'info'); }
+    var btns = document.querySelectorAll('#rsOpts .opt-big');
+    btns.forEach(function(b, j){
+      b.disabled = true;
+      if (U.cur.disp[j] === U.cur.correctText) b.classList.add('correct');
+      else if (j === pos) b.classList.add('wrong');
+    });
+    var fb = document.getElementById('rsFb'), msg;
+    if (isTimeout){
+      msg = (mode === 'bell')
+        ? '⏰ Hết giờ — mất 1 ❤️ (còn ' + st.lives + ' ❤️). Đáp án đúng: ' + esc(U.cur.correctText)
+        : '⏰ Hết giờ — không trả lời, trừ 1.000 điểm. Đáp án đúng: ' + esc(U.cur.correctText);
+    } else if (correct){
+      var det = ['gốc ' + res.base + 'đ'];
+      if (res.speed) det.push('⚡ tốc độ +' + res.speed + 'đ');
+      if (res.streakBonus) det.push('🔥 chuỗi +' + res.streakBonus + 'đ');
+      if (res.golden) det.push('🌟 Câu Vàng x2');
+      if (res.firstBlood) det.push('⚡ First Blood +500đ');
+      msg = '✅ Chính xác! +' + res.delta + ' điểm (' + det.join(' • ') + ') — chờ câu tiếp theo nhé.';
+      if (res.lifeBonus) msg += '<br>🔔 Thưởng +1 ❤️ — đang có ' + st.lives + ' mạng!';
+    } else if (res.shieldUsed){
+      msg = '🛡️ KHIÊN BẤT TỬ đã đỡ đòn! Sai nhưng KHÔNG trừ điểm' + (mode === 'bell' ? ', KHÔNG mất mạng' : '') + '. Đáp án đúng: ' + esc(U.cur.correctText);
+    } else {
+      msg = '❌ Chưa đúng — trừ ' + Math.abs(res.delta) + ' điểm' + (mode === 'bell' ? ', mất 1 ❤️ (còn ' + st.lives + ' ❤️)' : '') + '. Đáp án đúng: ' + esc(U.cur.correctText);
+    }
+    if (res.eliminated) msg += '<br>🔔 Em đã hết mạng — chuyển sang khán giả cổ vũ, chờ thầy/cô CỨU TRỢ hồi sinh nhé.';
+    if (fb) fb.innerHTML = msg;
+    if (res.chestUnlock) rsShowChestBar();
+    rsRenderHead();
+  }
+  if (correct && !isTimeout){
+    /* First Blood: giành quyền "đúng đầu tiên của câu" bằng transaction nguyên tử trên node firstBlood/{idx} */
+    roomRef(U.code).child('firstBlood/' + idx).transaction(function(cur){ return cur ? undefined : U.pid; },
+      function(err, committed){ finalize(!!committed); });
+  } else finalize(false);
+}
+function rsShowChestBar(){
+  var fb = document.getElementById('rsFb');
+  if (!fb || document.getElementById('rsChestBar')) return;
+  var d = document.createElement('div');
+  d.id = 'rsChestBar'; d.style.marginTop = '10px';
+  d.innerHTML = '<b>🎁 RƯƠNG BÍ ẨN đã mở! Chọn 1 rương:</b> ';
+  [0, 1, 2].forEach(function(i){
+    var b = document.createElement('button');
+    b.className = 'chip'; b.style.marginRight = '8px'; b.textContent = '🎁 Rương ' + (i + 1);
+    b.onclick = function(){ rsChestPick(); };
+    d.appendChild(b);
+  });
+  fb.appendChild(d);
+}
+function rsChestPick(){
+  if (!U || !U.pendingChest) return;
+  U.pendingChest = false;
+  var st = U.tc || (U.tc = tcNewState(U.R.mode));
+  var r = tcOpenChest(st, Math.random());
+  var pref = roomRef(U.code).child('players/' + U.pid);
+  pref.child('score').transaction(function(cur){ return (cur || 0) + r.delta; });
+  pref.child('tc').update({ chestOpened: true, chestAvail: false, shield: !!st.shield, lives: st.lives, out: !!st.out });
+  if (U.R.mode === 'bell' && !st.out) pref.update({ out: '' });
+  if (r.steal){
+    var arr = tcSorted(U.players, U.R.mode), top = null;
+    for (var i = 0; i < arr.length; i++){ if (arr[i]._id !== U.pid){ top = arr[i]; break; } }
+    if (top) roomRef(U.code).child('players/' + top._id + '/score').transaction(function(cur){ return (cur || 0) - r.steal; });
+    pushEvent(U.code, '🥷 ' + U.name + ' mở Rương Đạo Chích: +900đ và hút 500đ của Top 1' + (top ? ' (' + (top.name || '') + ')' : '') + '!', 'mirror');
+  } else {
+    pushEvent(U.code, '🎁 ' + U.name + ' mở Rương Bí Ẩn: ' + r.label, 'info');
+  }
+  var bar = document.getElementById('rsChestBar');
+  if (bar) bar.innerHTML = '<b>' + r.label + '</b>';
+  showAnnounce(r.label, 4200);
+}
 function rsLifeline(kind){
-  if (!U || U.answered || !U.cur) return;
+  if (!U || U.answered || U.locked || !U.cur) return;
   var ll = (U.me && U.me.ll) || {};
   if (ll[kind]) return;
   roomRef(U.code).child('players/' + U.pid + '/ll/' + kind).set(1);
@@ -2592,7 +3048,7 @@ function rsRevivePick(pos){
   fb.innerHTML = correct ? '🌟 Đúng rồi! Chờ thầy/cô đóng câu hồi sinh là em quay lại ván đấu!' : '❌ Chưa đúng — em tiếp tục chờ đợt hồi sinh kế tiếp nhé.';
 }
 function rsShowFinal(){
-  var arr = sortedPlayers(U.players);
+  var arr = tcIsMode(U.R.mode) ? tcSorted(U.players, U.R.mode) : sortedPlayers(U.players);
   var myRank = rsMyRank();
   var medals = ['🥇', '🥈', '🥉'];
   var w = U.meta && U.meta.winner, modeLine = '';
@@ -2603,12 +3059,17 @@ function rsShowFinal(){
     modeLine = '<p class="score-big">' + (w === 'students' ? '🏆 CẢ LỚP ĐÃ DIỆT ĐƯỢC BOSS!' : '👹 BOSS CÒN SỐNG — BOSS THẮNG!') +
       '<br><span style="font-size:16px">⚔️ Tổng sát thương em gây lên Boss: <b>' + ((U.me && U.me.dmg) || 0) + '</b></span></p>';
   }
-  document.getElementById('rsArea').innerHTML = modeLine + '<p class="wait-big">🏁 VÁN ĐẤU KẾT THÚC!<br>Em xếp hạng <b>' + myRank + '</b> với <b>' + ((U.me && U.me.score) || 0) + ' điểm</b>' + (badgeOf((U.me && U.me.score) || 0) ? ' • ' + badgeOf(U.me.score) : '') + '</p>' +
+  if (U.R.mode === 'bell' && arr.length){
+    modeLine = '<p class="score-big">🔔 QUÁN QUÂN RUNG CHUÔNG VÀNG: ' + esc(arr[0].name) + ' (còn ' + ((arr[0].tc && arr[0].tc.lives) || 0) + ' ❤️ • ' + (arr[0].score || 0) + 'đ)</p>';
+  } else if (U.R.mode === 'fast' && arr.length){
+    modeLine = '<p class="score-big">⚡ NHANH NHẤT PHÒNG: ' + esc(arr[0].name) + ' — ' + (arr[0].score || 0) + ' điểm</p>';
+  }
+  document.getElementById('rsArea').innerHTML = modeLine + '<p class="wait-big">🏁 VÁN ĐẤU KẾT THÚC!<br>Em xếp hạng <b>' + myRank + '</b> với <b>' + ((U.me && U.me.score) || 0) + ' điểm</b>' + (badgeOf((U.me && U.me.score) || 0) ? ' • ' + badgeOf(U.me.score) : '') + (tcIsMode(U.R.mode) ? '<br>🎓 Điểm quy đổi theo hạng: <b>' + tcGradeByRank(myRank) + ' điểm</b> (thang 10)' : '') + '</p>' +
     '<div class="podium">' + [1, 0, 2].map(function(k){
       var p = arr[k]; if (!p) return '<div></div>';
       return '<div class="pod" style="background:linear-gradient(180deg,#b39ddb,#6a11cb)">' + medals[k] + '<br>' + esc(p.name) + '<br>' + p.score + 'đ</div>';
     }).join('') + '</div>' +
-    '<div style="max-width:520px;margin:0 auto">' + lbHTML(U.players, U.pid) + '</div>' +
+    '<div style="max-width:520px;margin:0 auto">' + lbHTML(U.players, U.pid, U.R.mode) + '</div>' +
     '<div class="btnrow" style="justify-content:center"><button class="btn alt" onclick="rsLeave()">🚪 Rời phòng</button></div>';
   if (myRank > 0 && myRank <= 3) confettiBurst();
 }
