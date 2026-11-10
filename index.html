@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Học Liệu VIP — Kho học liệu chuẩn SGK, chỉ xem</title>
+<style>
+  :root{
+    --brand1:#6a11cb; --brand2:#2575fc; --ink:#1c1440; --muted:#5b5470;
+    --gold:#f5a623; --card:#ffffff; --bg:#f2eefc;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:"Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size:17px; line-height:1.5; color:var(--ink); background:var(--bg);
+    -webkit-user-select:none; user-select:none;
+  }
+  input{ -webkit-user-select:text; user-select:text; }
+
+  /* ===== Header ===== */
+  header{
+    position:sticky; top:0; z-index:50; color:#fff;
+    background:linear-gradient(100deg, var(--brand1), var(--brand2));
+    box-shadow:0 3px 14px rgba(60,10,140,.35);
+  }
+  .head-in{max-width:1060px; margin:0 auto; padding:12px 16px 14px;}
+  .brand{display:flex; align-items:center; gap:14px;}
+  .logo{flex:0 0 auto; filter:drop-shadow(0 2px 6px rgba(0,0,0,.3));}
+  .site-name{font-size:32px; font-weight:800; letter-spacing:.5px; line-height:1.1;}
+  .site-name .vip{color:#ffd94d; text-shadow:0 1px 4px rgba(0,0,0,.35);}
+  .site-sub{font-size:16px; opacity:.95; margin-top:2px;}
+  .search-wrap{margin-top:12px;}
+  #searchInput{
+    width:100%; font-size:18px; padding:13px 18px; border:none; border-radius:999px;
+    outline:none; box-shadow:inset 0 0 0 2px rgba(255,255,255,.35);
+  }
+  #searchInput:focus{box-shadow:0 0 0 3px #ffd94d;}
+
+  main{max-width:1060px; margin:0 auto; padding:18px 16px 30px;}
+
+  /* ===== Banner phòng thi ===== */
+  .exam-banner{
+    border-radius:18px; padding:20px 22px; color:#fff; margin-bottom:20px;
+    background:linear-gradient(100deg,#b3127f,#6a11cb 55%,#2575fc);
+    box-shadow:0 6px 20px rgba(106,17,203,.35);
+    display:flex; flex-wrap:wrap; align-items:center; gap:14px;
+  }
+  .exam-banner .big{font-size:23px; font-weight:800; line-height:1.25;}
+  .exam-banner .small{font-size:16.5px; opacity:.95; margin-top:3px;}
+  .exam-btn{
+    margin-left:auto; background:#ffd94d; color:#4a2500; font-weight:800; font-size:18px;
+    padding:13px 22px; border-radius:999px; text-decoration:none; white-space:nowrap;
+    box-shadow:0 3px 10px rgba(0,0,0,.3);
+  }
+  .exam-btn:active{transform:scale(.97);}
+
+  /* ===== Chip môn ===== */
+  .chips{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:8px;}
+  .chip{
+    font-size:17.5px; font-weight:700; padding:11px 18px; border-radius:999px; cursor:pointer;
+    border:2px solid #cdbcf5; background:#fff; color:var(--ink); min-height:48px;
+  }
+  .chip .tag{font-size:13px; font-weight:800; margin-left:7px; padding:2px 8px; border-radius:999px; vertical-align:2px;}
+  .chip.on{
+    background:linear-gradient(100deg, var(--brand1), var(--brand2)); color:#fff; border-color:transparent;
+    box-shadow:0 4px 12px rgba(106,17,203,.35);
+  }
+  .chip.soonload{
+    border:2px dashed var(--gold); background:#fff8e6; color:#7a5200;
+    box-shadow:0 0 0 3px rgba(245,166,35,.18);
+  }
+  .chip.soonload .tag{background:var(--gold); color:#fff;}
+  .chip.soon{opacity:.55; border-style:dashed;}
+  .chip.soon .tag{background:#9a93ad; color:#fff;}
+  .chips-note{font-size:15.5px; color:var(--muted); margin:2px 2px 14px;}
+
+  /* ===== Tab khối ===== */
+  .khoi-tabs{display:flex; flex-wrap:wrap; gap:10px; margin:14px 0 16px;}
+  .ktab{
+    font-size:18px; font-weight:800; padding:10px 22px; border-radius:12px; cursor:pointer;
+    border:2px solid var(--brand1); background:#fff; color:var(--brand1); min-height:48px;
+  }
+  .ktab.on{background:var(--brand1); color:#fff;}
+  .bo-title{font-size:21px; font-weight:800; color:var(--brand1); margin:4px 0 12px;}
+
+  /* ===== Thẻ bài ===== */
+  .bai-card{
+    background:var(--card); border-radius:16px; margin-bottom:12px; overflow:hidden;
+    box-shadow:0 2px 10px rgba(60,20,140,.10); border:1px solid #e3dbfa;
+  }
+  .bai-head{
+    display:flex; align-items:center; gap:13px; padding:15px 16px; cursor:pointer; min-height:60px;
+  }
+  .bai-num{
+    flex:0 0 auto; min-width:64px; text-align:center; color:#fff; font-weight:800; font-size:16.5px;
+    background:linear-gradient(135deg, var(--brand1), var(--brand2)); border-radius:11px; padding:8px 6px; line-height:1.2;
+  }
+  .bai-ten{font-size:18.5px; font-weight:700; flex:1;}
+  .bai-tiet{font-size:15px; color:var(--muted); white-space:nowrap;}
+  .bai-arrow{font-size:19px; color:var(--brand1); transition:transform .2s;}
+  .bai-card.open .bai-arrow{transform:rotate(180deg);}
+  .bai-body{display:none; border-top:1px dashed #ddd3f7; padding:14px 16px 16px; background:#faf8ff;}
+  .bai-card.open .bai-body{display:block;}
+  .slots{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .slot{
+    background:#fff; border:1.5px solid #e0d6fb; border-radius:13px; padding:13px 14px;
+    display:flex; flex-direction:column; gap:6px;
+  }
+  .slot h4{font-size:17.5px;}
+  .slot .fname{font-size:14.5px; color:var(--muted); word-break:break-all;}
+  .slot .note{font-size:15.5px;}
+  .st-ok{color:#0d7a33; font-weight:800;}
+  .st-wait{color:#b06f00; font-weight:800;}
+  .view-btn{
+    margin-top:auto; align-self:flex-start; font-size:16.5px; font-weight:800; cursor:pointer;
+    color:#fff; border:none; border-radius:10px; padding:11px 20px; min-height:46px;
+    background:linear-gradient(100deg, var(--brand1), var(--brand2));
+  }
+  .view-btn:active{transform:scale(.97);}
+  a.view-btn{text-decoration:none; display:inline-block;}
+
+  /* ===== Kệ đề thi ===== */
+  .shelf{
+    margin-top:22px; background:#fff; border-radius:16px; padding:18px;
+    border:1.5px solid #ffd9a8; box-shadow:0 2px 10px rgba(180,110,0,.10);
+  }
+  .shelf h3{font-size:20px; color:#9a5b00; margin-bottom:10px;}
+  .shelf-row{
+    display:flex; align-items:center; gap:12px; padding:10px 4px; border-bottom:1px dashed #eee0c8;
+  }
+  .shelf-row:last-child{border-bottom:none;}
+  .shelf-row .nm{flex:1; font-size:16.5px; font-weight:600; word-break:break-all;}
+
+  .empty{padding:26px; text-align:center; color:var(--muted); font-size:17px;}
+
+  /* ===== Modal xem file ===== */
+  #viewerModal{
+    display:none; position:fixed; inset:0; z-index:200; background:rgba(15,5,40,.82);
+    align-items:center; justify-content:center; padding:14px;
+  }
+  #viewerModal.show{display:flex;}
+  .viewer-box{background:#fff; border-radius:16px; width:100%; max-width:920px; height:92vh; display:flex; flex-direction:column; overflow:hidden;}
+  .viewer-head{
+    display:flex; align-items:center; gap:10px; padding:12px 16px; color:#fff;
+    background:linear-gradient(100deg, var(--brand1), var(--brand2));
+  }
+  .viewer-head .t{flex:1; font-size:17.5px; font-weight:700;}
+  #viewerClose{
+    background:#ffd94d; color:#4a2500; border:none; font-weight:800; font-size:16px;
+    border-radius:9px; padding:9px 16px; cursor:pointer; min-height:44px;
+  }
+  #viewerFrame{flex:1; width:100%; border:none;}
+
+  /* ===== Toast ===== */
+  #toast{
+    display:none; position:fixed; left:50%; bottom:26px; transform:translateX(-50%);
+    z-index:300; background:#241243; color:#fff; font-size:17px; font-weight:600;
+    padding:14px 22px; border-radius:13px; max-width:92vw; text-align:center;
+    box-shadow:0 8px 24px rgba(0,0,0,.4);
+  }
+
+  footer{
+    background:#241243; color:#d9d2f5; text-align:center; padding:22px 16px; font-size:16px; line-height:1.7;
+  }
+  footer b{color:#ffd94d;}
+
+  @media (max-width:640px){
+    .site-name{font-size:26px;}
+    .site-sub{font-size:14.5px;}
+    .slots{grid-template-columns:1fr;}
+    .exam-btn{margin-left:0;}
+    .bai-ten{font-size:17px;}
+    .bai-tiet{display:none;}
+  }
+
+  /* ===== Lá chắn chỉ-xem: cấm chọn chữ + cấm in ===== */
+  @media print{
+    body *{visibility:hidden !important;}
+    body::after{
+      content:"Tài liệu chỉ xem — muốn tải, liên hệ tác giả: thầy Hồ Tấn Khải, Trường THPT Mang Thít";
+      visibility:visible; display:block; font-size:19px; padding:44px; color:#000;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-in">
+    <div class="brand">
+      <svg class="logo" width="58" height="58" viewBox="0 0 64 64" role="img" aria-label="Logo Học Liệu VIP">
+        <defs>
+          <linearGradient id="lgBrand" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#8e2de2"/><stop offset="1" stop-color="#2575fc"/>
+          </linearGradient>
+        </defs>
+        <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#lgBrand)"/>
+        <path d="M13 20c5.5-3.6 12.5-3.6 18 .4 5.5-4 12.5-4 18-.4v25c-5.5-3.6-12.5-3.6-18 .4-5.5-4-12.5-4-18-.4V20z" fill="#ffffff"/>
+        <path d="M31 20.4v25" stroke="#6a11cb" stroke-width="2.2"/>
+        <path d="M17.5 25.5c3.4-1.4 6.8-1.5 9.8-.4M17.5 31.5c3.4-1.4 6.8-1.5 9.8-.4M34.7 25.1c3-1.1 6.4-1 9.8.4M34.7 31.1c3-1.1 6.4-1 9.8.4" stroke="#9db9f2" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        <polygon points="51,6.5 53,11.4 58.2,11.7 54.2,15 55.4,20.1 51,17.2 46.6,20.1 47.8,15 43.8,11.7 49,11.4" fill="#ffd94d" stroke="#e8a100" stroke-width="1"/>
+      </svg>
+      <div>
+        <div class="site-name">HỌC LIỆU <span class="vip">VIP</span></div>
+        <div class="site-sub">Kho học liệu chuẩn SGK — Giáo án • Đề thi • Phiếu học tập • Tài liệu VIP • Thi online thời gian thực</div>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <input id="searchInput" type="text" placeholder="🔎 Tìm bài học, môn học… (ví dụ: quang hợp, tế bào, chăn nuôi)" autocomplete="off">
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="exam-banner">
+    <div>
+      <div class="big">🏆 PHÒNG THI ONLINE THỜI GIAN THỰC</div>
+      <div class="small">Học sinh vào phòng bằng mã/QR, kết quả hiện trực tiếp cho giáo viên</div>
+    </div>
+    <a class="exam-btn" href="https://khaibcmt.github.io/edumaster-pro-v2/" target="_blank" rel="noopener">Vào phòng thi ▶</a>
+  </section>
+
+  <nav class="chips" id="subjectChips" aria-label="Chọn môn học"></nav>
+  <p class="chips-note" id="chipsNote"></p>
+
+  <div id="browseArea">
+    <div class="khoi-tabs" id="khoiTabs"></div>
+    <div class="bo-title" id="boTitle"></div>
+    <div id="baiList"></div>
+    <div id="shelfArea"></div>
+  </div>
+
+  <div id="searchArea" style="display:none;">
+    <div class="bo-title" id="searchTitle"></div>
+    <div id="searchList"></div>
+  </div>
+</main>
+
+<footer>
+  <b>Học Liệu VIP</b> — Thầy Hồ Tấn Khải • Trường THPT Mang Thít<br>
+  Tài liệu chỉ để <b>XEM</b> — muốn tải về, liên hệ tác giả • Phiên bản v1
+</footer>
+
+<div id="viewerModal" role="dialog" aria-modal="true">
+  <div class="viewer-box">
+    <div class="viewer-head">
+      <span class="t" id="viewerTitle">Xem tài liệu</span>
+      <button id="viewerClose" type="button">✖ Đóng</button>
+    </div>
+    <iframe id="viewerFrame" title="Khung xem tài liệu" allowfullscreen></iframe>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+/* Cấu hình kho Drive — để trống, chờ thầy gửi link thư mục Drive mới (chỉ-xem).
+   Khi có: gắn driveId của từng file vào catalog, hoặc đặt DRIVE_ROOT rồi mở cả thư mục. */
+var DRIVE_ROOT = '';
+
+var CATALOG = /*CATALOG_START*/[{"mon": "Sinh học", "khoi": 10, "ten_bo": "Sinh học 10 — Kết nối tri thức với cuộc sống", "bai": [{"so": 1, "ten": "GIỚI THIỆU KHÁI QUÁT MÔN SINH HỌC", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_1_Gioi_thieu_khai_quat_mon_sinh_hoc_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 2, "ten": "PHƯƠNG PHÁP NGHIÊN CỨU VÀ HỌC TẬP MÔN SINH HỌC", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_2_Phuong_phap_nghien_cuu_va_hoc_tap_mon_sinh_hoc_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 3, "ten": "CÁC CẤP TỔ CHỨC CỦA THẾ GIỚI SỐNG", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_3_Cac_cap_to_chuc_cua_the_gioi_song_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 4, "ten": "CÁC NGUYÊN TỐ HOÁ HỌC VÀ NƯỚC", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_4_Cac_nguyen_to_hoa_hoc_va_nuoc_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 5, "ten": "CÁC PHÂN TỬ SINH HỌC", "so_tiet": 4, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_5_Cac_phan_tu_sinh_hoc_4_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 6, "ten": "THỰC HÀNH: NHẬN BIẾT MỘT SỐ PHÂN TỬ SINH HỌC", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_6_Thuc_hanh_Nhan_biet_mot_so_phan_tu_sinh_hoc_1_tiet.docx", "driveId": ""}, "phieu": {"co": false, "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 7, "ten": "TẾ BÀO NHÂN SƠ", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_7_Te_bao_nhan_so_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 8, "ten": "TẾ BÀO NHÂN THỰC", "so_tiet": 4, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_8_Te_bao_nhan_thuc_4_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 9, "ten": "THỰC HÀNH: QUAN SÁT TẾ BÀO", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_9_Thuc_hanh_Quan_sat_te_bao_2_tiet.docx", "driveId": ""}, "phieu": {"co": false, "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 10, "ten": "TRAO ĐỔI CHẤT QUA MÀNG TẾ BÀO", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_10_Trao_doi_chat_qua_mang_te_bao_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 11, "ten": "THỰC HÀNH: THÍ NGHIỆM CO VÀ PHẢN CO NGUYÊN SINH", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_11_Thuc_hanh_Co_va_phan_co_nguyen_sinh_1_tiet.docx", "driveId": ""}, "phieu": {"co": false, "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 12, "ten": "TRUYỀN TIN TẾ BÀO", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_12_Truyen_tin_te_bao_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 13, "ten": "KHÁI QUÁT VỀ CHUYỂN HOÁ VẬT CHẤT VÀ NĂNG LƯỢNG", "so_tiet": 3, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_13_Khai_quat_chuyen_hoa_vat_chat_va_nang_luong_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 14, "ten": "PHÂN GIẢI VÀ TỔNG HỢP CÁC CHẤT TRONG TẾ BÀO", "so_tiet": 3, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_14_Phan_giai_va_tong_hop_cac_chat_trong_te_bao_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 15, "ten": "THỰC HÀNH: THÍ NGHIỆM PHÂN TÍCH YẾU TỐ ẢNH HƯỞNG ĐẾN HOẠT TÍNH CỦA ENZYME VÀ KIỂM TRA HOẠT TÍNH CỦA ENZYME AMYLASE", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_15_Thuc_hanh_Enzyme_va_Amylase_1_tiet.docx", "driveId": ""}, "phieu": {"co": false, "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 16, "ten": "CHU KÌ TẾ BÀO VÀ NGUYÊN PHÂN", "so_tiet": 3, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_16_Chu_ki_te_bao_va_nguyen_phan_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 17, "ten": "GIẢM PHÂN", "so_tiet": 3, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_17_Giam_phan_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 18, "ten": "THỰC HÀNH: LÀM VÀ QUAN SÁT TIÊU BẢN QUÁ TRÌNH NGUYÊN PHÂN VÀ GIẢM PHÂN", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_18_Thuc_hanh_Lam_va_quan_sat_tieu_ban_nguyen_phan_va_giam_phan_2_tiet.docx", "driveId": ""}, "phieu": {"co": false, "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 19, "ten": "CÔNG NGHỆ TẾ BÀO", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_19_Cong_nghe_te_bao_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 20, "ten": "SỰ ĐA DẠNG VÀ PHƯƠNG PHÁP NGHIÊN CỨU VI SINH VẬT", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_20_Su_da_dang_va_phuong_phap_nghien_cuu_vi_sinh_vat_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 21, "ten": "TRAO ĐỔI CHẤT, SINH TRƯỞNG VÀ SINH SẢN Ở VI SINH VẬT", "so_tiet": 4, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_21_Trao_doi_chat_sinh_truong_va_sinh_san_o_vi_sinh_vat_4_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 22, "ten": "VAI TRÒ VÀ ỨNG DỤNG CỦA VI SINH VẬT", "so_tiet": 4, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_22_Vai_tro_va_ung_dung_cua_vi_sinh_vat_4_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 23, "ten": "THỰC HÀNH: MỘT SỐ PHƯƠNG PHÁP NGHIÊN CỨU VI SINH VẬT THÔNG DỤNG, TÌM HIỂU CÁC SẢN PHẨM CÔNG NGHỆ VI SINH VẬT VÀ LÀM MỘT SỐ SẢN PHẨM LÊN MEN TỪ VI SINH VẬT", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_23_Thuc_hanh_Phuong_phap_nghien_cuu_vi_sinh_vat_va_san_pham_len_men_2_tiet.docx", "driveId": ""}, "phieu": {"co": false, "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 24, "ten": "KHÁI QUÁT VỀ VIRUS", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_24_Khai_quat_ve_virus_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 25, "ten": "MỘT SỐ BỆNH DO VIRUS VÀ CÁC THÀNH TỰU NGHIÊN CỨU ỨNG DỤNG CỦA VIRUS", "so_tiet": 4, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_25_Mot_so_benh_do_virus_va_thanh_tuu_ung_dung_virus_4_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 26, "ten": "THỰC HÀNH: ĐIỀU TRA MỘT SỐ BỆNH DO VIRUS VÀ TUYÊN TRUYỀN PHÒNG CHỐNG BỆNH", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_10_Bai_26_Thuc_hanh_Dieu_tra_benh_do_virus_va_tuyen_truyen_phong_chong_1_tiet.docx", "driveId": ""}, "phieu": {"co": false, "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}], "de_thi": [{"file": "KHBD_Sinh_hoc_10_Kiem_tra_Cuoi_ki_1_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_10_Kiem_tra_Cuoi_ki_2_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_10_Kiem_tra_Giua_ki_1_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_10_Kiem_tra_Giua_ki_2_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_10_On_tap_Cuoi_ki_1_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_10_On_tap_Cuoi_ki_2_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_10_On_tap_Giua_ki_1_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_10_On_tap_Giua_ki_2_1_tiet.docx", "driveId": ""}]}, {"mon": "Sinh học", "khoi": 11, "ten_bo": "Sinh học 11 — Kết nối tri thức với cuộc sống", "bai": [{"so": 1, "ten": "KHÁI QUÁT VỀ TRAO ĐỔI CHẤT VÀ CHUYỂN HÓA NĂNG LƯỢNG TRONG SINH GIỚI", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_1_Khai_quat_ve_trao_doi_chat_va_chuyen_hoa_nang_luong_trong_sinh_gioi_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 2, "ten": "TRAO ĐỔI NƯỚC VÀ KHOÁNG Ở THỰC VẬT", "so_tiet": 4, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_2_Trao_doi_nuoc_va_khoang_o_thuc_vat_4_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 3, "ten": "THỰC HÀNH: TRAO ĐỔI NƯỚC VÀ KHOÁNG Ở THỰC VẬT", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_3_Thuc_hanh_Trao_doi_nuoc_va_khoang_o_thuc_vat_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 4, "ten": "QUANG HỢP Ở THỰC VẬT", "so_tiet": 3, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_4_Quang_hop_o_thuc_vat_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 5, "ten": "THỰC HÀNH: QUANG HỢP Ở THỰC VẬT", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_5_Thuc_hanh_Quang_hop_o_thuc_vat_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 6, "ten": "HÔ HẤP Ở THỰC VẬT", "so_tiet": 4, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_6_Ho_hap_o_thuc_vat_4_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 7, "ten": "THỰC HÀNH: HÔ HẤP Ở THỰC VẬT", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_7_Thuc_hanh_Ho_hap_o_thuc_vat_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 8, "ten": "DINH DƯỠNG VÀ TIÊU HOÁ Ở ĐỘNG VẬT", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_8_Dinh_duong_va_tieu_hoa_o_dong_vat_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 9, "ten": "HÔ HẤP Ở ĐỘNG VẬT", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_9_Ho_hap_o_dong_vat_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 10, "ten": "TUẦN HOÀN Ở ĐỘNG VẬT", "so_tiet": 3, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_10_Tuan_hoan_o_dong_vat_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 11, "ten": "THỰC HÀNH: MỘT SỐ THÍ NGHIỆM VỀ HỆ TUẦN HOÀN", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_11_Thuc_hanh_Mot_so_thi_nghiem_ve_tuan_hoan_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 12, "ten": "MIỄN DỊCH Ở ĐỘNG VẬT", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_12_Mien_dich_o_dong_vat_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 13, "ten": "BÀI TIẾT VÀ CÂN BẰNG NỘI MÔI", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_13_Bai_tiet_va_can_bang_noi_moi_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 14, "ten": "KHÁI QUÁT VỀ CẢM ỨNG Ở SINH VẬT", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_14_Khai_quat_ve_cam_ung_o_sinh_vat_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 15, "ten": "CẢM ỨNG Ở THỰC VẬT", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_15_Cam_ung_o_thuc_vat_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 16, "ten": "THỰC HÀNH: CẢM ỨNG Ở THỰC VẬT", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_16_Thuc_hanh_Cam_ung_o_thuc_vat_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 17, "ten": "CẢM ỨNG Ở ĐỘNG VẬT", "so_tiet": 4, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_17_Cam_ung_o_dong_vat_4_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 18, "ten": "TẬP TÍNH Ở ĐỘNG VẬT", "so_tiet": 3, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_18_Tap_tinh_o_dong_vat_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 19, "ten": "KHÁI QUÁT VỀ SINH TRƯỞNG VÀ PHÁT TRIỂN Ở SINH VẬT", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_19_Khai_quat_ve_sinh_truong_va_phat_trien_o_sinh_vat_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 20, "ten": "SINH TRƯỞNG VÀ PHÁT TRIỂN Ở THỰC VẬT", "so_tiet": 4, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_20_Sinh_truong_va_phat_trien_o_thuc_vat_4_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 21, "ten": "THỰC HÀNH: BẤM NGỌN, TỈA CÀNH, TÍNH TUỔI CÂY", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_21_Thuc_hanh_Bam_ngon_tia_canh_tinh_tuoi_cay_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 22, "ten": "SINH TRƯỞNG VÀ PHÁT TRIỂN Ở ĐỘNG VẬT", "so_tiet": 3, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_22_Sinh_truong_va_phat_trien_o_dong_vat_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 23, "ten": "THỰC HÀNH: QUAN SÁT QUÁ TRÌNH BIẾN THÁI Ở ĐỘNG VẬT", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_23_Thuc_hanh_Quan_sat_qua_trinh_bien_thai_o_dong_vat_1_tiet.docx", "driveId": ""}, "phieu": {"co": false, "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 24, "ten": "KHÁI QUÁT VỀ SINH SẢN Ở SINH VẬT", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_24_Khai_quat_ve_sinh_san_o_sinh_vat_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 25, "ten": "SINH SẢN Ở THỰC VẬT", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_25_Sinh_san_o_thuc_vat_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 26, "ten": "THỰC HÀNH: NHÂN GIỐNG BẰNG SINH SẢN SINH DƯỠNG VÀ THỤ PHẤN CHO CÂY", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_26_Thuc_hanh_Nhan_giong_vo_tinh_va_thu_phan_cho_cay_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 27, "ten": "SINH SẢN Ở ĐỘNG VẬT", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_27_Sinh_san_o_dong_vat_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 28, "ten": "MỐI QUAN HỆ GIỮA CÁC QUÁ TRÌNH SINH LÍ TRONG CƠ THỂ SINH VẬT", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_28_Moi_quan_he_giua_cac_qua_trinh_sinh_li_trong_co_the_sinh_vat_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 29, "ten": "MỘT SỐ NGÀNH NGHỀ LIÊN QUAN ĐẾN SINH HỌC CƠ THỂ", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_11_Bai_29_Mot_so_nganh_nghe_lien_quan_den_sinh_hoc_co_the_1_tiet.docx", "driveId": ""}, "phieu": {"co": false, "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}], "de_thi": [{"file": "KHBD_Sinh_hoc_11_Kiem_tra_Cuoi_ki_1_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_11_Kiem_tra_Cuoi_ki_2_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_11_Kiem_tra_Giua_ki_1_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_11_Kiem_tra_Giua_ki_2_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_11_On_tap_Chuong_1_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_11_On_tap_Chuong_2_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_11_On_tap_Chuong_3_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_11_On_tap_Chuong_4_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_11_On_tap_Cuoi_ki_1_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_11_On_tap_Cuoi_ki_2_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_11_On_tap_Giua_ki_1_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_11_On_tap_Giua_ki_2_1_tiet.docx", "driveId": ""}]}, {"mon": "Sinh học", "khoi": 12, "ten_bo": "Sinh học 12 — Kết nối tri thức với cuộc sống", "bai": [{"so": 1, "ten": "DNA VÀ CƠ CHẾ TÁI BẢN", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_1_DNA_va_co_che_tai_ban_DNA_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 2, "ten": "GENE, QUÁ TRÌNH TRUYỀN ĐẠT THÔNG TIN DI TRUYỀN VÀ HỆ GENE", "so_tiet": 3, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_2_Gene_qua_trinh_truyen_dat_thong_tin_di_truyen_va_he_gene_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 3, "ten": "ĐIỀU HÒA BIỂU HIỆN GENE", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_3_Dieu_hoa_bieu_hien_gene_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 4, "ten": "ĐỘT BIẾN GENE", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_4_Dot_bien_gene_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 5, "ten": "CÔNG NGHỆ GENE", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_5_Cong_nghe_di_truyen_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 6, "ten": "THỰC HÀNH: TÁCH CHIẾT DNA", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_6_Thuc_hanh_Tach_chiet_DNA_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 7, "ten": "CẤU TRÚC VÀ CHỨC NĂNG CỦA NHIỄM SẮC THỂ", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_7_Cau_truc_va_chuc_nang_cua_nhiem_sac_the_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 8, "ten": "HỌC THUYẾT DI TRUYỀN CỦA MENDEL", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_8_Hoc_thuyet_di_truyen_cua_Mendel_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 9, "ten": "MỞ RỘNG HỌC THUYẾT MENDEL", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_9_Mo_rong_hoc_thuyet_Mendel_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 10, "ten": "DI TRUYỀN GIỚI TÍNH VÀ DI TRUYỀN LIÊN KẾT VỚI GIỚI TÍNH", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_10_Di_truyen_gioi_tinh_va_di_truyen_lien_ket_voi_gioi_tinh_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 11, "ten": "LIÊN KẾT GENE VÀ HOÁN VỊ GENE", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_11_Lien_ket_gene_va_hoan_vi_gene_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 12, "ten": "ĐỘT BIẾN NHIỄM SẮC THỂ", "so_tiet": 3, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_12_Dot_bien_nhiem_sac_the_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 13, "ten": "DI TRUYỀN HỌC NGƯỜI VÀ DI TRUYỀN Y HỌC", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_13_Di_truyen_hoc_nguoi_va_di_truyen_y_hoc_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 14, "ten": "THỰC HÀNH: QUAN SÁT MỘT SỐ DẠNG ĐỘT BIẾN NHIỄM SẮC THỂ", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_14_Thuc_hanh_Quan_sat_mot_so_dang_dot_bien_nhiem_sac_the_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 15, "ten": "DI TRUYỀN GENE NGOÀI NHÂN", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_15_Di_truyen_gene_ngoai_nhan_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 16, "ten": "TƯƠNG TÁC GIỮA KIỂU GEN VỚI MÔI TRƯỜNG VÀ THÀNH TỰU CHỌN GIỐNG", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_16_Tuong_tac_giua_kieu_gen_voi_moi_truong_va_thanh_tuu_chon_giong_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 17, "ten": "THỰC HÀNH: THÍ NGHIỆM VỀ THƯỜNG BIẾN Ở CÂY TRỒNG", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_17_Thuc_hanh_Thi_nghiem_ve_thuong_bien_o_cay_trong_1_tiet.docx", "driveId": ""}, "phieu": {"co": false, "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 18, "ten": "DI TRUYỀN HỌC QUẦN THỂ", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_18_Di_truyen_hoc_quan_the_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 19, "ten": "CÁC BẰNG CHỨNG TIẾN HÓA", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_19_Cac_bang_chung_tien_hoa_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 20, "ten": "QUAN NIỆM CỦA ĐACUYN VỀ CHỌN LỌC TỰ NHIÊN VÀ HÌNH THÀNH LOÀI", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_20_Quan_niem_cua_Dacuyn_ve_chon_loc_tu_nhien_va_hinh_thanh_loai_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 21, "ten": "HỌC THUYẾT TIẾN HÓA TỔNG HỢP HIỆN ĐẠI", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_21_Hoc_thuyet_tien_hoa_tong_hop_hien_dai_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 22, "ten": "TIẾN HÓA VÀ QUÁ TRÌNH PHÁT SINH CHỦNG LOẠI", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_22_Tien_hoa_va_qua_trinh_phat_sinh_chung_loai_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 23, "ten": "MÔI TRƯỜNG VÀ CÁC NHÂN TỐ SINH THÁI", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_23_Moi_truong_va_cac_nhan_to_sinh_thai_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 24, "ten": "SINH THÁI HỌC QUẦN THỂ", "so_tiet": 3, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_24_Sinh_thai_hoc_quan_the_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 25, "ten": "THỰC HÀNH: XÁC ĐỊNH MỘT SỐ ĐẶC TRƯNG CƠ BẢN CỦA QUẦN THỂ SINH VẬT", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_25_Thuc_hanh_Xac_dinh_mot_so_dac_trung_cua_quan_the_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 26, "ten": "QUẦN XÃ SINH VẬT", "so_tiet": 3, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_26_Quan_xa_sinh_vat_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 27, "ten": "THỰC HÀNH: TÌM HIỂU CẤU TRÚC DINH DƯỠNG CỦA QUẦN XÃ TRONG TỰ NHIÊN", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_27_Thuc_hanh_Tim_hieu_cau_truc_dinh_duong_cua_quan_xa_trong_tu_nhien_1_tiet.docx", "driveId": ""}, "phieu": {"co": false, "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 28, "ten": "HỆ SINH THÁI", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_28_He_sinh_thai_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 29, "ten": "TRAO ĐỔI CHẤT VÀ CHUYỂN HÓA NĂNG LƯỢNG TRONG HỆ SINH THÁI", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_29_Trao_doi_vat_chat_va_chuyen_hoa_nang_luong_trong_he_sinh_thai_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 30, "ten": "DIỄN THẾ SINH THÁI", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_30_Dien_the_sinh_thai_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 31, "ten": "SINH QUYỂN, KHU SINH HỌC VÀ CHU TRÌNH SINH – ĐỊA – HÓA", "so_tiet": 2, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_31_Sinh_quyen_khu_sinh_hoc_va_chu_trinh_sinh_dia_hoa_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 32, "ten": "THỰC HÀNH: THIẾT KẾ HỆ SINH THÁI NHÂN TẠO", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_32_Thuc_hanh_Thiet_ke_he_sinh_thai_nhan_tao_1_tiet.docx", "driveId": ""}, "phieu": {"co": false, "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 33, "ten": "SINH THÁI HỌC PHỤC HỒI VÀ BẢO TỒN ĐA DẠNG SINH VẬT", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_33_Sinh_thai_hoc_phuc_hoi_va_bao_ton_da_dang_sinh_vat_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 34, "ten": "PHÁT TRIỂN BỀN VỮNG", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_34_Phat_trien_ben_vung_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 35, "ten": "DỰ ÁN: TÌM HIỂU THỰC TRẠNG BẢO TỒN SINH THÁI TẠI ĐỊA PHƯƠNG VÀ ĐỀ XUẤT GIẢI PHÁP BẢO TỒN", "so_tiet": 1, "giao_an": {"file": "KHBD_Sinh_hoc_12_Bai_35_Du_an_Tim_hieu_thuc_trang_bao_ton_sinh_thai_tai_dia_phuong_va_de_xuat_giai_phap_bao_ton_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}], "de_thi": [{"file": "KHBD_Sinh_hoc_12_Kiem_tra_Cuoi_ki_1_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_12_Kiem_tra_Cuoi_ki_2_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_12_Kiem_tra_Giua_ki_1_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_12_Kiem_tra_Giua_ki_2_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_12_On_tap_Chuong_1_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_12_On_tap_Chuong_2_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_12_On_tap_Chuong_3_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_12_On_tap_Chuong_4_5_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_12_On_tap_Chuong_6_7_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_12_On_tap_Cuoi_ki_1_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_12_On_tap_Cuoi_ki_2_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_12_On_tap_Giua_ki_1_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Sinh_hoc_12_On_tap_Giua_ki_2_1_tiet.docx", "driveId": ""}]}, {"mon": "Công nghệ nông nghiệp", "khoi": 10, "ten_bo": "Công nghệ nông nghiệp 10 — Trồng trọt (Kết nối tri thức)", "bai": [{"so": 1, "ten": "GIỚI THIỆU VỀ TRỒNG TRỌT", "so_tiet": 3, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_1_Gioi_thieu_ve_trong_trot_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 2, "ten": "CÂY TRỒNG VÀ CÁC YẾU TỐ CHÍNH TRONG TRỒNG TRỌT", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_2_Cay_trong_va_cac_yeu_to_chinh_trong_trong_trot_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 3, "ten": "GIỚI THIỆU VỀ ĐẤT TRỒNG", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_3_Gioi_thieu_ve_dat_trong_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 4, "ten": "SỬ DỤNG, CẢI TẠO VÀ BẢO VỆ ĐẤT TRỒNG", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_4_Su_dung_cai_tao_va_bao_ve_dat_trong_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 5, "ten": "GIÁ THỂ TRỒNG CÂY", "so_tiet": 3, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_5_Gia_the_trong_cay_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 6, "ten": "THỰC HÀNH: XÁC ĐỊNH ĐỘ CHUA VÀ ĐỘ MẶN CỦA ĐẤT", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_6_Thuc_hanh_Xac_dinh_do_chua_va_do_man_cua_dat_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 7, "ten": "GIỚI THIỆU VỀ PHÂN BÓN", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_7_Gioi_thieu_ve_phan_bon_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 8, "ten": "SỬ DỤNG VÀ BẢO QUẢN PHÂN BÓN", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_8_Su_dung_va_bao_quan_phan_bon_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 9, "ten": "ỨNG DỤNG CÔNG NGHỆ VI SINH TRONG SẢN XUẤT PHÂN BÓN", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_9_Ung_dung_cong_nghe_vi_sinh_trong_san_xuat_phan_bon_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 10, "ten": "THỰC HÀNH NHẬN BIẾT MỘT SỐ LOẠI PHÂN BÓN HÓA HỌC", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_10_Thuc_hanh_nhan_biet_mot_so_loai_phan_bon_hoa_hoc_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 11, "ten": "KHÁI NIỆM VÀ VAI TRÒ CỦA GIỐNG CÂY TRỒNG", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_11_Khai_niem_va_vai_tro_cua_giong_cay_trong_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 12, "ten": "MỘT SỐ PHƯƠNG PHÁP CHỌN TẠO GIỐNG CÂY TRỒNG", "so_tiet": 3, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_12_Mot_so_phuong_phap_chon_tao_giong_cay_trong_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 13, "ten": "NHÂN GIỐNG CÂY TRỒNG", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_13_Nhan_giong_cay_trong_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 14, "ten": "THỰC HÀNH: NHÂN GIỐNG CÂY ĂN QUẢ BẰNG PHƯƠNG PHÁP GHÉP", "so_tiet": 1, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_14_Thuc_hanh_Nhan_giong_cay_an_qua_bang_phuong_phap_ghep_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 15, "ten": "SÂU, BỆNH HẠI CÂY TRỒNG VÀ Ý NGHĨA CỦA VIỆC PHÒNG TRỪ", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_15_Sau_benh_hai_cay_trong_va_y_nghia_cua_viec_phong_tru_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 16, "ten": "MỘT SỐ SÂU HẠI CÂY TRỒNG THƯỜNG GẶP VÀ BIỆN PHÁP PHÒNG TRỪ", "so_tiet": 3, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_16_Mot_so_sau_hai_cay_trong_thuong_gap_va_bien_phap_phong_tru_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 17, "ten": "MỘT SỐ BỆNH HẠI CÂY TRỒNG THƯỜNG GẶP VÀ BIỆN PHÁP PHÒNG TRỪ", "so_tiet": 3, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_17_Mot_so_benh_hai_cay_trong_thuong_gap_va_bien_phap_phong_tru_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 18, "ten": "ỨNG DỤNG CÔNG NGHỆ VI SINH TRONG PHÒNG TRỪ SÂU, BỆNH HẠI CÂY TRỒNG", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_18_Ung_dung_cong_nghe_vi_sinh_trong_phong_tru_sau_benh_hai_cay_trong_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 19, "ten": "QUY TRÌNH TRỒNG TRỌT VÀ CƠ GIỚI HÓA TRONG TRỒNG TRỌT", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_19_Quy_trinh_trong_trot_va_co_gioi_hoa_trong_trong_trot_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 20, "ten": "CÔNG NGHỆ CAO TRONG THU HOẠCH VÀ BẢO QUẢN SẢN PHẨM TRỒNG TRỌT", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_20_Cong_nghe_cao_trong_thu_hoach_va_bao_quan_san_pham_trong_trot_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 21, "ten": "CHẾ BIẾN SẢN PHẨM TRỒNG TRỌT", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_21_Che_bien_san_pham_trong_trot_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 22, "ten": "DỰ ÁN TRỒNG HOA TRONG CHẬU", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_22_Du_an_trong_hoa_trong_chau_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 23, "ten": "GIỚI THIỆU VỀ TRỒNG TRỌT CÔNG NGHỆ CAO", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_23_Gioi_thieu_ve_trong_trot_cong_nghe_cao_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 24, "ten": "MỘT SỐ CÔNG NGHỆ CAO TRONG TRỒNG TRỌT", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_24_Mot_so_cong_nghe_cao_trong_trong_trot_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 25, "ten": "CÔNG NGHỆ TRỒNG CÂY KHÔNG DÙNG ĐẤT", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_25_Cong_nghe_trong_cay_khong_dung_dat_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 26, "ten": "SỰ CẦN THIẾT PHẢI BẢO VỆ MÔI TRƯỜNG TRONG TRỒNG TRỌT", "so_tiet": 1, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_26_Su_can_thiet_phai_bao_ve_moi_truong_trong_trong_trot_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 27, "ten": "ỨNG DỤNG CÔNG NGHỆ VI SINH TRONG BẢO VỆ MÔI TRƯỜNG VÀ XỬ LÍ CHẤT THẢI TRỒNG TRỌT", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_27_Ung_dung_cong_nghe_vi_sinh_trong_bao_ve_moi_truong_va_xu_li_chat_thai_trong_trot_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 28, "ten": "THỰC HÀNH: SỬ DỤNG RƠM, RẠ ĐỂ TRỒNG NẤM RƠM", "so_tiet": 1, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_10_Bai_28_Thuc_hanh_Su_dung_rom_ra_de_trong_nam_rom_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}], "de_thi": [{"file": "KHBD_Cong_nghe_nong_nghiep_10_Kiem_tra_Cuoi_ki_1_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Cong_nghe_nong_nghiep_10_Kiem_tra_Cuoi_ki_2_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Cong_nghe_nong_nghiep_10_Kiem_tra_Giua_ki_1_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Cong_nghe_nong_nghiep_10_Kiem_tra_Giua_ki_2_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Cong_nghe_nong_nghiep_10_On_tap_Cuoi_ki_1_2_tiet.docx", "driveId": ""}, {"file": "KHBD_Cong_nghe_nong_nghiep_10_On_tap_Cuoi_ki_2_2_tiet.docx", "driveId": ""}, {"file": "KHBD_Cong_nghe_nong_nghiep_10_On_tap_Giua_ki_1_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Cong_nghe_nong_nghiep_10_On_tap_Giua_ki_2_1_tiet.docx", "driveId": ""}]}, {"mon": "Công nghệ", "khoi": 11, "ten_bo": "Công nghệ 11 — Chăn nuôi (Kết nối tri thức)", "bai": [{"so": 1, "ten": "VAI TRÒ VÀ TRIỂN VỌNG CỦA CHĂN NUÔI", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_11_Bai_1_Vai_tro_va_trien_vong_cua_chan_nuoi_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 2, "ten": "VẬT NUÔI VÀ PHƯƠNG THỨC CHĂN NUÔI", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_11_Bai_2_Vat_nuoi_va_phuong_thuc_chan_nuoi_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 3, "ten": "KHÁI NIỆM, VAI TRÒ CỦA GIỐNG TRONG CHĂN NUÔI", "so_tiet": 1, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_11_Bai_3_Khai_niem_vai_tro_cua_giong_trong_chan_nuoi_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 4, "ten": "CHỌN GIỐNG VẬT NUÔI", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_11_Bai_4_Chon_giong_vat_nuoi_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 5, "ten": "NHÂN GIỐNG VẬT NUÔI", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_11_Bai_5_Nhan_giong_vat_nuoi_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 6, "ten": "ỨNG DỤNG CÔNG NGHỆ SINH HỌC TRONG CHỌN VÀ NHÂN GIỐNG VẬT NUÔI", "so_tiet": 3, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_11_Bai_6_Ung_dung_cong_nghe_sinh_hoc_trong_chon_va_nhan_giong_vat_nuoi_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 7, "ten": "THỨC ĂN VÀ NHU CẦU DINH DƯỠNG CỦA VẬT NUÔI", "so_tiet": 3, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_11_Bai_7_Thuc_an_va_nhu_cau_dinh_duong_cua_vat_nuoi_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 8, "ten": "SẢN XUẤT VÀ CHẾ BIẾN THỨC ĂN CHĂN NUÔI", "so_tiet": 3, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_11_Bai_8_San_xuat_va_che_bien_thuc_an_chan_nuoi_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 9, "ten": "BẢO QUẢN THỨC ĂN CHĂN NUÔI", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_11_Bai_9_Bao_quan_thuc_an_chan_nuoi_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 10, "ten": "THỰC HÀNH: CHẾ BIẾN, BẢO QUẢN THỨC ĂN CHO VẬT NUÔI", "so_tiet": 1, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_11_Bai_10_Thuc_hanh_Che_bien_bao_quan_thuc_an_cho_vat_nuoi_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 11, "ten": "VAI TRÒ CỦA PHÒNG, TRỊ BỆNH TRONG CHĂN NUÔI", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_11_Bai_11_Vai_tro_cua_phong_tri_benh_trong_chan_nuoi_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 12, "ten": "MỘT SỐ BỆNH PHỔ BIẾN Ở LỢN VÀ BIỆN PHÁP PHÒNG, TRỊ", "so_tiet": 3, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_11_Bai_12_Mot_so_benh_pho_bien_o_lon_va_bien_phap_phong_tri_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 13, "ten": "MỘT SỐ BỆNH PHỔ BIẾN Ở GIA CẦM VÀ BIỆN PHÁP PHÒNG, TRỊ", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_11_Bai_13_Mot_so_benh_pho_bien_o_gia_cam_va_bien_phap_phong_tri_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 14, "ten": "MỘT SỐ BỆNH PHỔ BIẾN Ở TRÂU, BÒ VÀ BIỆN PHÁP PHÒNG, TRỊ", "so_tiet": 3, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_11_Bai_14_Mot_so_benh_pho_bien_o_trau_bo_va_bien_phap_phong_tri_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 15, "ten": "ỨNG DỤNG CÔNG NGHỆ SINH HỌC TRONG PHÒNG, TRỊ BỆNH VẬT NUÔI", "so_tiet": 3, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_11_Bai_15_Ung_dung_cong_nghe_sinh_hoc_trong_phong_tri_benh_vat_nuoi_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 16, "ten": "CHUỒNG NUÔI VÀ BIỆN PHÁP VỆ SINH TRONG CHĂN NUÔI", "so_tiet": 3, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_11_Bai_16_Chuong_nuoi_va_bien_phap_ve_sinh_trong_chan_nuoi_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 17, "ten": "NUÔI DƯỠNG VÀ CHĂM SÓC VẬT NUÔI", "so_tiet": 4, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_11_Bai_17_Nuoi_duong_va_cham_soc_vat_nuoi_4_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 18, "ten": "CHĂN NUÔI THEO TIÊU CHUẨN VIETGAP", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_11_Bai_18_Chan_nuoi_theo_tieu_chuan_VietGAP_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 19, "ten": "CHĂN NUÔI CÔNG NGHỆ CAO", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_11_Bai_19_Chan_nuoi_cong_nghe_cao_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 20, "ten": "BẢO QUẢN VÀ CHẾ BIẾN SẢN PHẨM CHĂN NUÔI", "so_tiet": 4, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_11_Bai_20_Bao_quan_va_che_bien_san_pham_chan_nuoi_4_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 21, "ten": "SỰ CẦN THIẾT BẢO VỆ MÔI TRƯỜNG TRONG CHĂN NUÔI", "so_tiet": 3, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_11_Bai_21_Su_can_thiet_bao_ve_moi_truong_trong_chan_nuoi_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 22, "ten": "XỬ LÍ CHẤT THẢI CHĂN NUÔI", "so_tiet": 3, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_11_Bai_22_Xu_li_chat_thai_chan_nuoi_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}], "de_thi": [{"file": "KHBD_Cong_nghe_nong_nghiep_11_Kiem_tra_Cuoi_ki_1_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Cong_nghe_nong_nghiep_11_Kiem_tra_Cuoi_ki_2_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Cong_nghe_nong_nghiep_11_Kiem_tra_Giua_ki_1_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Cong_nghe_nong_nghiep_11_Kiem_tra_Giua_ki_2_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Cong_nghe_nong_nghiep_11_On_tap_Chuong_3_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Cong_nghe_nong_nghiep_11_On_tap_Chuong_5_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Cong_nghe_nong_nghiep_11_On_tap_Cuoi_ki_1_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Cong_nghe_nong_nghiep_11_On_tap_Cuoi_ki_2_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Cong_nghe_nong_nghiep_11_On_tap_Giua_ki_1_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Cong_nghe_nong_nghiep_11_On_tap_Giua_ki_2_1_tiet.docx", "driveId": ""}]}, {"mon": "Công nghệ nông nghiệp", "khoi": 12, "ten_bo": "Công nghệ nông nghiệp 12 — Lâm nghiệp – Thuỷ sản (Kết nối tri thức)", "bai": [{"so": 1, "ten": "VAI TRÒ VÀ TRIỂN VỌNG CỦA LÂM NGHIỆP", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_1_Vai_tro_va_trien_vong_cua_lam_nghiep_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 2, "ten": "CÁC HOẠT ĐỘNG LÂM NGHIỆP CƠ BẢN VÀ NGUYÊN NHÂN CHỦ YẾU LÀM SUY THOÁI TÀI NGUYÊN RỪNG", "so_tiet": 3, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_2_Cac_hoat_dong_lam_nghiep_co_ban_va_nguyen_nhan_chu_yeu_lam_suy_thoai_tai_nguyen_rung_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 3, "ten": "VAI TRÒ, NHIỆM VỤ CỦA TRỒNG VÀ CHĂM SÓC RỪNG", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_3_Vai_tro_nhiem_vu_cua_trong_va_cham_soc_rung_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 4, "ten": "QUY LUẬT SINH TRƯỞNG VÀ PHÁT TRIỂN CỦA CÂY RỪNG", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_4_Quy_luat_sinh_truong_va_phat_trien_cua_cay_rung_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 5, "ten": "KĨ THUẬT TRỒNG VÀ CHĂM SÓC RỪNG", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_5_Ki_thuat_trong_va_cham_soc_rung_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 6, "ten": "Ý NGHĨA, NHIỆM VỤ, THỰC TRẠNG CỦA VIỆC BẢO VỆ VÀ KHAI THÁC RỪNG", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_6_Y_nghia_nhiem_vu_thuc_trang_cua_viec_bao_ve_va_khai_thac_rung_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 7, "ten": "BIỆN PHÁP BẢO VỆ VÀ KHAI THÁC TÀI NGUYÊN RỪNG", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_7_Bien_phap_bao_ve_va_khai_thac_tai_nguyen_rung_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 8, "ten": "VAI TRÒ VÀ TRIỂN VỌNG CỦA THUỶ SẢN", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_8_Vai_tro_va_trien_vong_cua_thuy_san_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 9, "ten": "CÁC NHÓM THUỶ SẢN VÀ MỘT SỐ PHƯƠNG THỨC NUÔI PHỔ BIẾN", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_9_Cac_nhom_thuy_san_va_mot_so_phuong_thuc_nuoi_pho_bien_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 10, "ten": "GIỚI THIỆU VỀ MÔI TRƯỜNG NUÔI THUỶ SẢN", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_10_Gioi_thieu_ve_moi_truong_nuoi_thuy_san_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 11, "ten": "QUẢN LÍ MÔI TRƯỜNG NUÔI THUỶ SẢN", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_11_Quan_li_moi_truong_nuoi_thuy_san_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 12, "ten": "BIỆN PHÁP XỬ LÍ MÔI TRƯỜNG NUÔI THUỶ SẢN", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_12_Bien_phap_xu_li_moi_truong_nuoi_thuy_san_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 13, "ten": "VAI TRÒ CỦA GIỐNG THUỶ SẢN", "so_tiet": 1, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_13_Vai_tro_cua_giong_thuy_san_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 14, "ten": "SINH SẢN CỦA CÁ VÀ TÔM", "so_tiet": 3, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_14_Sinh_san_cua_ca_va_tom_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 15, "ten": "ỨNG DỤNG CÔNG NGHỆ SINH HỌC TRONG CHỌN VÀ NHÂN GIỐNG THUỶ SẢN", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_15_Ung_dung_cong_nghe_sinh_hoc_trong_chon_va_nhan_giong_thuy_san_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 16, "ten": "THỨC ĂN THUỶ SẢN", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_16_Thuc_an_thuy_san_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 17, "ten": "PHƯƠNG PHÁP BẢO QUẢN VÀ CHẾ BIẾN THỨC ĂN THUỶ SẢN", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_17_Phuong_phap_bao_quan_va_che_bien_thuc_an_thuy_san_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 18, "ten": "ỨNG DỤNG CÔNG NGHỆ SINH HỌC TRONG BẢO QUẢN, CHẾ BIẾN THỨC ĂN THUỶ SẢN", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_18_Ung_dung_cong_nghe_sinh_hoc_trong_bao_quan_che_bien_thuc_an_thuy_san_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 19, "ten": "CÔNG NGHỆ NUÔI MỘT SỐ LOÀI THUỶ SẢN PHỔ BIẾN Ở VIỆT NAM", "so_tiet": 3, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_19_Cong_nghe_nuoi_mot_so_loai_thuy_san_pho_bien_o_Viet_Nam_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 20, "ten": "NUÔI THUỶ SẢN THEO TIÊU CHUẨN VIETGAP", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_20_Nuoi_thuy_san_theo_tieu_chuan_VietGAP_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 21, "ten": "MỘT SỐ ỨNG DỤNG CÔNG NGHỆ CAO TRONG NUÔI THUỶ SẢN", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_21_Mot_so_ung_dung_cong_nghe_cao_trong_nuoi_thuy_san_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 22, "ten": "BẢO QUẢN VÀ CHẾ BIẾN SẢN PHẨM THUỶ SẢN", "so_tiet": 3, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_22_Bao_quan_va_che_bien_san_pham_thuy_san_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 23, "ten": "VAI TRÒ CỦA PHÒNG, TRỊ BỆNH THUỶ SẢN", "so_tiet": 1, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_23_Vai_tro_cua_phong_tri_benh_thuy_san_1_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 24, "ten": "MỘT SỐ BỆNH THUỶ SẢN PHỔ BIẾN VÀ BIỆN PHÁP PHÒNG, TRỊ", "so_tiet": 3, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_24_Mot_so_benh_thuy_san_pho_bien_va_bien_phap_phong_tri_3_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 25, "ten": "ỨNG DỤNG CÔNG NGHỆ SINH HỌC TRONG PHÒNG, TRỊ BỆNH THUỶ SẢN", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_25_Ung_dung_cong_nghe_sinh_hoc_trong_phong_tri_benh_thuy_san_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 26, "ten": "BẢO VỆ NGUỒN LỢI THUỶ SẢN", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_26_Bao_ve_nguon_loi_thuy_san_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}, {"so": 27, "ten": "KHAI THÁC NGUỒN LỢI THUỶ SẢN", "so_tiet": 2, "giao_an": {"file": "KHBD_Cong_nghe_nong_nghiep_12_Bai_27_Khai_thac_nguon_loi_thuy_san_2_tiet.docx", "driveId": ""}, "phieu": {"co": true, "ghi_chu": "3 bản: HS • HS có đáp án • GV", "driveId": ""}, "vip": {"co": false, "ghi_chu": "Đang cập nhật", "driveId": ""}}], "de_thi": [{"file": "KHBD_Cong_nghe_nong_nghiep_12_Kiem_tra_Cuoi_ki_1_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Cong_nghe_nong_nghiep_12_Kiem_tra_Cuoi_ki_2_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Cong_nghe_nong_nghiep_12_Kiem_tra_Giua_ki_1_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Cong_nghe_nong_nghiep_12_Kiem_tra_Giua_ki_2_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Cong_nghe_nong_nghiep_12_On_tap_Chuong_4_5_6_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Cong_nghe_nong_nghiep_12_On_tap_Cuoi_ki_1_2_tiet.docx", "driveId": ""}, {"file": "KHBD_Cong_nghe_nong_nghiep_12_On_tap_Cuoi_ki_2_2_tiet.docx", "driveId": ""}, {"file": "KHBD_Cong_nghe_nong_nghiep_12_On_tap_Giua_ki_1_1_tiet.docx", "driveId": ""}, {"file": "KHBD_Cong_nghe_nong_nghiep_12_On_tap_Giua_ki_2_1_tiet.docx", "driveId": ""}]}]/*CATALOG_END*/;
+
+/* Các môn chưa có dữ liệu: sapNap = có sẵn bộ file của thầy, chờ nạp; sapCo = sắp bổ sung sau */
+var EXTRA_SUBJECTS = [
+  { mon: 'Vật lí',  trang_thai: 'sap_nap' },
+  { mon: 'Hoá học', trang_thai: 'sap_nap' },
+  { mon: 'Toán',        trang_thai: 'sap_co' },
+  { mon: 'Ngữ văn',     trang_thai: 'sap_co' },
+  { mon: 'Tiếng Anh',   trang_thai: 'sap_co' },
+  { mon: 'Lịch sử',     trang_thai: 'sap_co' },
+  { mon: 'Địa lí',      trang_thai: 'sap_co' },
+  { mon: 'Tin học',     trang_thai: 'sap_co' },
+  { mon: 'KHTN',        trang_thai: 'sap_co' }
+];
+
+var state = { mon: null, khoi: null };
+
+function esc(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+function boOf(mon, khoi){
+  for (var i = 0; i < CATALOG.length; i++)
+    if (CATALOG[i].mon === mon && CATALOG[i].khoi === khoi) return CATALOG[i];
+  return null;
+}
+function khoisOf(mon){
+  var ks = [];
+  CATALOG.forEach(function(b){ if (b.mon === mon && ks.indexOf(b.khoi) < 0) ks.push(b.khoi); });
+  return ks.sort(function(a, b){ return a - b; });
+}
+function monsAvailable(){
+  var ms = [];
+  CATALOG.forEach(function(b){ if (ms.indexOf(b.mon) < 0) ms.push(b.mon); });
+  return ms;
+}
+
+/* ---------- Toast ---------- */
+var toastTimer = null;
+function showToast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.style.display = 'none'; }, 3400);
+}
+
+/* ---------- Xem tài liệu ---------- */
+function openDoc(slot, title){
+  if (slot && slot.driveId){
+    var m = document.getElementById('viewerModal');
+    document.getElementById('viewerTitle').textContent = title || 'Xem tài liệu';
+    document.getElementById('viewerFrame').src =
+      'https://drive.google.com/file/d/' + slot.driveId + '/preview';
+    m.classList.add('show');
+  } else if (DRIVE_ROOT){
+    window.open(DRIVE_ROOT, '_blank');
+  } else {
+    showToast('⏳ Tài liệu đang được nạp lên kho — thầy cô quay lại tối nay nhé!');
+  }
+}
+function closeViewer(){
+  document.getElementById('viewerModal').classList.remove('show');
+  document.getElementById('viewerFrame').src = 'about:blank';
+}
+document.getElementById('viewerClose').addEventListener('click', closeViewer);
+document.getElementById('viewerModal').addEventListener('click', function(e){
+  if (e.target === this) closeViewer();
+});
+
+/* ---------- Chip môn ---------- */
+function renderChips(){
+  var wrap = document.getElementById('subjectChips');
+  var html = '';
+  monsAvailable().forEach(function(mon){
+    var on = (state.mon === mon && !isSearching()) ? ' on' : '';
+    html += '<button type="button" class="chip' + on + '" data-mon="' + esc(mon) + '">' + esc(mon) + '</button>';
+  });
+  EXTRA_SUBJECTS.forEach(function(s){
+    if (s.trang_thai === 'sap_nap'){
+      html += '<button type="button" class="chip soonload" data-extra="' + esc(s.mon) + '" data-tt="sap_nap">' +
+              esc(s.mon) + '<span class="tag">SẮP NẠP</span></button>';
+    } else {
+      html += '<button type="button" class="chip soon" data-extra="' + esc(s.mon) + '" data-tt="sap_co">' +
+              esc(s.mon) + '<span class="tag">SẮP CÓ</span></button>';
+    }
+  });
+  wrap.innerHTML = html;
+  wrap.querySelectorAll('[data-mon]').forEach(function(btn){
+    btn.addEventListener('click', function(){ pickMon(btn.getAttribute('data-mon')); });
+  });
+  wrap.querySelectorAll('[data-extra]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      if (btn.getAttribute('data-tt') === 'sap_nap'){
+        showToast('📦 Môn ' + btn.getAttribute('data-extra') + ': thầy đã có sẵn trọn bộ file — đang chờ nạp lên kho, thầy cô quay lại sau nhé!');
+      } else {
+        showToast('🌱 Môn ' + btn.getAttribute('data-extra') + ' sắp được bổ sung vào kho — thầy cô đón chờ nhé!');
+      }
+    });
+  });
+  document.getElementById('chipsNote').textContent =
+    '⭐ Hai môn Vật lí và Hoá học: Sắp nạp — có sẵn bộ file của thầy, chờ đưa lên kho Drive mới.';
+}
+function pickMon(mon){
+  state.mon = mon;
+  var ks = khoisOf(mon);
+  if (ks.indexOf(state.khoi) < 0) state.khoi = ks[0];
+  renderAll();
+}
+
+/* ---------- Duyệt theo bộ ---------- */
+function renderKhoiTabs(){
+  var wrap = document.getElementById('khoiTabs');
+  var html = '';
+  khoisOf(state.mon).forEach(function(k){
+    html += '<button type="button" class="ktab' + (state.khoi === k ? ' on' : '') +
+            '" data-khoi="' + k + '">Khối ' + k + '</button>';
+  });
+  wrap.innerHTML = html;
+  wrap.querySelectorAll('[data-khoi]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      state.khoi = parseInt(btn.getAttribute('data-khoi'), 10); renderAll();
+    });
+  });
+}
+
+var RENDERED = [];   /* danh sách bài đang hiển thị (cho nút Xem tra đúng slot) */
+function slotHtml(icon, label, info, okText, waitText, co, onclick){
+  var st = co ? '<span class="st-ok">✅ ' + okText + '</span>'
+              : '<span class="st-wait">🕐 ' + waitText + '</span>';
+  var btn = onclick
+    ? '<button type="button" class="view-btn" onclick="' + onclick + '">👁 Xem</button>' : '';
+  return '<div class="slot"><h4>' + icon + ' ' + label + '</h4>' +
+         (info ? '<div class="fname">' + info + '</div>' : '') +
+         '<div class="note">' + st + '</div>' + btn + '</div>';
+}
+function baiCardHtml(b, idx, boLabel){
+  var badge = 'Bài ' + b.so;
+  var head = '<div class="bai-head">' +
+    '<div class="bai-num">' + badge + '</div>' +
+    '<div class="bai-ten">' + esc(b.ten) + (boLabel ? ' <span style="color:#5b5470;font-size:14.5px;">(' + esc(boLabel) + ')</span>' : '') + '</div>' +
+    '<div class="bai-tiet">' + (b.so_tiet ? b.so_tiet + ' tiết' : '') + '</div>' +
+    '<div class="bai-arrow">▾</div></div>';
+  var ga = b.giao_an;
+  var slots =
+    slotHtml('📗', 'Giáo án', ga ? esc(ga.file) : '', 'Đã có sẵn', 'Đang cập nhật', !!ga,
+             ga ? 'xemGiaoAn(' + idx + ')' : '') +
+    slotHtml('🧾', 'Phiếu học tập', b.phieu && b.phieu.co ? esc(b.phieu.ghi_chu || '') : '',
+             'Đã có sẵn', 'Đang cập nhật', !!(b.phieu && b.phieu.co),
+             (b.phieu && b.phieu.co) ? 'xemPhieu(' + idx + ')' : '') +
+    slotHtml('💎', 'Tài liệu tham khảo VIP', 'Tài liệu chọn lọc dành cho thầy cô', 'Đã có sẵn',
+             'Đang cập nhật', !!(b.vip && b.vip.co), 'xemVip(' + idx + ')') +
+    '<div class="slot"><h4>🏆 Thi online</h4>' +
+      '<div class="note"><span class="st-ok">✅ Sẵn sàng</span></div>' +
+      '<a class="view-btn" href="https://khaibcmt.github.io/edumaster-pro-v2/" target="_blank" rel="noopener">👁 Vào phòng thi</a></div>';
+  return '<article class="bai-card" data-idx="' + idx + '">' + head +
+         '<div class="bai-body"><div class="slots">' + slots + '</div></div></article>';
+}
+function bindCards(container){
+  container.querySelectorAll('.bai-card .bai-head').forEach(function(h){
+    h.addEventListener('click', function(){ h.parentElement.classList.toggle('open'); });
+  });
+}
+function xemGiaoAn(i){ var b = RENDERED[i]; if (b) openDoc(b.giao_an, 'Giáo án — Bài ' + b.so + ': ' + b.ten); }
+function xemPhieu(i){ var b = RENDERED[i]; if (b) openDoc(b.phieu, 'Phiếu học tập — Bài ' + b.so + ': ' + b.ten); }
+function xemVip(i){ var b = RENDERED[i]; if (b) openDoc(b.vip, 'Tài liệu VIP — Bài ' + b.so + ': ' + b.ten); }
+
+function renderBrowse(){
+  renderKhoiTabs();
+  var bo = boOf(state.mon, state.khoi);
+  var list = document.getElementById('baiList');
+  var shelf = document.getElementById('shelfArea');
+  if (!bo){
+    document.getElementById('boTitle').textContent = '';
+    list.innerHTML = '<div class="empty">Chưa có dữ liệu cho lựa chọn này.</div>';
+    shelf.innerHTML = ''; RENDERED = []; return;
+  }
+  document.getElementById('boTitle').textContent = '📚 ' + bo.ten_bo + ' — ' + bo.bai.length + ' bài theo đúng trình tự SGK';
+  RENDERED = bo.bai;
+  list.innerHTML = bo.bai.map(function(b, i){ return baiCardHtml(b, i, ''); }).join('');
+  bindCards(list);
+  if (bo.de_thi && bo.de_thi.length){
+    var rows = bo.de_thi.map(function(d, i){
+      return '<div class="shelf-row"><div class="nm">📄 ' + esc(d.file) + '</div>' +
+             '<button type="button" class="view-btn" onclick="xemDeThi(' + i + ')">👁 Xem</button></div>';
+    }).join('');
+    shelf.innerHTML = '<section class="shelf"><h3>📝 ĐỀ THI • ÔN TẬP • KIỂM TRA — ' +
+                      esc(bo.ten_bo.split(' — ')[0]) + '</h3>' + rows + '</section>';
+  } else {
+    shelf.innerHTML = '';
+  }
+}
+var CURRENT_BO = null;
+function xemDeThi(i){
+  var bo = boOf(state.mon, state.khoi);
+  if (bo && bo.de_thi[i]) openDoc(bo.de_thi[i], 'Đề thi / Ôn tập / Kiểm tra — ' + bo.de_thi[i].file);
+}
+
+/* ---------- Tìm kiếm ---------- */
+function isSearching(){
+  var q = document.getElementById('searchInput').value.trim();
+  return q.length > 0;
+}
+function renderSearch(){
+  var q = document.getElementById('searchInput').value.trim().toLowerCase();
+  var area = document.getElementById('searchArea');
+  var browse = document.getElementById('browseArea');
+  if (!q){ area.style.display = 'none'; browse.style.display = ''; renderBrowse(); return; }
+  browse.style.display = 'none'; area.style.display = '';
+  var hits = [];
+  CATALOG.forEach(function(bo){
+    bo.bai.forEach(function(b){
+      if (b.ten.toLowerCase().indexOf(q) >= 0 || bo.mon.toLowerCase().indexOf(q) >= 0 ||
+          bo.ten_bo.toLowerCase().indexOf(q) >= 0){
+        hits.push({ b: b, label: bo.mon + ' ' + bo.khoi });
+      }
+    });
+  });
+  document.getElementById('searchTitle').textContent =
+    '🔎 Tìm thấy ' + hits.length + ' bài khớp "' + document.getElementById('searchInput').value.trim() + '"';
+  RENDERED = hits.map(function(h){ return h.b; });
+  var list = document.getElementById('searchList');
+  list.innerHTML = hits.length
+    ? hits.map(function(h, i){ return baiCardHtml(h.b, i, h.label); }).join('')
+    : '<div class="empty">Không tìm thấy bài nào khớp. Thầy cô thử từ khoá khác nhé!</div>';
+  bindCards(list);
+}
+document.getElementById('searchInput').addEventListener('input', function(){
+  renderChips(); renderSearch();
+});
+
+function renderAll(){
+  renderChips();
+  if (isSearching()) renderSearch(); else renderBrowse();
+}
+
+/* Khởi tạo: chọn môn đầu tiên có dữ liệu */
+(function init(){
+  var ms = monsAvailable();
+  state.mon = ms[0];
+  state.khoi = khoisOf(state.mon)[0];
+  renderAll();
+})();
+
+/* ================================================================
+   LÁ CHẮN "CHỈ XEM" (port từ EduMaster Pro bản V23, áp cho MỌI khách —
+   trang này không có vai trò Admin):
+   cấm chuột phải, cấm copy/cắt ngoài ô nhập, cấm Ctrl+U / Ctrl+S / Ctrl+P /
+   Ctrl+Shift+I,J,C,K / F12, cấm chọn tất cả ngoài ô nhập, cấm kéo thả ảnh/link,
+   cấm chọn chữ (CSS) và cấm in (CSS print).
+   Đây là lớp ngăn sao chép/tải lén với người dùng phổ thông;
+   muốn tải thật thì liên hệ tác giả. */
+function shieldActive(){ return true; }
+function shieldInField(t){
+  if (!t) return false;
+  if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable) return true;
+  if (t.closest){ try { return !!t.closest('input,textarea,[contenteditable]'); } catch(e){ return false; } }
+  return false;
+}
+document.addEventListener('contextmenu', function(e){ if (shieldActive() && !shieldInField(e.target)) e.preventDefault(); });
+document.addEventListener('copy', function(e){ if (shieldActive() && !shieldInField(e.target)) e.preventDefault(); });
+document.addEventListener('cut', function(e){ if (shieldActive() && !shieldInField(e.target)) e.preventDefault(); });
+document.addEventListener('dragstart', function(e){ if (shieldActive() && e.target && (e.target.tagName === 'IMG' || e.target.tagName === 'A')) e.preventDefault(); });
+document.addEventListener('keydown', function(e){
+  if (!shieldActive()) return;
+  var k = String(e.key || '');
+  var combo = e.ctrlKey || e.metaKey;
+  if (k === 'F12'){ e.preventDefault(); return; }
+  if (combo && e.shiftKey && ['I', 'J', 'C', 'K'].indexOf(k.toUpperCase()) >= 0){ e.preventDefault(); return; }
+  if (combo && ['u', 's', 'p'].indexOf(k.toLowerCase()) >= 0){ e.preventDefault(); return; }
+  if (combo && k.toLowerCase() === 'a' && !shieldInField(e.target)){ e.preventDefault(); return; }
+});
+(function(){
+  try {
+    var css = 'body{-webkit-user-select:none;user-select:none}body input,body textarea,body [contenteditable]{-webkit-user-select:text;user-select:text}@media print{body *{visibility:hidden!important}body::after{content:"Tài liệu chỉ xem — muốn tải, liên hệ tác giả: thầy Hồ Tấn Khải, Trường THPT Mang Thít";visibility:visible;display:block;font-size:19px;padding:44px}}';
+    var st = document.createElement('style'); st.id = 'shieldCss'; st.textContent = css;
+    if (document.head) document.head.appendChild(st);
+  } catch(e){}
+})();
+</script>
+</body>
+</html>
