@@ -757,8 +757,7 @@ body.hs-mode header,body.hs-mode footer,body.hs-mode .exam-banner,body.hs-mode #
     <iframe id="viewerFrame" title="Khung xem tài liệu" allowfullscreen></iframe>
     <div class="viewer-foot" id="viewerFoot" style="display:none">
       <a id="viewerNewTab" href="#" target="_blank" rel="noopener">↗ Mở trong tab mới</a>
-      <a id="viewerUpload" href="https://drive.google.com/drive/folders/1lYN66GXeceThgiueLdaQIbygLyaLiE_e" target="_blank" rel="noopener">⬆️ Tải lên</a>
-      <span>Nếu khung xem không tải được thư mục (một số trình duyệt chặn), thầy cô bấm nút này để mở kho trong tab mới. Nút <b>Tải lên</b> mở kho Drive để thầy thả file vào — file lên Drive là hiện ngay trong khung Xem.</span>
+      <span>Nếu khung xem không tải được thư mục (một số trình duyệt chặn), thầy cô bấm nút này để mở kho trong tab mới.</span>
     </div>
   </div>
 </div>
@@ -834,7 +833,6 @@ function viewerOpenFolder(hint){
   var h = document.getElementById('viewerHint');
   var f = document.getElementById('viewerFoot');
   document.getElementById('viewerNewTab').href = DRIVE_ROOT;
-  document.getElementById('viewerUpload').href = DRIVE_ROOT;
   h.textContent = hint || '';
   h.style.display = hint ? 'block' : 'none';
   f.style.display = 'flex';
