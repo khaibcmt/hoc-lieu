@@ -428,8 +428,13 @@ body.hs-mode header,body.hs-mode footer,body.hs-mode .exam-banner,body.hs-mode #
   .tc-clock{font-size:15px;background:#3a2d63;border-radius:999px;padding:3px 12px;}
   .sp-name{width:100%;font-size:19px;padding:13px;border-radius:12px;border:2px solid #4a3a80;background:#241b3f;color:#fff;font-family:inherit;font-weight:700;}
   .sp-bigbtn{width:100%;border:0;border-radius:14px;padding:16px;font-size:19px;font-weight:900;color:#4a2500;background:linear-gradient(135deg,#ffb300,#ff8f00);cursor:pointer;font-family:inherit;margin-top:12px;}
-  .tn-shelf{border:2px dashed #b8860b;background:#fffdf4;border-radius:14px;padding:14px 16px;margin-top:14px;}
+  .tn-shelf{border:2px dashed #b8860b;background:#fffdf4;border-radius:14px;padding:14px 16px;margin:0 0 14px;}
   .tn-shelf h3{margin:0 0 8px;color:#7a5200;}
+  .tn-shelf .tn-folder .nm{font-size:18px;}
+  .tn-shelf .tn-folder{border-bottom:1px solid #eadfc0;}
+  .tn-shelf .tn-wait{margin:2px 0 8px 28px;}
+  .tn-shelf .tn-uphint{margin:0 0 10px 28px;font-size:13.5px;opacity:.85;}
+  .tn-shelf a.tn-up{text-decoration:none;}
 
   /* ===== Lá chắn chỉ-xem: cấm chọn chữ + cấm in ===== */
   @media print{
@@ -486,9 +491,9 @@ body.hs-mode header,body.hs-mode footer,body.hs-mode .exam-banner,body.hs-mode #
   <div id="browseArea">
     <div class="khoi-tabs" id="khoiTabs"></div>
     <div class="bo-title" id="boTitle"></div>
+    <div id="tnShelfArea"></div>
     <div id="baiList"></div>
     <div id="shelfArea"></div>
-    <div id="tnShelfArea"></div>
   </div>
 
   <div id="searchArea" style="display:none;">
@@ -739,7 +744,7 @@ body.hs-mode header,body.hs-mode footer,body.hs-mode .exam-banner,body.hs-mode #
 
 <footer>
   <b>Học Liệu VIP</b> — Thầy Hồ Tấn Khải • Trường THPT Mang Thít<br>
-  Tài liệu chỉ để <b>XEM</b> — muốn tải về, liên hệ tác giả • Phòng thi online chạy ngay trong trang • Phiên bản v8
+  Tài liệu chỉ để <b>XEM</b> — muốn tải về, liên hệ tác giả • Phòng thi online chạy ngay trong trang • Phiên bản v9
 </footer>
 
 <div id="viewerModal" role="dialog" aria-modal="true">
@@ -752,7 +757,8 @@ body.hs-mode header,body.hs-mode footer,body.hs-mode .exam-banner,body.hs-mode #
     <iframe id="viewerFrame" title="Khung xem tài liệu" allowfullscreen></iframe>
     <div class="viewer-foot" id="viewerFoot" style="display:none">
       <a id="viewerNewTab" href="#" target="_blank" rel="noopener">↗ Mở trong tab mới</a>
-      <span>Nếu khung xem không tải được thư mục (một số trình duyệt chặn), thầy cô bấm nút này để mở kho trong tab mới.</span>
+      <a id="viewerUpload" href="https://drive.google.com/drive/folders/1lYN66GXeceThgiueLdaQIbygLyaLiE_e" target="_blank" rel="noopener">⬆️ Tải lên</a>
+      <span>Nếu khung xem không tải được thư mục (một số trình duyệt chặn), thầy cô bấm nút này để mở kho trong tab mới. Nút <b>Tải lên</b> mở kho Drive để thầy thả file vào — file lên Drive là hiện ngay trong khung Xem.</span>
     </div>
   </div>
 </div>
@@ -828,6 +834,7 @@ function viewerOpenFolder(hint){
   var h = document.getElementById('viewerHint');
   var f = document.getElementById('viewerFoot');
   document.getElementById('viewerNewTab').href = DRIVE_ROOT;
+  document.getElementById('viewerUpload').href = DRIVE_ROOT;
   h.textContent = hint || '';
   h.style.display = hint ? 'block' : 'none';
   f.style.display = 'flex';
@@ -3309,7 +3316,7 @@ function hlExamBoot(){
 /* ================= v8: TỰ LUYỆN THEO BÀI + GIAO LINK KHUNG GIỜ + TỔ HỢP CÂU HỎI + KỆ ÔN THI TN ================= */
 var LS_NAME = 'hoclieu_student_name', LS_RESULT = 'hoclieu_practice_results',
     LS_TASK_LOCAL = 'hoclieu_tasks_local', LS_MIX = 'hoclieu_mix_saved';
-var TN_SUBJECTS = ['Sinh học', 'Vật lí', 'Hoá học', 'Toán', 'Ngữ văn', 'Tiếng Anh', 'Lịch sử', 'Địa lí'];
+var TN_SUBJECTS = ['Sinh học', 'Công nghệ nông nghiệp', 'Vật lí', 'Hoá học', 'Toán', 'Ngữ văn', 'Tiếng Anh', 'Lịch sử', 'Địa lí'];
 var LET4 = ['A', 'B', 'C', 'D'];
 var SP = null;      /* phiên tự luyện / làm bài giao link đang chạy */
 var SP_TIMER = null;
@@ -3359,28 +3366,61 @@ function lsGet(k, dft){ try { var v = localStorage.getItem(k); return v ? JSON.p
 function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
 function spStudentName(){ try { return localStorage.getItem(LS_NAME) || ''; } catch(e){ return ''; } }
 
-/* ---------- Kệ 🎓 ÔN THI TỐT NGHIỆP (theo môn thi tốt nghiệp THPT) ---------- */
+/* ---------- Ô 🎓 ÔN THI TỐT NGHIỆP — ngay trên trang danh sách bài của từng bộ ----------
+   Đúng 1 ô cho mỗi bộ (dưới tiêu đề bộ, trên Bài 1), bên trong có đúng 2 thư mục:
+   📚 Tài liệu ôn thi + 📝 Đề thi tốt nghiệp. Nút Xem mở kho Drive kèm gợi ý đường đi
+   Môn → Ôn thi tốt nghiệp → thư mục con. Dữ liệu (khi thầy nạp): bo.on_thi_tn =
+   [{file, driveId, loai}] với loai = 'de' → Đề thi tốt nghiệp, còn lại → Tài liệu ôn thi. */
+var TN_FOLDERS = [
+  { kind: 'tl', icon: '📚', ten: 'Tài liệu ôn thi' },
+  { kind: 'de', icon: '📝', ten: 'Đề thi tốt nghiệp' }
+];
+function tnFilesOf(bo, kind){
+  var out = [];
+  if (bo && bo.on_thi_tn) bo.on_thi_tn.forEach(function(d){ if ((d.loai === 'de' ? 'de' : 'tl') === kind) out.push(d); });
+  return out;
+}
+/* Link kho Drive gốc để nút "⬆️ Tải lên" mở ra cho thầy thả file vào.
+   Web tĩnh KHÔNG tự ghi file lên Drive (không đăng nhập Google theo chỉ đạo của thầy) —
+   nút này chỉ MỞ thư mục Drive; file thầy thả vào Drive sẽ hiện trong khung Xem. */
+function tnDriveUrl(){
+  try { if (typeof DRIVE_ROOT !== 'undefined' && DRIVE_ROOT) return DRIVE_ROOT; } catch (e) {}
+  return 'https://drive.google.com/drive/folders/1lYN66GXeceThgiueLdaQIbygLyaLiE_e';
+}
+var TN_UPLOAD_HINT = 'Bấm Tải lên để mở kho Drive rồi thả file vào — file lên Drive là hiện ngay trong khung Xem';
 window.renderTnShelf = function(){
   var area = document.getElementById('tnShelfArea'); if (!area) return;
   if (!state || TN_SUBJECTS.indexOf(state.mon) < 0){ area.innerHTML = ''; return; }
   var bo = boOf(state.mon, state.khoi);
-  var files = (bo && bo.on_thi_tn) ? bo.on_thi_tn : null;
-  var rows;
-  if (files && files.length){
-    rows = files.map(function(d, i){
-      return '<div class="shelf-row"><div class="nm">🎓 ' + esc(d.file) + '</div>' +
-             '<button type="button" class="view-btn" onclick="xemOnThiTn(' + i + ')">👁 Xem</button></div>';
-    }).join('');
-  } else {
-    rows = '<p class="note" style="margin:0">🕐 <b>Đang chờ thầy nạp file</b> — thầy đặt tài liệu ôn thi + đề thi tốt nghiệp vào thư mục <b>“Ôn thi tốt nghiệp”</b> trong kho Drive (môn ' + esc(state.mon) + ') là hiện ở đây để học sinh xem (chỉ xem, theo lá chắn chỉ-xem như mọi tài liệu của kho).</p>' +
-      '<div class="btnrow"><button type="button" class="view-btn" onclick="xemOnThiTn(-1)">📂 Mở kho để tìm thư mục Ôn thi tốt nghiệp</button></div>';
-  }
-  area.innerHTML = '<section class="tn-shelf"><h3>🎓 ÔN THI TỐT NGHIỆP — ' + esc(state.mon) + '</h3>' + rows + '</section>';
+  if (!bo){ area.innerHTML = ''; return; }
+  var rows = TN_FOLDERS.map(function(f){
+    var files = tnFilesOf(bo, f.kind);
+    var h = '<div class="shelf-row tn-folder"><div class="nm">' + f.icon + ' <b>' + f.ten + '</b></div>' +
+            '<button type="button" class="view-btn" onclick="xemOnThiTnFolder(\'' + f.kind + '\')">👁 Xem</button>' +
+            '<a class="view-btn tn-up" href="' + tnDriveUrl() + '" target="_blank" rel="noopener">⬆️ Tải lên</a></div>';
+    if (files.length){
+      h += files.map(function(d, i){
+        return '<div class="shelf-row"><div class="nm">📄 ' + esc(d.file) + '</div>' +
+               '<button type="button" class="view-btn" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + i + ')">👁 Xem</button></div>';
+      }).join('');
+    } else {
+      h += '<p class="note tn-wait">🕐 Đang chờ thầy nạp file</p>';
+    }
+    h += '<p class="note tn-uphint">' + TN_UPLOAD_HINT + '</p>';
+    return h;
+  }).join('');
+  area.innerHTML = '<section class="tn-shelf"><h3>🎓 ÔN THI TỐT NGHIỆP — ' + esc(state.mon) + ' ' + esc(state.khoi) + '</h3>' + rows + '</section>';
 };
-window.xemOnThiTn = function(i){
-  var bo = boOf(state.mon, state.khoi);
-  var slot = (bo && bo.on_thi_tn && bo.on_thi_tn[i]) ? bo.on_thi_tn[i] : { file: '', driveId: '' };
-  openDoc(slot, '🎓 Ôn thi tốt nghiệp — ' + state.mon + (slot.file ? ' — ' + slot.file : ''));
+window.xemOnThiTnFolder = function(kind){
+  var f = TN_FOLDERS.filter(function(x){ return x.kind === kind; })[0] || TN_FOLDERS[0];
+  document.getElementById('viewerTitle').textContent =
+    '🎓 Ôn thi tốt nghiệp — ' + state.mon + ' ' + state.khoi + ' — ' + f.ten;
+  viewerOpenFolder('Trong kho: mở thư mục ' + state.mon + ' → Ôn thi tốt nghiệp → ' + f.ten +
+    ' → chọn file để xem ngay trong khung (chỉ xem, không tải về).');
+};
+window.xemOnThiTnFile = function(kind, i){
+  var files = tnFilesOf(boOf(state.mon, state.khoi), kind);
+  if (files[i]) openDoc(files[i], '🎓 Ôn thi tốt nghiệp — ' + state.mon + ' — ' + files[i].file);
 };
 
 /* ---------- Màn hình dùng chung: tự luyện + bài giao link ---------- */
