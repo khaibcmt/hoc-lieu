@@ -73,6 +73,13 @@
   .chip.soonload .tag{background:var(--gold); color:#fff;}
   .chip.soon{opacity:.55; border-style:dashed;}
   .chip.soon .tag{background:#9a93ad; color:#fff;}
+  .chip.drive{border-color:#1e9e62;}
+  .chip.drive .tag{background:#1e9e62; color:#fff;}
+  /* ===== Trang môn dạng thư mục Drive (đã có kho, chưa có catalog từng bài) ===== */
+  .drive-mon{border:1.5px solid #d9d2f2; border-radius:12px; background:#fff; padding:14px 16px;}
+  .drive-status{font-size:16px; line-height:1.55; margin:0 0 10px;}
+  .drive-actions{margin:0 0 12px;}
+  .drive-frame{width:100%; height:560px; border:1px solid #e3ddf5; border-radius:10px; background:#fff;}
   .chips-note{font-size:15.5px; color:var(--muted); margin:2px 2px 14px;}
 
   /* ===== Tab khối ===== */
@@ -753,7 +760,7 @@ body.hs-mode header,body.hs-mode footer,body.hs-mode .exam-banner,body.hs-mode #
 
 <footer>
   <b>Học Liệu VIP</b> — Thầy Hồ Tấn Khải • Trường THPT Mang Thít<br>
-  Tài liệu chỉ để <b>XEM</b> — muốn tải về, liên hệ tác giả • Phòng thi online chạy ngay trong trang • Phiên bản v10
+  Tài liệu chỉ để <b>XEM</b> — muốn tải về, liên hệ tác giả • Phòng thi online chạy ngay trong trang • Phiên bản v11
 </footer>
 
 <div id="viewerModal" role="dialog" aria-modal="true">
@@ -787,7 +794,7 @@ var BANKS = /*BANK_START*/{"Sinh học 10|1": {"mc": [["Đối tượng nghiên 
 
 /* Các môn chưa có dữ liệu: sapNap = có sẵn bộ file của thầy, chờ nạp; sapCo = sắp bổ sung sau */
 var EXTRA_SUBJECTS = [
-  { mon: 'Vật lí',  trang_thai: 'sap_nap' },
+  { mon: 'Vật lí',  trang_thai: 'drive_folder', driveId: '1grcvYfrmN-ipdlTCM2BOmS62gqBcRPfY' },
   { mon: 'Hoá học', trang_thai: 'sap_nap' },
   { mon: 'Toán',        trang_thai: 'sap_co' },
   { mon: 'Ngữ văn',     trang_thai: 'sap_co' },
@@ -798,6 +805,19 @@ var EXTRA_SUBJECTS = [
   { mon: 'KHTN',        trang_thai: 'sap_co' },
   { mon: 'Công nghệ công nghiệp', trang_thai: 'sap_co' }
 ];
+
+function extraSubjectOf(mon){
+  for (var i = 0; i < EXTRA_SUBJECTS.length; i++)
+    if (EXTRA_SUBJECTS[i].mon === mon) return EXTRA_SUBJECTS[i];
+  return null;
+}
+/* Môn đã có thư mục Drive riêng nhưng CHƯA có catalog từng bài (vd Vật lí):
+   trang môn hiển thị thẳng khung thư mục Drive của môn đó. */
+function driveSubjectOf(mon){
+  var s = extraSubjectOf(mon);
+  return (s && s.trang_thai === 'drive_folder' && s.driveId) ? s : null;
+}
+function driveFolderUrl(folderId){ return 'https://drive.google.com/drive/folders/' + folderId; }
 
 var state = { mon: null, khoi: null };
 
@@ -837,16 +857,16 @@ function boOpenRoot(){
     if (CATALOG[i].mon === state.mon) return CATALOG[i];
   return null;
 }
-function viewerOpenFolder(hint){
+function viewerOpenFolder(hint, folderId, folderUrl){
   var m = document.getElementById('viewerModal');
   var h = document.getElementById('viewerHint');
   var f = document.getElementById('viewerFoot');
-  document.getElementById('viewerNewTab').href = DRIVE_ROOT;
+  document.getElementById('viewerNewTab').href = folderUrl || DRIVE_ROOT;
   h.textContent = hint || '';
   h.style.display = hint ? 'block' : 'none';
   f.style.display = 'flex';
   document.getElementById('viewerFrame').src =
-    'https://drive.google.com/embeddedfolderview?id=' + DRIVE_ROOT_ID + '#grid';
+    'https://drive.google.com/embeddedfolderview?id=' + (folderId || DRIVE_ROOT_ID) + '#grid';
   m.classList.add('show');
 }
 function openDoc(slot, title){
@@ -863,6 +883,16 @@ function openDoc(slot, title){
     var mon = bo ? bo.mon : state.mon;
     var khoi = state.khoi;
     var file = (slot && slot.file) ? slot.file : '';
+    var ds = driveSubjectOf(state.mon);
+    if (ds){
+      document.getElementById('viewerTitle').textContent =
+        '📂 ' + ds.mon + ' — thư mục Drive của môn' + (file ? ' — tìm file: ' + file : '');
+      viewerOpenFolder('Thư mục Drive môn ' + ds.mon +
+        (file ? ' → tìm file ' + file : ' → chọn file để xem') +
+        ' — bấm vào file là xem ngay trong khung (chỉ xem, không tải về).',
+        ds.driveId, driveFolderUrl(ds.driveId));
+      return;
+    }
     document.getElementById('viewerTitle').textContent =
       '📂 Kho học Liệu Vip — ' + mon + ' ' + khoi + (file ? ' — tìm file: ' + file : '');
     viewerOpenFolder('Trong kho: mở thư mục ' + mon + ' → ' + khoi +
@@ -895,6 +925,10 @@ function renderChips(){
     if (s.trang_thai === 'sap_nap'){
       html += '<button type="button" class="chip soonload" data-extra="' + esc(s.mon) + '" data-tt="sap_nap">' +
               esc(s.mon) + '<span class="tag">SẮP NẠP</span></button>';
+    } else if (s.trang_thai === 'drive_folder'){
+      var onD = (state.mon === s.mon && !isSearching()) ? ' on' : '';
+      html += '<button type="button" class="chip drive' + onD + '" data-drivemon="' + esc(s.mon) + '">' +
+              esc(s.mon) + '<span class="tag">ĐÃ NẠP</span></button>';
     } else {
       html += '<button type="button" class="chip soon" data-extra="' + esc(s.mon) + '" data-tt="sap_co">' +
               esc(s.mon) + '<span class="tag">SẮP CÓ</span></button>';
@@ -903,6 +937,9 @@ function renderChips(){
   wrap.innerHTML = html;
   wrap.querySelectorAll('[data-mon]').forEach(function(btn){
     btn.addEventListener('click', function(){ pickMon(btn.getAttribute('data-mon')); });
+  });
+  wrap.querySelectorAll('[data-drivemon]').forEach(function(btn){
+    btn.addEventListener('click', function(){ pickDriveMon(btn.getAttribute('data-drivemon')); });
   });
   wrap.querySelectorAll('[data-extra]').forEach(function(btn){
     btn.addEventListener('click', function(){
@@ -914,12 +951,17 @@ function renderChips(){
     });
   });
   document.getElementById('chipsNote').textContent =
-    '⭐ Hai môn Vật lí và Hoá học: Sắp nạp — có sẵn bộ file của thầy, chờ đưa lên kho Drive mới.';
+    '⭐ Vật lí: ĐÃ NẠP — bấm vào chip Vật lí để xem cả thư mục Drive của môn 📂 • Hoá học: Sắp nạp — có sẵn bộ file của thầy, chờ đưa lên kho Drive mới.';
 }
 function pickMon(mon){
   state.mon = mon;
   var ks = khoisOf(mon);
   if (ks.indexOf(state.khoi) < 0) state.khoi = ks[0];
+  renderAll();
+}
+function pickDriveMon(mon){
+  state.mon = mon;
+  state.khoi = null;
   renderAll();
 }
 
@@ -992,6 +1034,8 @@ function xemPpt(i){ var b = RENDERED[i]; if (b) openDoc(b.ppt, 'Slide PPT — B�
 
 function renderBrowse(){
   renderKhoiTabs();
+  var ds = driveSubjectOf(state.mon);
+  if (ds){ renderDriveSubject(ds); return; }
   var bo = boOf(state.mon, state.khoi);
   var list = document.getElementById('baiList');
   var shelf = document.getElementById('shelfArea');
@@ -1015,6 +1059,26 @@ function renderBrowse(){
   } else {
     shelf.innerHTML = '';
   }
+  renderTnShelf();
+}
+/* Trang môn dạng THƯ MỤC DRIVE: môn đã có kho Drive riêng (link thầy gửi) nhưng
+   chưa có catalog từng bài — nhúng thẳng khung thư mục của môn ngay trong trang,
+   kèm nút mở tab mới + ô Ôn thi tốt nghiệp cấp môn (renderTnShelf như thường). */
+function renderDriveSubject(ds){
+  var list = document.getElementById('baiList');
+  var shelf = document.getElementById('shelfArea');
+  document.getElementById('boTitle').textContent = '📚 ' + ds.mon + ' — thư mục Drive của môn';
+  RENDERED = []; RENDERED_BO = [];
+  list.innerHTML =
+    '<section class="drive-mon">' +
+      '<p class="drive-status">✅ <b>Kho ' + esc(ds.mon) + ' đã nạp</b> — danh sách bài chi tiết đang được hoàn thiện. ' +
+      'Thầy cô xem toàn bộ tài liệu của môn ngay trong khung thư mục Drive dưới đây (chỉ xem, không tải về).</p>' +
+      '<div class="drive-actions"><a class="view-btn" href="' + driveFolderUrl(ds.driveId) +
+        '" target="_blank" rel="noopener">↗ Mở thư mục ' + esc(ds.mon) + ' trong tab mới</a></div>' +
+      '<iframe class="drive-frame" title="Thư mục Drive môn ' + esc(ds.mon) + '" loading="lazy" ' +
+        'src="https://drive.google.com/embeddedfolderview?id=' + ds.driveId + '#grid"></iframe>' +
+    '</section>';
+  shelf.innerHTML = '';
   renderTnShelf();
 }
 var CURRENT_BO = null;
@@ -3404,6 +3468,7 @@ function tnFilesOf(mon, kind){
    Web tĩnh KHÔNG tự ghi file lên Drive (không đăng nhập Google theo chỉ đạo của thầy) —
    nút này chỉ MỞ thư mục Drive; file thầy thả vào Drive sẽ hiện trong khung Xem. */
 function tnDriveUrl(){
+  try { var ds = driveSubjectOf(state && state.mon); if (ds) return driveFolderUrl(ds.driveId); } catch (e) {}
   try { if (typeof DRIVE_ROOT !== 'undefined' && DRIVE_ROOT) return DRIVE_ROOT; } catch (e) {}
   return 'https://drive.google.com/drive/folders/1lYN66GXeceThgiueLdaQIbygLyaLiE_e';
 }
@@ -3436,8 +3501,11 @@ window.xemOnThiTnFolder = function(kind){
   var f = TN_FOLDERS.filter(function(x){ return x.kind === kind; })[0] || TN_FOLDERS[0];
   document.getElementById('viewerTitle').textContent =
     '🎓 Ôn thi tốt nghiệp — ' + state.mon + ' — ' + f.ten;
+  var ds = null;
+  try { ds = driveSubjectOf(state.mon); } catch (e) {}
   viewerOpenFolder('Trong kho: mở thư mục ' + state.mon + ' → Ôn thi tốt nghiệp → ' + f.ten +
-    ' → chọn file để xem ngay trong khung (chỉ xem, không tải về).');
+    ' → chọn file để xem ngay trong khung (chỉ xem, không tải về).',
+    ds ? ds.driveId : null, ds ? driveFolderUrl(ds.driveId) : null);
 };
 window.xemOnThiTnFile = function(kind, i){
   var files = tnFilesOf(state.mon, kind);
