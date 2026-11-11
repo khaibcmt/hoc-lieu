@@ -1586,7 +1586,7 @@ function hlPaneLoad(slot, title){
   if (fr) fr.addEventListener('load', function(){ if (seq === __paneSeq) __paneLoaded = true; });
   setTimeout(function(){
     if (seq === __paneSeq && !__paneLoaded) hlPaneFallback('https://drive.google.com/file/d/' + fid + '/view');
-  }, 3500);
+  }, 10000);
   return true;
 }
 function hlPaneFallback(viewUrl){
