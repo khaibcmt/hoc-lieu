@@ -4559,7 +4559,8 @@ function tnDeSo(file){
   var n = parseInt(g[g.length - 1], 10) % 100; return n === 0 ? 100 : n;
 }
 function tnDeHue(so){ return Math.round((so - 1) * 137.508) % 360; }
-window.tnDeSo = tnDeSo; window.tnDeHue = tnDeHue;
+function tnTlHue(i){ return Math.round(i * 137.508 + 60) % 360; }
+window.tnDeSo = tnDeSo; window.tnDeHue = tnDeHue; window.tnTlHue = tnTlHue;
 window.renderTnShelf = function(){
   var area = document.getElementById('tnShelfArea'); if (!area) return;
   if (!state || TN_SUBJECTS.indexOf(state.mon) < 0){ area.innerHTML = ''; return; }
@@ -4578,6 +4579,12 @@ window.renderTnShelf = function(){
           var hue = tnDeHue(x.so);
           return '<div class="tn-file" style="background:hsl(' + hue + ',85%,95%);border-left:7px solid hsl(' + hue + ',70%,45%);border-radius:8px">' +
                  '<span class="nm"><span style="display:inline-block;background:hsl(' + hue + ',70%,42%);color:#fff;font-weight:900;border-radius:999px;padding:3px 14px;font-size:16px">Đề ' + x.so + '</span></span>' +
+                 '<button type="button" class="view-btn" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + x.i + ')">👁 Xem</button></div>';
+        }
+        if (f.kind === 'tl'){
+          var thue = tnTlHue(x.i);
+          return '<div class="tn-file" style="background:hsl(' + thue + ',85%,95%);border-left:7px solid hsl(' + thue + ',70%,45%);border-radius:8px">' +
+                 '<span class="nm"><span style="display:inline-block;background:hsl(' + thue + ',70%,42%);border-radius:999px;padding:3px 10px;font-size:15px">📚</span> ' + esc(x.d.file) + '</span>' +
                  '<button type="button" class="view-btn" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + x.i + ')">👁 Xem</button></div>';
         }
         return '<div class="tn-file"><span class="nm">📄 ' + esc(x.d.file) + '</span>' +
