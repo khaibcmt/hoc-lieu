@@ -585,6 +585,14 @@ main{max-width:1440px;padding:12px 16px 30px;}
 .side-list{max-height:calc(100vh - 250px);}
 @media (min-width:1024px){ .chips{position:sticky;top:100px;z-index:40;background:var(--bg);padding-top:6px;} }
 @media (max-width:720px){ .cr-badge{display:none;} .site-name{font-size:19px;} header .mtab{flex:1 1 120px;font-size:14.5px;} }
+
+/* Hang bam duoc (thay dan 04:54 12/11/2026: bo nut Xem, bam thang vao hang) */
+.shelf-row[onclick]{cursor:pointer;}
+.shelf-row[onclick]:hover{background:#f6f2ff;}
+.tn-file[onclick]{cursor:pointer;}
+.tn-file[onclick]:hover{outline:2px solid #cdbcf5;outline-offset:-2px;}
+.slot[onclick]{cursor:pointer;}
+.slot[onclick]:hover{border-color:#6a11cb;box-shadow:0 4px 14px rgba(106,17,203,.18);}
 </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
@@ -613,9 +621,7 @@ main{max-width:1440px;padding:12px 16px 30px;}
         
       </div>
     </div>
-    <div class="search-wrap">
-      <input id="searchInput" type="text" placeholder="🔎 Tìm bài học, môn học… (ví dụ: quang hợp, tế bào, chăn nuôi)" autocomplete="off">
-    </div>
+    
       <div class="head-tools">
       <span class="cr-badge" title="Bản quyền Thầy Hồ Tấn Khải — Chế độ xem trực tuyến">🔒 Bản quyền Thầy Hồ Tấn Khải</span>
       <button type="button" id="adminBtn" class="admin-btn" onclick="hlAdminToggle()">🔑 Admin</button>
@@ -687,11 +693,11 @@ main{max-width:1440px;padding:12px 16px 30px;}
         <div class="side-box side-list"><div class="side-h">📖 Danh sách bài</div><div id="baiList"></div></div>
       </aside>
       <section id="libMain">
-        <div class="bo-title" id="boTitle"></div>
+        
         <div id="tnShelfArea"></div>
         <div id="paneViewer">
-          <div class="pane-head"><span id="paneTitle">📄 Khung hiển thị tài liệu</span><span class="pane-note">Tài liệu mở ngay tại đây</span></div>
-          <div id="paneBody"><div class="pane-empty">👈 Thầy cô chọn <b>Môn → Khối → Thể loại</b> rồi bấm vào <b>bài học</b> ở cột trái — tài liệu sẽ hiện ngay trong khung này.</div></div>
+          
+          <div id="paneBody"></div>
           <div id="paneFallback" style="display:none">
             <div class="pf-title">⚠️ Khung xem bị trình duyệt chặn</div>
             <p>Thầy cô bấm nút to dưới đây để mở tài liệu, hoặc quét mã QR bằng điện thoại / iPad để xem:</p>
@@ -1487,11 +1493,9 @@ var RENDERED_BO = []; /* bộ (key bank) song song với RENDERED — phục v�
 function slotHtml(icon, label, info, okText, waitText, co, onclick){
   var st = co ? '<span class="st-ok">✅ ' + okText + '</span>'
               : '<span class="st-wait">🕐 ' + waitText + '</span>';
-  var btn = onclick
-    ? '<button type="button" class="view-btn" onclick="' + onclick + '">👁 Xem</button>' : '';
-  return '<div class="slot"><h4>' + icon + ' ' + label + '</h4>' +
+  return '<div class="slot"' + (onclick ? ' onclick="' + onclick + '" style="cursor:pointer" title="Bấm để xem"' : '') + '><h4>' + icon + ' ' + label + '</h4>' +
          (info ? '<div class="fname">' + info + '</div>' : '') +
-         '<div class="note">' + st + '</div>' + btn + '</div>';
+         '<div class="note">' + st + '</div></div>';
 }
 function baiCardHtml(b, idx, boLabel){
   var badge = 'Bài ' + b.so;
@@ -1538,7 +1542,7 @@ function renderBrowse(){
   if (state.tnView && monHasTn(state.mon)){
     renderTypeTabs();
     var spT = document.getElementById('specialArea'); if (spT) spT.innerHTML = '';
-    document.getElementById('boTitle').textContent = '🎓 Ôn thi tốt nghiệp — ' + state.mon;
+    
     document.getElementById('baiList').innerHTML = '';
     document.getElementById('shelfArea').innerHTML = '';
     RENDERED = []; RENDERED_BO = [];
@@ -1551,7 +1555,7 @@ function renderBrowse(){
   var list = document.getElementById('baiList');
   var shelf = document.getElementById('shelfArea');
   if (!bo){
-    document.getElementById('boTitle').textContent = '';
+    
     list.innerHTML = '<div class="empty">Chưa có dữ liệu cho lựa chọn này.</div>';
     shelf.innerHTML = ''; RENDERED = []; RENDERED_BO = []; hlTnShelf(); return;
   }
@@ -1559,15 +1563,7 @@ function renderBrowse(){
   var nChuDe = (bo.chu_de && bo.chu_de.length) || 0;
   var nTd = (bo.nhom_the_thao || []).reduce(function(a, g){ return a + g.chuyen_de.reduce(function(b, c){ return b + c.bai.length; }, 0); }, 0);
   var nTa = (bo.don_vi || []).reduce(function(a, u){ return a + u.phan.length; }, 0);
-  document.getElementById('boTitle').textContent = bo.bai.length
-    ? '📚 ' + bo.ten_bo + ' — ' + Object.keys(nBaiD).length + ' bài theo đúng trình tự SGK'
-    : (nTd
-      ? '📚 ' + bo.ten_bo + ' — ' + nTd + ' giáo án theo môn thể thao'
-      : (nTa
-        ? '📚 ' + bo.ten_bo + ' — ' + nTa + ' phần giáo án theo Unit'
-        : (nChuDe
-          ? '📚 ' + bo.ten_bo + ' — ' + nChuDe + ' chủ đề theo đúng trình tự SGK'
-          : '📚 ' + bo.ten_bo + ' — Đang cập nhật')));
+  
   RENDERED = bo.bai;
   RENDERED_BO = bo.bai.map(function(){ return bo.mon + ' ' + bo.khoi + '|'; });
   renderTypeTabs();
@@ -1620,8 +1616,7 @@ function renderBrowse(){
   }
   if (bo.de_thi && bo.de_thi.length && state.theLoai !== 'de'){
     var rows = bo.de_thi.map(function(d, i){
-      return '<div class="shelf-row"><div class="nm">📄 ' + (d.nhan ? esc(d.nhan) + ' — ' : '') + esc(d.file) + '</div>' +
-             '<button type="button" class="view-btn" onclick="xemDeThi(' + i + ')">👁 Xem</button></div>';
+      return '<div class="shelf-row" onclick="xemDeThi(' + i + ')" style="cursor:pointer"><div class="nm">📄 ' + (d.nhan ? esc(d.nhan) + ' — ' : '') + esc(d.file) + '</div>' +'</div>';
     }).join('');
     shelf.innerHTML = '<section class="shelf"><h3>📝 ĐỀ THI • ÔN TẬP • KIỂM TRA — ' +
                       esc(bo.ten_bo.split(' — ')[0]) + '</h3>' + rows + '</section>';
@@ -1701,8 +1696,7 @@ var RENDERED_KHUNG = [];
 function khungShelfHtml(){
   RENDERED_KHUNG = KHUNG_TN_CHUNG;
   var rows = KHUNG_TN_CHUNG.map(function(d, i){
-    return '<div class="shelf-row"><div class="nm">📐 ' + (d.nhan ? esc(d.nhan) + ' — ' : '') + esc(d.file) + '</div>' +
-           '<button type="button" class="view-btn" onclick="xemKhung(' + i + ')">👁 Xem</button></div>';
+    return '<div class="shelf-row" onclick="xemKhung(' + i + ')" style="cursor:pointer"><div class="nm">📐 ' + (d.nhan ? esc(d.nhan) + ' — ' : '') + esc(d.file) + '</div>' +'</div>';
   }).join('');
   return '<section class="shelf"><h3>📐 KHUNG ĐÁNH GIÁ • KẾ HOẠCH TỔ CHỨC KTDG — DÙNG CHUNG CẢ 3 KHỐI</h3>' + rows + '</section>';
 }
@@ -1723,9 +1717,8 @@ function nhomTheThaoSectionHtml(bo){
   return nhoms.map(function(g, gi){
     var cds = g.chuyen_de.map(function(cd, ci){
       var rows = cd.bai.map(function(b, bi){
-        return '<div class="shelf-row"><div class="nm">📗 Chuyên đề ' + cd.so + ' — Bài ' + b.so +
-               ' — ' + esc(b.file) + '</div>' +
-               '<button type="button" class="view-btn" onclick="xemTdBai(' + gi + ',' + ci + ',' + bi + ')">👁 Xem</button></div>';
+        return '<div class="shelf-row" onclick="xemTdBai(' + gi + ',' + ci + ',' + bi + ')" style="cursor:pointer"><div class="nm">📗 Chuyên đề ' + cd.so + ' — Bài ' + b.so +
+               ' — ' + esc(b.file) + '</div>' +'</div>';
       }).join('');
       return '<div style="font-weight:700;margin:10px 0 6px;">Chuyên đề ' + cd.so +
              ' (' + cd.bai.length + ' bài)</div>' + rows;
@@ -1755,9 +1748,8 @@ function unitSectionHtml(bo){
   if (!units.length) return '';
   var out = units.map(function(u, ui){
     var rows = u.phan.map(function(p, pi){
-      return '<div class="shelf-row"><div class="nm">📗 Unit ' + u.so + ' — ' + esc(p.phan) +
-             ' <span style="color:#5b5470;font-size:13px;">(' + esc(p.file) + ')</span></div>' +
-             '<button type="button" class="view-btn" onclick="xemTaPhan(' + ui + ',' + pi + ')">👁 Xem</button></div>';
+      return '<div class="shelf-row" onclick="xemTaPhan(' + ui + ',' + pi + ')" style="cursor:pointer"><div class="nm">📗 Unit ' + u.so + ' — ' + esc(p.phan) +
+             ' <span style="color:#5b5470;font-size:13px;">(' + esc(p.file) + ')</span></div>' +'</div>';
     }).join('');
     return '<section class="cd-sec"><h3>📚 UNIT ' + u.so + ' — ' + u.phan.length + ' PHẦN</h3>' +
            '<p class="cd-note">Giáo án theo từng phần của Unit — bấm Xem để mở đúng file.</p>' +
@@ -1766,9 +1758,8 @@ function unitSectionHtml(bo){
   var dps = bo.du_phong || [];
   if (dps.length){
     var drows = dps.map(function(d, di){
-      return '<div class="shelf-row"><div class="nm">📦 ' + esc(d.nhan) +
-             ' <span style="color:#5b5470;font-size:13px;">(' + esc(d.file) + ')</span></div>' +
-             '<button type="button" class="view-btn" onclick="xemTaDuPhong(' + di + ')">👁 Xem</button></div>';
+      return '<div class="shelf-row" onclick="xemTaDuPhong(' + di + ')" style="cursor:pointer"><div class="nm">📦 ' + esc(d.nhan) +
+             ' <span style="color:#5b5470;font-size:13px;">(' + esc(d.file) + ')</span></div>' +'</div>';
     }).join('');
     out += '<section class="cd-sec"><h3>📦 GIÁO ÁN DỰ PHÒNG — ' + dps.length + ' FILE</h3>' +
            '<p class="cd-note">Giáo án dự phòng theo học kì.</p>' + drows + '</section>';
@@ -1791,7 +1782,7 @@ function xemTaDuPhong(di){
 function renderDriveSubject(ds){
   var list = document.getElementById('baiList');
   var shelf = document.getElementById('shelfArea');
-  document.getElementById('boTitle').textContent = '📚 ' + ds.mon + ' — thư mục Drive của môn';
+  
   RENDERED = []; RENDERED_BO = [];
   list.innerHTML =
     '<section class="drive-mon">' +
@@ -1812,10 +1803,7 @@ function xemDeThi(i){
 }
 
 /* ---------- Tìm kiếm ---------- */
-function isSearching(){
-  var q = document.getElementById('searchInput').value.trim();
-  return q.length > 0;
-}
+function isSearching(){ var el = document.getElementById('searchInput'); if (!el) return false; var q = el.value.trim(); return q.length > 0; }
 function renderSearch(){
   var q = document.getElementById('searchInput').value.trim().toLowerCase();
   var area = document.getElementById('searchArea');
@@ -1841,9 +1829,7 @@ function renderSearch(){
     : '<div class="empty">Không tìm thấy bài nào khớp. Thầy cô thử từ khoá khác nhé!</div>';
   bindCards(list);
 }
-document.getElementById('searchInput').addEventListener('input', function(){
-  renderChips(); renderSearch();
-});
+
 
 function renderAll(){
   renderChips();
@@ -4594,12 +4580,8 @@ function tnFilesOf(mon, kind){
 /* Link kho Drive gốc để nút "⬆️ Tải lên" mở ra cho thầy thả file vào.
    Web tĩnh KHÔNG tự ghi file lên Drive (không đăng nhập Google theo chỉ đạo của thầy) —
    nút này chỉ MỞ thư mục Drive; file thầy thả vào Drive sẽ hiện trong khung Xem. */
-function tnDriveUrl(){
-  try { var mid = (typeof driveMonId === 'function') ? driveMonId(state && state.mon) : null; if (mid) return driveFolderUrl(mid); } catch (e) {}
-  try { if (typeof DRIVE_ROOT !== 'undefined' && DRIVE_ROOT) return DRIVE_ROOT; } catch (e) {}
-  return 'https://drive.google.com/drive/folders/1lYN66GXeceThgiueLdaQIbygLyaLiE_e';
-}
-var TN_UPLOAD_HINT = 'Tải lên mở kho Drive — file thả vào Drive sẽ hiện ngay trong khung Xem.';
+
+
 /* Thầy chốt 00:32 ngày 12/11/2026: đề thi TN hiển thị thống nhất "Đề 1..30" theo môn,
    mỗi số đề 1 màu riêng xen kẽ (góc vàng HSL) — cùng số đề thì cùng màu ở mọi môn. */
 function tnDeSo(file){
@@ -4619,27 +4601,22 @@ window.renderTnShelf = function(){
     var files = tnFilesOf(state.mon, f.kind);
     var h = '<div class="tn-folder"><span class="tn-folder-name">' + f.icon + ' <b>' + f.ten + '</b></span>' +
             (files.length ? '' : '<span class="tn-wait">🕐 Đang chờ thầy nạp file</span>') +
-            '<span class="tn-actions">' +
-            '<button type="button" class="view-btn" onclick="xemOnThiTnFolder(\'' + f.kind + '\')">👁 Xem</button>' +
-            '<a class="view-btn tn-up" href="' + tnDriveUrl() + '" target="_blank" rel="noopener">⬆️ Tải lên</a></span>';
+            '';
     if (files.length){
       var disp = files.map(function(d, i){ return { d: d, i: i, so: f.kind === 'de' ? tnDeSo(d.file) : 0 }; });
       if (f.kind === 'de') disp.sort(function(a, b){ return (a.so || 999) - (b.so || 999) || a.i - b.i; });
       h += '<div class="tn-files">' + disp.map(function(x){
         if (x.so){
           var hue = tnDeHue(x.so);
-          return '<div class="tn-file" style="background:hsl(' + hue + ',85%,95%);border-left:7px solid hsl(' + hue + ',70%,45%);border-radius:8px">' +
-                 '<span class="nm"><span style="display:inline-block;background:hsl(' + hue + ',70%,42%);color:#fff;font-weight:900;border-radius:999px;padding:3px 14px;font-size:16px">' + tnMonShort(state.mon) + ' Đề ' + x.so + '</span></span>' +
-                 '<button type="button" class="view-btn" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + x.i + ')">👁 Xem</button></div>';
+          return '<div class="tn-file" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + x.i + ')"" style="background:hsl(' + hue + ',85%,95%);border-left:7px solid hsl(' + hue + ',70%,45%);border-radius:8px;cursor:pointer">' +
+                 '<span class="nm"><span style="display:inline-block;background:hsl(' + hue + ',70%,42%);color:#fff;font-weight:900;border-radius:999px;padding:3px 14px;font-size:16px">' + tnMonShort(state.mon) + ' Đề ' + x.so + '</span></span>' +'</div>';
         }
         if (f.kind === 'tl'){
           var thue = tnTlHue(x.i);
-          return '<div class="tn-file" style="background:hsl(' + thue + ',85%,95%);border-left:7px solid hsl(' + thue + ',70%,45%);border-radius:8px">' +
-                 '<span class="nm"><span style="display:inline-block;background:hsl(' + thue + ',70%,42%);border-radius:999px;padding:3px 10px;font-size:15px">📚</span> ' + esc(x.d.file) + '</span>' +
-                 '<button type="button" class="view-btn" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + x.i + ')">👁 Xem</button></div>';
+          return '<div class="tn-file" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + x.i + ')"" style="background:hsl(' + thue + ',85%,95%);border-left:7px solid hsl(' + thue + ',70%,45%);border-radius:8px;cursor:pointer">' +
+                 '<span class="nm"><span style="display:inline-block;background:hsl(' + thue + ',70%,42%);border-radius:999px;padding:3px 10px;font-size:15px">📚</span> ' + esc(x.d.file) + '</span>' +'</div>';
         }
-        return '<div class="tn-file"><span class="nm">📄 ' + esc(x.d.file) + '</span>' +
-               '<button type="button" class="view-btn" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + x.i + ')">👁 Xem</button></div>';
+        return '<div class="tn-file" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + x.i + ')"" style="cursor:pointer"><span class="nm">📄 ' + esc(x.d.file) + '</span>' +'</div>';
       }).join('') + '</div>';
     }
     return h + '</div>';
@@ -4648,18 +4625,9 @@ window.renderTnShelf = function(){
     '<div class="tn-head"><h3>🎓 ÔN THI TỐT NGHIỆP — ' + esc(state.mon) + '</h3>' +
     '<span class="tn-scope">Chung cả môn</span></div>' +
     '<div class="tn-folders">' + rows + '</div>' +
-    '<p class="note tn-uphint">' + TN_UPLOAD_HINT + '</p></section>';
+    '</section>';
 };
-window.xemOnThiTnFolder = function(kind){
-  var f = TN_FOLDERS.filter(function(x){ return x.kind === kind; })[0] || TN_FOLDERS[0];
-  document.getElementById('viewerTitle').textContent =
-    '🎓 Ôn thi tốt nghiệp — ' + state.mon + ' — ' + f.ten;
-  var mid = null;
-  try { mid = (typeof driveMonId === 'function') ? driveMonId(state.mon) : null; } catch (e) {}
-  viewerOpenFolder('Trong kho: mở thư mục ' + state.mon + ' → Ôn thi tốt nghiệp → ' + f.ten +
-    ' → chọn file để xem ngay trong khung (chỉ xem, không tải về).',
-    mid, mid ? driveFolderUrl(mid) : null);
-};
+
 window.xemOnThiTnFile = function(kind, i){
   var files = tnFilesOf(state.mon, kind);
   if (files[i]){ var tnSo = kind === 'de' ? tnDeSo(files[i].file) : 0; openDoc(files[i], '🎓 Ôn thi tốt nghiệp — ' + state.mon + ' — ' + (tnSo ? tnMonShort(state.mon) + ' Đề ' + tnSo : files[i].file)); }
