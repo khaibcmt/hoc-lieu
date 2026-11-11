@@ -2022,7 +2022,9 @@ function renderAll(){
   var ms = monsAvailable();
   state.mon = ms[0];
   state.khoi = khoisOf(state.mon)[0];
+  state.baiSel = 0;
   renderAll();
+  hlPaneOpenBai(0);
 })();
 
 /* ================================================================
