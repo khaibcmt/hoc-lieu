@@ -730,6 +730,14 @@ footer{background:transparent;}
 .slot-phieu{border-left-color:#22c55e;}
 .slot-vip{border-left-color:#f59e0b;}
 .slot-ppt{border-left-color:#f97316;}
+/* nut the loai chua chon: moi nut 1 mau vien trai rieng (06:34 12/11/2026) */
+.ttab:not(.on)[data-type="ga"]{border-left:3px solid var(--mon);}
+.ttab:not(.on)[data-type="phieu"]{border-left:3px solid #22c55e;}
+.ttab:not(.on)[data-type="vip"]{border-left:3px solid #f59e0b;}
+.ttab:not(.on)[data-type="ppt"]{border-left:3px solid #f97316;}
+.ttab:not(.on)[data-type="de"]{border-left:3px solid #f43f5e;}
+#sec-game .gtab{color:#0f172a;}
+.exam-row-t{line-height:1.35;overflow-wrap:break-word;}
 .exam-groups{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
 @media (max-width:900px){ .exam-groups{grid-template-columns:1fr;} }
 .exam-group h4{margin:0 0 8px;font-size:15px;font-weight:800;color:#67e8f9;}
@@ -1448,9 +1456,9 @@ document.getElementById('viewerModal').addEventListener('click', function(e){
 var MON_COLORS = {
   'Toán': '#1e88e5', 'Vật lí': '#5e35b1', 'Hoá học': '#ad1457', 'Sinh học': '#2e9e4f',
   'Công nghệ nông nghiệp': '#7cb342', 'Công nghệ công nghiệp': '#00897b',
-  'Ngữ văn': '#e53935', 'Lịch sử': '#6d4c41', 'Địa lí': '#00acc1',
-  'Kinh tế & Pháp luật': '#3949ab', 'Tiếng Anh': '#fb8c00', 'Tin học': '#546e7a',
-  'Thể dục': '#f4511e', 'Quốc phòng – An ninh': '#827717',
+  'Ngữ văn': '#e53935', 'Lịch sử': '#8d6e63', 'Địa lí': '#00acc1',
+  'Kinh tế & Pháp luật': '#3949ab', 'Tiếng Anh': '#fb8c00', 'Tin học': '#78909c',
+  'Thể dục': '#f4511e', 'Quốc phòng – An ninh': '#9e9d24',
   'Hoạt động trải nghiệm, hướng nghiệp': '#8e24aa'
 };
 function chipShort(mon){ var m = { 'Toán': 'Toán', 'Kinh tế & Pháp luật': 'KTPL', 'Hoá học': 'Hoá', 'Lịch sử': 'Sử', 'Ngữ văn': 'Văn', 'Sinh học': 'Sinh', 'Vật lí': 'Lí', 'Công nghệ công nghiệp': 'CNCN', 'Công nghệ nông nghiệp': 'CNNN', 'Địa lí': 'Địa', 'Tiếng Anh': 'Anh', 'Tin học': 'Tin', 'Thể dục': 'Thể dục', 'Hoạt động trải nghiệm, hướng nghiệp': 'Trải nghiệm' }; return m[mon] || mon || ''; }
@@ -1506,13 +1514,17 @@ function pickMon(mon){ var inEx = hlInExam(); if (!inEx) hlShowTab('lib'); state
   state.mon = mon;
   var ks = khoisOf(mon);
   if (ks.indexOf(state.khoi) < 0) state.khoi = ks[0];
+  state.baiSel = 0;
   renderAll();
+  if (!inEx) hlPaneOpenBai(0);
   if (inEx && window.renderExamMenu) window.renderExamMenu();
 }
 function pickDriveMon(mon){ var inEx = hlInExam(); if (!inEx) hlShowTab('lib'); state.tnView = false;
   state.mon = mon;
   state.khoi = null;
+  state.baiSel = 0;
   renderAll();
+  if (!inEx) hlPaneOpenBai(0);
   if (inEx && window.renderExamMenu) window.renderExamMenu();
 }
 
@@ -1557,7 +1569,7 @@ function renderTypeTabs(){
   }).join('');
   w.querySelectorAll('[data-type]').forEach(function(btn){
     btn.addEventListener('click', function(){
-      state.theLoai = btn.getAttribute('data-type'); state.baiSel = -1; renderBrowse();
+      state.theLoai = btn.getAttribute('data-type'); state.baiSel = 0; renderBrowse(); hlPaneOpenBai(0);
     });
   });
 }
