@@ -4529,6 +4529,16 @@ function tnDriveUrl(){
   return 'https://drive.google.com/drive/folders/1lYN66GXeceThgiueLdaQIbygLyaLiE_e';
 }
 var TN_UPLOAD_HINT = 'Tải lên mở kho Drive — file thả vào Drive sẽ hiện ngay trong khung Xem.';
+/* Thầy chốt 00:32 ngày 12/11/2026: đề thi TN hiển thị thống nhất "Đề 1..30" theo môn,
+   mỗi số đề 1 màu riêng xen kẽ (góc vàng HSL) — cùng số đề thì cùng màu ở mọi môn. */
+function tnDeSo(file){
+  var m = /^De_(\d{1,2})_/i.exec(file || ''); if (m) return parseInt(m[1], 10);
+  if (!/^(De-thi-thu|DE_THI_THU)/i.test(file || '')) return 0;
+  var g = (file || '').match(/\d+/g); if (!g) return 0;
+  var n = parseInt(g[g.length - 1], 10) % 100; return n === 0 ? 100 : n;
+}
+function tnDeHue(so){ return Math.round((so - 1) * 137.508) % 360; }
+window.tnDeSo = tnDeSo; window.tnDeHue = tnDeHue;
 window.renderTnShelf = function(){
   var area = document.getElementById('tnShelfArea'); if (!area) return;
   if (!state || TN_SUBJECTS.indexOf(state.mon) < 0){ area.innerHTML = ''; return; }
@@ -4540,9 +4550,17 @@ window.renderTnShelf = function(){
             '<button type="button" class="view-btn" onclick="xemOnThiTnFolder(\'' + f.kind + '\')">👁 Xem</button>' +
             '<a class="view-btn tn-up" href="' + tnDriveUrl() + '" target="_blank" rel="noopener">⬆️ Tải lên</a></span>';
     if (files.length){
-      h += '<div class="tn-files">' + files.map(function(d, i){
-        return '<div class="tn-file"><span class="nm">📄 ' + esc(d.file) + '</span>' +
-               '<button type="button" class="view-btn" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + i + ')">👁 Xem</button></div>';
+      var disp = files.map(function(d, i){ return { d: d, i: i, so: f.kind === 'de' ? tnDeSo(d.file) : 0 }; });
+      if (f.kind === 'de') disp.sort(function(a, b){ return (a.so || 999) - (b.so || 999) || a.i - b.i; });
+      h += '<div class="tn-files">' + disp.map(function(x){
+        if (x.so){
+          var hue = tnDeHue(x.so);
+          return '<div class="tn-file" style="background:hsl(' + hue + ',85%,95%);border-left:7px solid hsl(' + hue + ',70%,45%);border-radius:8px">' +
+                 '<span class="nm"><span style="display:inline-block;background:hsl(' + hue + ',70%,42%);color:#fff;font-weight:900;border-radius:999px;padding:3px 14px;font-size:16px">Đề ' + x.so + '</span></span>' +
+                 '<button type="button" class="view-btn" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + x.i + ')">👁 Xem</button></div>';
+        }
+        return '<div class="tn-file"><span class="nm">📄 ' + esc(x.d.file) + '</span>' +
+               '<button type="button" class="view-btn" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + x.i + ')">👁 Xem</button></div>';
       }).join('') + '</div>';
     }
     return h + '</div>';
@@ -4565,7 +4583,7 @@ window.xemOnThiTnFolder = function(kind){
 };
 window.xemOnThiTnFile = function(kind, i){
   var files = tnFilesOf(state.mon, kind);
-  if (files[i]) openDoc(files[i], '🎓 Ôn thi tốt nghiệp — ' + state.mon + ' — ' + files[i].file);
+  if (files[i]){ var tnSo = kind === 'de' ? tnDeSo(files[i].file) : 0; openDoc(files[i], '🎓 Ôn thi tốt nghiệp — ' + state.mon + ' — ' + (tnSo ? 'Đề ' + tnSo : files[i].file)); }
 };
 
 /* ---------- Màn hình dùng chung: tự luyện + bài giao link ---------- */
