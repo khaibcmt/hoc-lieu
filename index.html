@@ -550,6 +550,15 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
   .chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px}
   #paneBody iframe{height:66vh}
 }
+
+/* ===== v41: Tự luyện kiểu thi thật ===== */
+.opt-huge.sel{outline:4px solid #ffd94d;outline-offset:-4px;filter:brightness(1.13)}
+.pq-chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 4px}
+.pq-chip{width:38px;height:38px;border-radius:10px;border:1.5px solid #6a6390;background:#241f3d;color:#e8e4ff;font-weight:800;cursor:pointer;font-size:15px}
+.pq-chip.done{background:#2e7d32;border-color:#2e7d32;color:#fff}
+.pq-chip.cur{outline:3px solid #ffd94d;outline-offset:1px}
+.pq-nav{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px;align-items:stretch}
+.pq-det{border-top:1px dashed #4a4370;padding:10px 0}
 </style>
 </head>
 <body>
@@ -869,7 +878,7 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
 
 <footer>
   <b>Học Liệu VIP</b> — Thầy Hồ Tấn Khải • Trường THPT Mang Thít<br>
-  Tài liệu chỉ để <b>XEM</b> — muốn tải về, liên hệ tác giả • Phòng thi online chạy ngay trong trang • Phiên bản v40
+  Tài liệu chỉ để <b>XEM</b> — muốn tải về, liên hệ tác giả • Phòng thi online chạy ngay trong trang • Phiên bản v41
 </footer>
 
 <div id="viewerModal" role="dialog" aria-modal="true">
@@ -2063,7 +2072,13 @@ function qcValid(kind){
   var st = _qcStates[kind];
   if (!st) return { ok: false, used: 0, bad: 0, total: 0 };
   var used = 0, bad = 0;
-  st.qs.forEach(function(q, i){ if (st.used[i]){ used++; if (q.ans < 0 || qcOptCount(q) < 4) bad++; } });
+  st.qs.forEach(function(q, i){
+    if (!st.used[i]) return;
+    used++;
+    if (q.kind === 'tf'){ if (!q.tfItems || q.tfItems.length !== 4) bad++; }
+    else if (q.kind === 'sa'){ if (q.ansText === null || q.ansText === undefined || String(q.ansText).trim() === '') bad++; }
+    else if (q.ans < 0 || qcOptCount(q) < 4) bad++;
+  });
   return { ok: used > 0 && bad === 0, used: used, bad: bad, total: st.qs.length };
 }
 function qcEls(kind){
@@ -2117,7 +2132,7 @@ function qcRender(kind){
   var rows = st.qs.map(function(q, i){
     var missing = q.ans < 0, short = qcOptCount(q) < 4;
     var flag = missing ? '<span class="qc-flag">Chưa có đáp án</span>' : (short ? '<span class="qc-flag">Thiếu phương án</span>' : '<span class="qc-ok">Đáp án: ' + letters[q.ans] + '</span>');
-    if (q.kind === 'tf') flag = '<span class="qc-flag">Dạng Đúng/Sai — đáp án: ' + esc(q.tfAns || '—') + ' (chỉ dùng khi trộn .docx; phòng thi online chưa hỗ trợ)</span>';
+    if (q.kind === 'tf') flag = '<span class="qc-flag">Dạng Đúng/Sai — đáp án: ' + esc(q.tfAns || '—') + ' (phòng thi online đã hỗ trợ)</span>';
     else if (q.kind === 'sa') flag = '<span class="qc-ok">Trả lời ngắn — đáp án: ' + esc(q.ansText || '') + ' (chỉ dùng khi trộn .docx; phòng thi online chưa hỗ trợ)</span>';
     var srcTxt = q.src === 'inline' ? 'dòng Đáp án' : q.src === 'star' ? 'dấu ***' : q.src === 'bracket' ? 'dấu [ ]' : q.src === 'key' ? 'bảng đáp án' : q.src === 'manual' ? 'thầy đặt tay' : '—';
     return '<tr class="' + ((missing || short) && st.used[i] ? 'qc-missing' : '') + '">' +
@@ -3137,7 +3152,12 @@ function rtExamQuestions(){
   if (st && ta && st.srcText !== ta.value){ qcAnalyze('room'); st = _qcStates.room; }
   if (!st || !qcValid('room').ok) return null;
   var out = [];
-  st.qs.forEach(function(q, i){ if (st.used[i]) out.push({ q: q.q, opts: q.opts.slice(0, 4).map(function(o){ return String(o); }), ans: q.ans }); });
+  st.qs.forEach(function(q, i){
+    if (!st.used[i]) return;
+    if (q.kind === 'tf') out.push({ q: q.q, kind: 'tf', items: (q.tfItems || []).map(function(it){ return it.t; }), bools: (q.tfItems || []).map(function(it){ return !!it.correct; }), opts: [], ans: -1 });
+    else if (q.kind === 'sa') out.push({ q: q.q, kind: 'sa', ansText: q.ansText, opts: [], ans: -1 });
+    else out.push({ q: q.q, opts: q.opts.slice(0, 4).map(function(o){ return String(o); }), ans: q.ans });
+  });
   return out.length ? out : null;
 }
 function rtCreateRoom(){
@@ -3160,9 +3180,13 @@ function rtCreateRoom(){
     var qs, revivePool, mainCount;
     if (examQs){
       var baiTag = examName || 'Bài thi trực tuyến';
-      qs = examQs.map(function(q){ return { q: q.q, bai: baiTag, opts: q.opts, ans: q.ans }; });
+      qs = examQs.map(function(q){
+        if (q.kind === 'tf') return { q: q.q, bai: baiTag, kind: 'tf', items: (q.items || []).slice(), bools: (q.bools || []).slice(), opts: [], ans: -1 };
+        if (q.kind === 'sa') return { q: q.q, bai: baiTag, kind: 'sa', ansText: q.ansText, opts: [], ans: -1 };
+        return { q: q.q, bai: baiTag, opts: q.opts, ans: q.ans };
+      });
       mainCount = qs.length;
-      revivePool = shuffle(qs.slice()).slice(0, 3).map(function(q){ return { q: q.q, bai: q.bai, opts: q.opts, ans: q.ans }; });
+      revivePool = shuffle(qs.filter(function(q){ return !q.kind || q.kind === 'mc'; }).slice()).slice(0, 3).map(function(q){ return { q: q.q, bai: q.bai, opts: q.opts, ans: q.ans }; });
     } else {
       var picked = shuffle(QUESTIONS);
       qs = picked.slice(0, 10).map(function(q){ return { q: q.q, bai: q.bai, opts: q.opts, ans: q.ans }; });
@@ -3347,7 +3371,9 @@ function rtRenderCurrent(){
     if (q){
       phase = rtPhaseOf(T.current);
       qText = q.q;
-      optsHTML = q.opts.map(function(op, j){ return '<div class="opt-big" data-tpos="' + j + '" style="cursor:default">' + LETTERS[j] + '. ' + esc(op) + '</div>'; }).join('');
+      if (q.kind === 'tf') optsHTML = (q.items || []).map(function(it, j){ return '<div class="opt-big" style="cursor:default">' + 'abcd'[j] + ') ' + esc(it) + ' — <b>' + (q.bools[j] ? 'Đúng' : 'Sai') + '</b></div>'; }).join('');
+      else if (q.kind === 'sa') optsHTML = '<div class="opt-big" style="cursor:default">✏️ Trả lời ngắn — đáp án đúng: <b>' + esc(String(q.ansText == null ? '' : q.ansText)) + '</b></div>';
+      else optsHTML = q.opts.map(function(op, j){ return '<div class="opt-big" data-tpos="' + j + '" style="cursor:default">' + LETTERS[j] + '. ' + esc(op) + '</div>'; }).join('');
     }
     document.getElementById('rtNextBtn').textContent = (T.current.idx >= (T.mainCount || 10) - 1) ? (T.R.bonus && !T.bonusPlayed && T.questions[T.mainCount || 10] ? '🌟 Tới câu Thách đố' : '🏁 Kết thúc & vinh danh') : '⏭️ Câu tiếp theo';
   }
@@ -3659,8 +3685,20 @@ function rsRenderQuestion(){
   var cur = U.current, q = U.questions[cur.idx];
   var area = document.getElementById('rsArea');
   if (!q){ area.innerHTML = '<p class="wait-big">⏳ Đang tải câu hỏi...</p>'; return; }
+  var kind = q.kind || 'mc';
   var order = seededShuffle([0, 1, 2, 3], U.code + ':' + U.pid + ':' + cur.idx);
-  U.cur = { q: q.q, disp: order.map(function(i){ return q.opts[i]; }), correctText: q.opts[q.ans], hidden: {}, bonus: !!cur.bonus, accel: !!cur.accel, idx: cur.idx };
+  if (kind === 'tf'){
+    U.cur = { q: q.q, kind: 'tf', items: (q.items || []).slice(), bools: (q.bools || []).slice(), disp: [],
+      correctText: (q.bools || []).map(function(v, j){ return 'abcd'[j] + ') ' + (v ? 'Đúng' : 'Sai'); }).join(' • '),
+      hidden: {}, bonus: !!cur.bonus, accel: !!cur.accel, idx: cur.idx };
+    U.tfSel = [null, null, null, null];
+  } else if (kind === 'sa'){
+    U.cur = { q: q.q, kind: 'sa', ansText: String(q.ansText == null ? '' : q.ansText), disp: [],
+      correctText: String(q.ansText == null ? '' : q.ansText),
+      hidden: {}, bonus: !!cur.bonus, accel: !!cur.accel, idx: cur.idx };
+  } else {
+    U.cur = { q: q.q, kind: 'mc', disp: order.map(function(i){ return q.opts[i]; }), correctText: q.opts[q.ans], hidden: {}, bonus: !!cur.bonus, accel: !!cur.accel, idx: cur.idx };
+  }
   U.answered = false; U.locked = false;
   U.bet = (U.R.betMode === 'round') ? U.roundBet : 0;
   var needRoundBet = U.R.bet && U.R.betMode === 'round' && cur.idx % 5 === 0 && !cur.bonus;
@@ -3711,10 +3749,23 @@ function rsRenderQuestion(){
       '<button class="ll-btn" id="rll-s" onclick="rsLifeline(\'s\')" ' + (ll.s ? 'disabled' : '') + '>🔄 Đổi câu hỏi' + (ll.s ? ' <span class="used">Đã dùng</span>' : '') + '</button>' +
       '<button class="ll-btn" id="rll-a" onclick="rsLifeline(\'a\')" ' + (ll.a ? 'disabled' : '') + '>👥 Hỏi khán giả' + (ll.a ? ' <span class="used">Đã dùng</span>' : '') + '</button></div><div id="audOut" style="margin-top:10px"></div>';
   }
-  area.innerHTML = tag + '<p class="big-q">' + esc(q.q) + '</p>' + rsSkillBarHTML() + betHTML +
-    '<div id="rsOpts">' + U.cur.disp.map(function(op, j){
+  var ansHTML;
+  if (kind === 'tf'){
+    ansHTML = '<div id="rsTf">' + U.cur.items.map(function(it, j){
+      return '<div class="tf-row"><span class="tf-txt"><b>' + 'abcd'[j] + ')</b> ' + esc(it) + '</span>' +
+        '<span class="tf-btns"><button type="button" class="tf-btn" id="rsTfD' + j + '" onclick="rsPickTf(' + j + ',true)">Đúng</button>' +
+        '<button type="button" class="tf-btn" id="rsTfS' + j + '" onclick="rsPickTf(' + j + ',false)">Sai</button></span></div>';
+    }).join('') + '</div>' + '<button type="button" class="sp-bigbtn" onclick="rsSubmitTf()">✅ CHỐT CÂU TRẢ LỜI</button>';
+  } else if (kind === 'sa'){
+    ansHTML = '<input type="text" id="rsSaInput" class="sa-input" inputmode="decimal" placeholder="Bấm vào đây rồi gõ đáp án bằng bàn phím điện thoại...">' +
+      '<button type="button" class="sp-bigbtn" onclick="rsSubmitSa()">✅ GỬI ĐÁP ÁN</button>';
+  } else {
+    ansHTML = '<div id="rsOpts">' + U.cur.disp.map(function(op, j){
       return '<button class="opt-big" data-pos="' + j + '" onclick="rsPick(' + j + ')"' + (needRoundBet ? ' disabled' : '') + '>' + LETTERS[j] + '. ' + esc(op) + '</button>';
-    }).join('') + '</div>' + llHTML + '<div id="rsFb" style="margin-top:12px;font-weight:700;font-size:16px"></div>';
+    }).join('') + '</div>';
+  }
+  area.innerHTML = tag + '<p class="big-q">' + esc(q.q) + '</p>' + rsSkillBarHTML() + betHTML +
+    ansHTML + (kind === 'mc' ? llHTML : '') + '<div id="rsFb" style="margin-top:12px;font-weight:700;font-size:16px"></div>';
   if (U.pendingChest) rsShowChestBar();
 }
 function rsSetBet(v, btn, isRound){
@@ -3757,9 +3808,41 @@ function rsStartTick(){
   }, 150);
 }
 function rsReveal(){
+  if (U.cur && U.cur.kind === 'tf'){
+    for (var j = 0; j < 4; j++){
+      var bd = document.getElementById('rsTfD' + j), bs = document.getElementById('rsTfS' + j);
+      if (bd) bd.disabled = true; if (bs) bs.disabled = true;
+    }
+    return;
+  }
+  if (U.cur && U.cur.kind === 'sa'){
+    var inp = document.getElementById('rsSaInput'); if (inp) inp.disabled = true;
+    return;
+  }
   var btns = document.querySelectorAll('#rsOpts .opt-big');
   btns.forEach(function(b, j){ b.disabled = true; if (U.cur.disp[j] === U.cur.correctText) b.classList.add('correct'); });
 }
+window.rsPickTf = function(j, val){
+  if (!U || U.answered || U.locked || !U.cur || U.cur.kind !== 'tf') return;
+  U.tfSel[j] = val;
+  var bd = document.getElementById('rsTfD' + j), bs = document.getElementById('rsTfS' + j);
+  if (bd) bd.className = 'tf-btn' + (val ? ' sel-d' : '');
+  if (bs) bs.className = 'tf-btn' + (!val ? ' sel-s' : '');
+};
+window.rsSubmitTf = function(){
+  if (!U || U.answered || U.locked || !U.cur || U.cur.kind !== 'tf') return;
+  if (U.tfSel.some(function(x){ return x === null; })){ showToast('⚠️ Em chọn Đúng/Sai cho đủ 4 ý rồi mới chốt nhé'); return; }
+  U.answered = true;
+  rsSubmit(U.tfSel.every(function(v, j){ return v === U.cur.bools[j]; }), -1, false);
+};
+window.rsSubmitSa = function(){
+  if (!U || U.answered || U.locked || !U.cur || U.cur.kind !== 'sa') return;
+  var inp = document.getElementById('rsSaInput');
+  var v = inp ? inp.value : '';
+  if (!String(v).trim()){ showToast('⚠️ Em nhập đáp án trước khi gửi nhé'); return; }
+  U.answered = true;
+  rsSubmit(spSaMatch(v, U.cur.ansText), -1, false);
+};
 function rsTimeout(){
   if (U.answered) return;
   U.answered = true;
@@ -4121,6 +4204,26 @@ function spFmtTime(ms){
   function p(n){ return (n < 10 ? '0' : '') + n; }
   return p(d.getHours()) + ':' + p(d.getMinutes()) + ' ngày ' + p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear();
 }
+/* Chấm TỰ LUYỆN theo điểm thật: Phần I/III tính theo câu, Phần II tính theo TỪNG Ý;
+   điểm hệ 10 = (đơn vị đúng / tổng đơn vị) x 10 — công thức thầy chốt 23:06 11/11/2026 */
+function spGradePractice(qs, answers){
+  var qC = 0, uC = 0, uT = 0;
+  (qs || []).forEach(function(q, i){
+    var a = answers ? answers[i] : null;
+    if (q.kind === 'tf'){
+      uT += 4; var all = true;
+      (q.bools || []).forEach(function(b, j){ if (a && a[j] === b) uC++; else all = false; });
+      if (all) qC++;
+    } else if (q.kind === 'sa'){
+      uT += 1;
+      if (a != null && String(a).trim() !== '' && spSaMatch(a, q.ans)){ uC++; qC++; }
+    } else {
+      uT += 1;
+      if (a === q.ans){ uC++; qC++; }
+    }
+  });
+  return { qCorrect: qC, unitsC: uC, unitsT: uT, grade10: spGrade10(uC, uT) };
+}
 /* == SP_PURE_END == */
 
 function lsGet(k, dft){ try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : dft; } catch(e){ return dft; } }
@@ -4221,6 +4324,7 @@ function spStartSession(cfg){
   SP = { mode: cfg.mode, key: cfg.key || '', title: cfg.title || 'Tự luyện', boLabel: cfg.boLabel || '',
     taskId: cfg.taskId || '', perQ: cfg.perQ || 30,
     qs: spBuildQuestions(cfg.bank), idx: 0, score: 0, correctCount: 0,
+    answers: null, unitsC: 0, unitsT: 0,
     tc: tcNewState('fast'), wager: 1, answered: false, locked: false,
     qStartAt: 0, disp: null, curKind: '', tfSel: [null, null, null, null], name: spStudentName() };
   spRenderName();
@@ -4233,7 +4337,9 @@ function spRenderName(){
     '<p style="margin:0;font-weight:800;color:#ffd94d">' + (isTask ? '🔗 BÀI GIAO THEO LINK' : '🎓 TỰ LUYỆN THEO BÀI') + '</p>' +
     '<h3 style="margin:6px 0 2px;font-size:22px">' + esc(SP.title) + '</h3>' +
     (SP.boLabel ? '<p class="note" style="margin:0 0 6px">' + esc(SP.boLabel) + '</p>' : '') +
-    '<p class="note">Bộ câu hỏi có <b>' + SP.qs.length + '</b> câu (trích từ Hoạt động 3 của giáo án) • mỗi câu ' + SP.perQ + ' giây • hết giờ tự qua câu • luật điểm Ai Nhanh Hơn (cược bản lĩnh, sai trừ 1.000đ × hệ số cược).</p>' +
+    (isTask
+      ? '<p class="note">Bộ câu hỏi có <b>' + SP.qs.length + '</b> câu (trích từ Hoạt động 3 của giáo án) • mỗi câu ' + SP.perQ + ' giây • trả lời xong biết đúng/sai ngay • luật điểm Ai Nhanh Hơn (cược bản lĩnh, sai trừ 1.000đ × hệ số cược) • kết quả tự nộp cho thầy.</p>'
+      : '<p class="note">Bộ câu hỏi có <b>' + SP.qs.length + '</b> câu (trích từ Hoạt động 3 của giáo án) • làm như thi thật: trả lời tự do, chuyển qua lại giữa các câu, sửa đáp án thoải mái — <b>chưa hiện đúng/sai</b>; bấm <b>Nộp bài</b> mới xem điểm thật và đáp án chi tiết từng câu.</p>') +
     '<label class="fl" style="color:#c9c2e8">Họ tên của em</label>' +
     '<input type="text" id="spName" class="sp-name" placeholder="Ví dụ: Nguyễn Văn An" value="' + esc(SP.name || '') + '">' +
     '<button type="button" class="sp-bigbtn" onclick="spBegin()">🚪 VÀO LÀM BÀI NGAY</button>' +
@@ -4243,7 +4349,7 @@ function spLastResultHtml(){
   var all = lsGet(LS_RESULT, {});
   var r = all[SP.key + '|' + (SP.name || '')];
   if (!r) return '';
-  return '<p class="note" style="margin-top:12px">📜 Lần làm gần nhất của <b>' + esc(r.name) + '</b>: ⭐ ' + r.score + 'đ • đúng ' + r.correct + '/' + r.total + ' câu • điểm hệ 10: <b>' + r.grade10 + '</b> • ' + esc(r.when) + '</p>';
+  return '<p class="note" style="margin-top:12px">📜 Lần làm gần nhất của <b>' + esc(r.name) + '</b>: ' + (r.practice ? '' : '⭐ ' + r.score + 'đ • ') + 'đúng ' + r.correct + '/' + r.total + ' câu • điểm hệ 10: <b>' + r.grade10 + '</b> • ' + esc(r.when) + '</p>';
 }
 window.spBegin = function(){
   var inp = document.getElementById('spName');
@@ -4251,8 +4357,113 @@ window.spBegin = function(){
   if (!name){ showToast('⚠️ Em nhập họ tên trước khi làm bài nhé'); if (inp) inp.focus(); return; }
   SP.name = name;
   try { localStorage.setItem(LS_NAME, name); } catch(e){}
-  SP.idx = 0; spRenderQ();
+  SP.idx = 0;
+  if (SP.mode === 'practice'){ SP.answers = SP.qs.map(function(){ return null; }); spRenderPQ(); }
+  else spRenderQ();
 };
+/* ---------- TỰ LUYỆN kiểu thi thật (Đợt 2): không đếm giờ, không cược, nộp mới chấm ---------- */
+function spPqAnswered(i){
+  var q = SP.qs[i], a = SP.answers[i];
+  if (a === null || a === undefined) return false;
+  if (q.kind === 'tf') return a.every(function(x){ return x !== null && x !== undefined; });
+  if (q.kind === 'sa') return String(a).trim() !== '';
+  return true;
+}
+function spRenderPQ(){
+  var q = SP.qs[SP.idx];
+  if (!q){ spPracticeFinish(); return; }
+  var total = SP.qs.length;
+  var ans = SP.answers[SP.idx];
+  var kindLabel = q.kind === 'mc' ? 'PHẦN I: TRẮC NGHIỆM 4 LỰA CHỌN' : (q.kind === 'tf' ? 'PHẦN II: ĐÚNG / SAI (4 Ý)' : 'PHẦN III: TRẢ LỜI NGẮN');
+  var body = '';
+  if (q.kind === 'mc'){
+    body = '<div id="spOpts">' + q.opts.map(function(o, j){
+      return '<button type="button" class="opt-huge c' + j + (ans === j ? ' sel' : '') + '" onclick="spPickPqMc(' + j + ')"><span class="ol">' + LET4[j] + '</span><span>' + esc(o) + '</span></button>';
+    }).join('') + '</div>';
+  } else if (q.kind === 'tf'){
+    var sel = ans || [null, null, null, null];
+    body = '<div id="spTf">' + q.items.map(function(it, j){
+      return '<div class="tf-row"><span class="tf-txt"><b>' + 'abcd'[j] + ')</b> ' + esc(it) + '</span>' +
+        '<span class="tf-btns"><button type="button" class="tf-btn' + (sel[j] === true ? ' sel-d' : '') + '" onclick="spPickPqTf(' + j + ',true)">Đúng</button>' +
+        '<button type="button" class="tf-btn' + (sel[j] === false ? ' sel-s' : '') + '" onclick="spPickPqTf(' + j + ',false)">Sai</button></span></div>';
+    }).join('') + '</div>';
+  } else {
+    body = '<input type="text" id="spSaInput" class="sa-input" inputmode="decimal" placeholder="Bấm vào đây rồi gõ đáp án bằng bàn phím điện thoại..." value="' + esc(ans == null ? '' : ans) + '" oninput="spTypePqSa(this.value)">' +
+      '<p class="note">💡 Đáp án là một số — gõ xong cứ chuyển câu, hệ thống tự ghi nhớ.</p>';
+  }
+  var done = 0; for (var di = 0; di < total; di++) if (spPqAnswered(di)) done++;
+  var chips = '<div class="pq-chips">' + SP.qs.map(function(_, i){
+    return '<button type="button" class="pq-chip' + (i === SP.idx ? ' cur' : '') + (spPqAnswered(i) ? ' done' : '') + '" onclick="spGotoPq(' + i + ')">' + (i + 1) + '</button>';
+  }).join('') + '</div>';
+  spBox().innerHTML =
+    '<div class="stu-card"><span class="avatar">🎓</span><span>' + esc(SP.name) + '</span><span>✍️ Đã trả lời ' + done + ' / ' + total + ' câu</span></div>' +
+    '<div class="qcard"><div class="qmeta"><span>CÂU ' + (SP.idx + 1) + ' / ' + total + ' • ' + kindLabel + '</span><span>🎓 TỰ LUYỆN</span></div>' +
+    '<p class="qstem">' + esc(q.stem) + '</p>' + body + chips +
+    '<div class="pq-nav">' +
+      '<button type="button" class="btn alt" onclick="spGotoPq(' + (SP.idx - 1) + ')"' + (SP.idx === 0 ? ' disabled' : '') + '>⬅ Câu trước</button>' +
+      '<button type="button" class="btn alt" onclick="spGotoPq(' + (SP.idx + 1) + ')"' + (SP.idx >= total - 1 ? ' disabled' : '') + '>Câu tiếp ➡</button>' +
+      '<button type="button" class="sp-bigbtn" style="flex:1" onclick="spPracticeSubmit()">📋 NỘP BÀI</button>' +
+    '</div></div>';
+}
+window.spPickPqMc = function(j){ if (!SP) return; SP.answers[SP.idx] = j; spRenderPQ(); };
+window.spPickPqTf = function(j, v){
+  if (!SP) return;
+  var a = SP.answers[SP.idx];
+  if (!Array.isArray(a)) a = [null, null, null, null];
+  a[j] = v; SP.answers[SP.idx] = a; spRenderPQ();
+};
+window.spTypePqSa = function(v){ if (SP) SP.answers[SP.idx] = v; };
+window.spGotoPq = function(i){
+  if (!SP || i < 0 || i >= SP.qs.length) return;
+  SP.idx = i; spRenderPQ();
+};
+window.spPracticeSubmit = function(){
+  var left = 0; for (var i = 0; i < SP.qs.length; i++) if (!spPqAnswered(i)) left++;
+  if (left && !confirm('Em còn ' + left + ' câu chưa trả lời. Vẫn nộp bài chứ?')) return;
+  spPracticeFinish();
+};
+function spPracticeFinish(){
+  spStopTimer();
+  var g = spGradePractice(SP.qs, SP.answers);
+  SP.correctCount = g.qCorrect;
+  var when = spFmtTime(Date.now());
+  var all = lsGet(LS_RESULT, {});
+  all[SP.key + '|' + SP.name] = { name: SP.name, practice: true, score: 0, correct: g.qCorrect, total: SP.qs.length, grade10: g.grade10, when: when };
+  lsSet(LS_RESULT, all);
+  var det = SP.qs.map(function(q, i){
+    var a = SP.answers[i];
+    var yours, corr, okQ;
+    if (q.kind === 'mc'){
+      yours = (a === null || a === undefined) ? '— chưa trả lời' : LET4[a] + '. ' + q.opts[a];
+      corr = LET4[q.ans] + '. ' + q.opts[q.ans];
+      okQ = a === q.ans;
+    } else if (q.kind === 'tf'){
+      yours = q.items.map(function(it, j){
+        var v = a ? a[j] : null;
+        return 'abcd'[j] + ') ' + (v === null || v === undefined ? '—' : (v ? 'Đúng' : 'Sai')) + ((a && a[j] === q.bools[j]) ? ' ✓' : ' ✗');
+      }).join('<br>');
+      corr = q.bools.map(function(b, j){ return 'abcd'[j] + ') ' + (b ? 'Đúng' : 'Sai'); }).join(' • ');
+      okQ = !!a && q.bools.every(function(b, j){ return a[j] === b; });
+    } else {
+      yours = (a === null || a === undefined || String(a).trim() === '') ? '— chưa trả lời' : String(a);
+      corr = q.ans;
+      okQ = (a !== null && a !== undefined && String(a).trim() !== '' && spSaMatch(a, q.ans));
+    }
+    return '<div class="pq-det"><p style="margin:0"><b>Câu ' + (i + 1) + '.</b> ' + (okQ ? '✅' : '❌') + ' ' + esc(q.stem) + '</p>' +
+      '<p class="note" style="margin:2px 0 0">Em trả lời: <b>' + (q.kind === 'tf' ? yours : esc(yours)) + '</b><br>Đáp án đúng: <b>' + esc(corr) + '</b></p></div>';
+  }).join('');
+  spBox().innerHTML =
+    '<p style="margin:0;font-weight:800;color:#ffd94d">🎓 TỰ LUYỆN THEO BÀI — KẾT QUẢ</p>' +
+    '<h3 style="margin:6px 0;font-size:23px">' + esc(SP.title) + '</h3>' +
+    '<div class="stu-card"><span class="avatar">🎓</span><span>' + esc(SP.name) + '</span></div>' +
+    '<p style="font-size:18px;margin:14px 0 4px">✅ Đúng <b>' + g.qCorrect + '</b> / <b>' + SP.qs.length + '</b> câu (Phần II tính từng ý: ' + g.unitsC + ' / ' + g.unitsT + ' ý đúng)</p>' +
+    '<p style="font-size:20px;margin:4px 0">🏅 Điểm thật hệ 10: <b style="color:#ffd94d;font-size:26px">' + g.grade10 + '</b></p>' +
+    '<h4 style="margin:14px 0 4px">📋 Xem lại từng câu</h4>' + det +
+    '<div class="btnrow" style="margin-top:12px">' +
+      '<button type="button" class="btn" onclick="spRetry()">🔁 Làm lại</button>' +
+      '<button type="button" class="btn alt" onclick="spExit()">📚 Chọn bài khác</button>' +
+    '</div>';
+}
 function spHeadHtml(){
   return '<div class="stu-card"><span class="avatar">🎓</span><span>' + esc(SP.name) + '</span>' +
     '<span>⭐ ' + SP.score + 'đ</span><span>✅ ' + SP.correctCount + ' câu đúng</span>' +
@@ -4280,6 +4491,7 @@ window.spSetWager = function(w, btn){
   btn.classList.add('sel');
 };
 function spRenderQ(){
+  if (SP && SP._autoT){ clearTimeout(SP._autoT); SP._autoT = null; }
   var q = SP.qs[SP.idx];
   if (!q){ spFinish(); return; }
   SP.answered = false; SP.locked = false; SP.wager = 1; SP.tfSel = [null, null, null, null];
@@ -4367,6 +4579,10 @@ function spApply(correct, timeout, pos){
     elapsed: elapsed, qIndex: SP.idx, total: SP.qs.length, isFirstBlood: false, isLast: SP.idx === SP.qs.length - 1 });
   SP.score += res.delta;
   if (correct) SP.correctCount++;
+  if (q.kind === 'tf'){
+    SP.unitsT += 4;
+    SP.unitsC += SP.tfSel.reduce(function(acc, v, j){ return acc + (v === q.bools[j] ? 1 : 0); }, 0);
+  } else { SP.unitsT += 1; if (correct) SP.unitsC += 1; }
   /* phản hồi + hiện đáp án */
   if (q.kind === 'mc'){
     var btns = document.querySelectorAll('#spOpts .opt-huge');
@@ -4408,6 +4624,13 @@ function spApply(correct, timeout, pos){
     return;
   }
   spContinueBtn(fb);
+  if (SP.mode === 'task'){
+    if (SP._autoT) clearTimeout(SP._autoT);
+    SP._autoT = setTimeout(function(){
+      if (!SP || SP.mode !== 'task' || !SP.answered) return;
+      if (SP.idx >= SP.qs.length - 1) spFinish(); else { SP.idx++; spRenderQ(); }
+    }, 2400);
+  }
 }
 function spChestPick(box){
   var r = tcOpenChest(SP.tc, Math.random());
@@ -4427,7 +4650,7 @@ function spContinueBtn(fb){
 function spFinish(){
   spStopTimer();
   var total = SP.qs.length;
-  var g10 = spGrade10(SP.correctCount, total);
+  var g10 = SP.unitsT ? spGrade10(SP.unitsC, SP.unitsT) : spGrade10(SP.correctCount, total);
   var bd = badgeOf(SP.score);
   var when = spFmtTime(Date.now());
   if (SP.mode === 'practice'){
@@ -4452,8 +4675,9 @@ function spFinish(){
 }
 window.spRetry = function(){
   if (!SP) return;
-  SP.idx = 0; SP.score = 0; SP.correctCount = 0; SP.tc = tcNewState('fast');
-  spRenderQ();
+  SP.idx = 0; SP.score = 0; SP.correctCount = 0; SP.tc = tcNewState('fast'); SP.unitsC = 0; SP.unitsT = 0;
+  if (SP.mode === 'practice'){ SP.answers = SP.qs.map(function(){ return null; }); spRenderPQ(); }
+  else spRenderQ();
 };
 window.spExit = function(){
   spStopTimer(); SP = null;
