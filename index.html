@@ -433,8 +433,7 @@ body.hs-mode #roomEntry{display:block!important}
 body.hs-mode #roomEntry .row2>.card:first-child{display:none!important}
 /* Biến màu riêng của module phòng thi (theo tông EduMaster) */
 #sec-game{--mc:#dc2626;--mcd:#b91c1c;--ok:#0d7a33;--bad:#c62828;--warn:#b06f00;}
-/* Ô dán cấu hình Firebase ngay trong section phòng thi */
-#sec-game .fb-config-box textarea{width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13.5px;padding:10px;border:1.5px solid #ddd3f7;border-radius:10px;}
+
 #sec-game input[type=text],#sec-game textarea{font-family:inherit;}
 #hsBar{display:none;background:#241243;color:#fff;border-radius:12px;padding:10px 14px;margin-bottom:12px;align-items:center;justify-content:space-between;gap:10px;font-weight:700;}
 body.hs-mode #hsBar{display:flex;}
@@ -540,8 +539,6 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
 .pf-title{font-size:19px;font-weight:800;color:#7a5200}
 .pf-btn{display:inline-block;margin:12px 0;padding:15px 26px;font-size:18px;font-weight:800;background:#f2a007;color:#fff;border-radius:999px;text-decoration:none}
 #paneQR{display:flex;justify-content:center;margin:8px 0 4px}
-#hlFbCard{display:none!important}
-#roomNoFb{display:none!important}
 .chip{padding:7px 13px}
 @media(max-width:900px){
   .lib-layout{flex-direction:column}
@@ -667,7 +664,7 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
   </div><!-- /#tabLib -->
   <section class="page" id="sec-game" style="display:none">
     <h2 class="ptitle">🏆 Phòng thi online — Game Rung chuông vàng &amp; thi trực tuyến thời gian thực</h2>
-    <p class="pdesc">Game thi đấu kiểu game show theo <b>luật trochoi</b>: ⚡ <b>Ai Nhanh Hơn</b> (đua tốc độ — cược bản lĩnh 3 mức, thưởng tốc độ/chuỗi, First Blood, 🌟 Câu Hỏi Vàng x2, 🎁 Rương Bí Ẩn) &amp; 🔔 <b>Rung Chuông Vàng</b> (3 ❤️ — sai mất mạng, đúng 3 câu liên tiếp +1 mạng, cứu trợ hồi sinh), cùng 2 chế độ cổ điển 🪢 Kéo co &amp; 👹 Diệt Boss (cược điểm, trợ giúp 50:50, Gương thần kỳ...). Phương án được <b>trộn riêng cho từng học sinh</b>; <b>2 giây cuối</b> mỗi câu tự hiện đáp án đúng và khoá trả lời. Chơi 1 người ngay trên máy này, hoặc mở <b>Phòng thi trực tuyến</b> cho cả lớp cùng thi qua Firebase (thời gian thực).</p>
+    <p class="pdesc">Game thi đấu kiểu game show theo <b>luật trochoi</b>: ⚡ <b>Ai Nhanh Hơn</b> (đua tốc độ — cược bản lĩnh 3 mức, thưởng tốc độ/chuỗi, First Blood, 🌟 Câu Hỏi Vàng x2, 🎁 Rương Bí Ẩn) &amp; 🔔 <b>Rung Chuông Vàng</b> (3 ❤️ — sai mất mạng, đúng 3 câu liên tiếp +1 mạng, cứu trợ hồi sinh), cùng 2 chế độ cổ điển 🪢 Kéo co &amp; 👹 Diệt Boss (cược điểm, trợ giúp 50:50, Gương thần kỳ...). Phương án được <b>trộn riêng cho từng học sinh</b>; <b>2 giây cuối</b> mỗi câu tự hiện đáp án đúng và khoá trả lời. Chơi 1 người ngay trên máy này, hoặc mở <b>Phòng thi trực tuyến</b> cho cả lớp cùng thi (thời gian thực).</p>
     <div class="guidebox"><p>📌 <b>Chỉ dẫn:</b> Chơi 1 người ngay trên máy này, hoặc mở <b>Phòng thi trực tuyến</b>: thầy tạo phòng, học sinh quét mã QR / nhập mã phòng vào thi — kết quả hiện trực tiếp trên màn hình của thầy.</p></div>
 
     <div class="gtabs">
@@ -698,29 +695,10 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
     <div id="gRoomPane" style="display:none">
       <div id="hsBar"><span>🎓 Chế độ học sinh — vào phòng thi</span><button type="button" onclick="exitStudentMode()">Thoát chế độ học sinh</button></div>
       <div class="guidebox" id="roomGuide" style="margin-bottom:14px"><p>📌 <b>Chỉ dẫn phòng thi:</b> ① Nhập <b>bài thi</b> ở ô ngay bên dưới (hoặc bỏ qua — phòng sẽ dùng Ngân hàng câu hỏi) → ② Chỉnh luật chơi rồi bấm <b>Tạo phòng thi</b> → ③ Học sinh quét mã QR là vào thẳng phòng thi, <b>không cần đăng nhập</b> (hoặc nhập mã phòng) → ④ Thầy bấm <b>Bắt đầu thi</b> → ⑤ Xem kết quả trực tiếp ở <b>Bảng kết quả chi tiết</b> phía dưới; khi kết thúc phòng có nút tải kết quả (.csv). <span id="roomGuideFb">Phòng thi đã sẵn sàng online — cứ tạo phòng và cho học sinh quét QR là thi.</span></p></div>
-      <div id="roomNoFb" class="card" style="margin-bottom:14px;display:none">
-        <h3 style="margin:0 0 6px">🔥 Phòng thi trực tuyến cần Firebase (miễn phí)</h3>
-        <p class="note" style="margin:0">Tính năng online đồng bộ qua <b>Firebase Realtime Database</b> bằng project Firebase của chính thầy. Cách làm (khoảng 3 phút):</p>
-        <ol class="note" style="margin:8px 0 8px 18px;padding:0">
-          <li>Mở <b>console.firebase.google.com</b>, đăng nhập Google và bấm <b>Add project</b> → đặt tên (ví dụ: edumaster) → Create project.</li>
-          <li>Trong project: vào <b>Build → Realtime Database → Create Database</b> → chọn <b>Start in test mode</b>.</li>
-          <li>Bấm biểu tượng ⚙️ → <b>Project settings</b> → mục <b>Your apps</b> → chọn biểu tượng Web <b>&lt;/&gt;</b> → đặt tên app → Register app.</li>
-          <li>Sao chép đoạn <b>firebaseConfig</b> (dạng JSON) mà Firebase hiển thị.</li>
-          <li>Quay lại đây: quay lại đây, mở ô <b>Kết nối Firebase</b> ngay bên dưới → dán firebaseConfig vào → Lưu. Dán xong là tạo phòng được ngay.</li>
-        </ol>
-        <button class="btn" type="button" onclick="hlFbBoxToggle(true)">🔥 Dán Firebase config ngay tại đây</button>
-      </div>
+      
 
 
-      <div class="card fb-config-box" id="hlFbCard" style="margin-bottom:14px">
-        <h3 style="margin:0 0 4px">🔥 Kết nối Firebase — dán cấu hình là phòng thi chạy online</h3>
-        <p class="note" style="margin:0 0 8px">Phòng thi đồng bộ thời gian thực qua <b>Firebase Realtime Database</b> (project của thầy, gói Spark miễn phí). Web đã tích hợp sẵn Firebase (project <b>edumaster-online</b>) nên phòng thi đã sẵn sàng online — ô này chỉ là dự phòng: dán <b>firebaseConfig</b> khác vào rồi bấm Lưu sẽ được ưu tiên dùng trước (chỉ lưu trong trình duyệt này, khoá riêng của Học Liệu VIP). Phần <b>Chơi 1 người</b> vẫn chạy bình thường ngay trên máy này. Trạng thái: <b id="setFbStatus">✅ Web đã tích hợp sẵn Firebase — thầy không cần dán cấu hình nữa</b></p>
-        <textarea id="setFbConfig" rows="4" placeholder='Dán firebaseConfig dạng JSON vào đây, ví dụ: {"apiKey":"...","authDomain":"...","databaseURL":"https://...","projectId":"..."}' autocomplete="off" spellcheck="false"></textarea>
-        <div class="btnrow">
-          <button class="btn" type="button" onclick="saveFbConfig()">💾 Lưu cấu hình</button>
-          <button class="btn alt" type="button" onclick="deleteFbConfig()">🗑️ Xoá cấu hình</button>
-        </div>
-      </div>
+      
       <div id="roomEntry">
         <div class="card" style="margin-bottom:14px" id="rtModeCard">
           <h3 style="margin:0 0 4px">📝 NGUỒN CÂU HỎI CHO PHÒNG THI — 2 chế độ</h3>
@@ -756,35 +734,6 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
         </div>
           </div>
         </div>
-        <div class="row2">
-          <div class="card">
-            <h3 style="margin:0 0 4px">👨‍🏫 Dành cho GIÁO VIÊN — Tạo phòng thi</h3>
-            <p class="note" style="margin:0 0 10px">Chỉnh luật chơi bên dưới (luật sẽ đồng bộ xuống máy học sinh theo thời gian thực), rồi bấm Tạo phòng. Màn hình chờ sẽ hiện <b>mã QR thật to</b> cho học sinh quét vào phòng.</p>
-            <div id="rRules"></div>
-            <label class="fl">🏷️ Mã phòng cố định (tuỳ chọn — dùng 1 mã cho mọi buổi, QR/link không đổi)</label>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <input type="text" id="rtFixedCode" placeholder="Để trống = mã ngẫu nhiên" maxlength="6" style="text-transform:uppercase;font-weight:800;letter-spacing:2px;flex:1;min-width:170px">
-              <button class="btn alt" onclick="rtCleanRoom()">🗑️ Dọn phòng</button>
-            </div>
-            <p class="note" style="margin:6px 0 0">Đặt mã cố định gồm đúng 6 ký tự (chữ/số, ví dụ: SINH10). Tạo phòng bằng mã này sẽ mở phòng tại đúng địa chỉ cũ; "Dọn phòng" xoá dữ liệu ván cũ của mã đó để buổi sau sạch sẽ.</p>
-            <div class="btnrow"><button class="btn" onclick="rtCreateRoom()">🚪 Tạo phòng thi</button></div>
-            <div id="rtCreateMsg"></div>
-          </div>
-          <div class="card">
-            <h3 style="margin:0 0 4px">🧑‍🎓 Dành cho HỌC SINH — Vào phòng</h3>
-            <p class="note">Quét mã QR trên màn hình giáo viên, hoặc nhập mã phòng 6 ký tự tại đây.</p>
-            <label class="fl">Mã phòng</label>
-            <input type="text" id="rsCode" placeholder="Ví dụ: K7X2PQ" maxlength="6" style="text-transform:uppercase;font-size:19px;font-weight:800;letter-spacing:3px">
-            <label class="fl">Tên của em</label>
-            <input type="text" id="rsName" placeholder="Ví dụ: Nguyễn Văn An">
-            <div class="btnrow"><button class="btn" onclick="rsJoin()">🎯 Vào phòng thi</button></div>
-            <div id="rsJoinMsg"></div>
-            <div class="guidebox" style="margin-top:10px"><p>📌 <b>Chỉ dẫn cho học sinh:</b> Nhập mã phòng → nhập tên của em → bấm <b>Vào phòng thi</b> → chờ thầy bấm "Bắt đầu thi" → đọc câu hỏi và bấm vào đáp án để trả lời.</p></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- KHU TỔ HỢP CÂU HỎI (v8) -->
       <div class="card" style="margin-bottom:14px" id="mixCard">
         <h3 style="margin:0 0 4px">🧩 TẠO CÂU HỎI TỔNG HỢP — tổ hợp bộ câu hỏi từ các câu ĐÃ CÓ</h3>
         <p class="note" style="margin:0 0 8px">Thầy <b>tick chọn từng câu</b> (hoặc chọn cả bài) từ <b>bank câu hỏi của từng bài</b> (Môn → Khối → Bài) và <b>ngân hàng mẫu</b>, hoặc tìm câu theo từ khoá. Bộ đã tổ hợp dùng ngay được cho: <b>mở phòng trực tiếp</b> • <b>tự luyện</b> • <b>giao link khung giờ</b>. Lưu ý trung thực: kệ <b>Đề thi/Ôn tập chương</b> hiện là file .docx cấp bộ, <b>chưa có dữ liệu câu hỏi trích sẵn</b> nên chưa tick chọn được từ kệ đó.</p>
@@ -811,8 +760,6 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
         </div>
         <div id="mixMsg" style="margin-top:6px"></div>
       </div>
-
-      <!-- KHU GIAO LINK LÀM TRONG KHUNG GIỜ (v8) -->
       <div class="card" style="margin-bottom:14px" id="taskCard">
         <h3 style="margin:0 0 4px">🔗 GIAO LINK LÀM BÀI TRONG KHUNG GIỜ (bài tập về nhà theo link)</h3>
         <p class="note" style="margin:0 0 8px">Khác phòng trực tiếp: thầy tạo <b>1 link</b>, học sinh mở link và làm bài <b>trong khung giờ mở–đóng</b> thầy đặt; kết quả nộp tự động hiện ở bảng bên dưới. Chế độ làm bài dùng chung giao diện tối giản + máy điểm Ai Nhanh Hơn + tự qua câu khi hết giờ từng câu.</p>
@@ -847,6 +794,39 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
         </div>
         <div id="taskSubs" style="margin-top:8px"><p class="note">Chưa chọn bài giao nào.</p></div>
       </div>
+        <div class="row2">
+          <div class="card">
+            <h3 style="margin:0 0 4px">👨‍🏫 Dành cho GIÁO VIÊN — Tạo phòng thi</h3>
+            <p class="note" style="margin:0 0 10px">Chỉnh luật chơi bên dưới (luật sẽ đồng bộ xuống máy học sinh theo thời gian thực), rồi bấm Tạo phòng. Màn hình chờ sẽ hiện <b>mã QR thật to</b> cho học sinh quét vào phòng.</p>
+            <div id="rRules"></div>
+            <label class="fl">🏷️ Mã phòng cố định (tuỳ chọn — dùng 1 mã cho mọi buổi, QR/link không đổi)</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <input type="text" id="rtFixedCode" placeholder="Để trống = mã ngẫu nhiên" maxlength="6" style="text-transform:uppercase;font-weight:800;letter-spacing:2px;flex:1;min-width:170px">
+              <button class="btn alt" onclick="rtCleanRoom()">🗑️ Dọn phòng</button>
+            </div>
+            <p class="note" style="margin:6px 0 0">Đặt mã cố định gồm đúng 6 ký tự (chữ/số, ví dụ: SINH10). Tạo phòng bằng mã này sẽ mở phòng tại đúng địa chỉ cũ; "Dọn phòng" xoá dữ liệu ván cũ của mã đó để buổi sau sạch sẽ.</p>
+            <div class="btnrow"><button class="btn" onclick="rtCreateRoom()">🚪 Tạo phòng thi</button></div>
+            <div id="rtCreateMsg"></div>
+          </div>
+          <div class="card">
+            <h3 style="margin:0 0 4px">🧑‍🎓 Dành cho HỌC SINH — Vào phòng</h3>
+            <p class="note">Quét mã QR trên màn hình giáo viên, hoặc nhập mã phòng 6 ký tự tại đây.</p>
+            <label class="fl">Mã phòng</label>
+            <input type="text" id="rsCode" placeholder="Ví dụ: K7X2PQ" maxlength="6" style="text-transform:uppercase;font-size:19px;font-weight:800;letter-spacing:3px">
+            <label class="fl">Tên của em</label>
+            <input type="text" id="rsName" placeholder="Ví dụ: Nguyễn Văn An">
+            <div class="btnrow"><button class="btn" onclick="rsJoin()">🎯 Vào phòng thi</button></div>
+            <div id="rsJoinMsg"></div>
+            <div class="guidebox" style="margin-top:10px"><p>📌 <b>Chỉ dẫn cho học sinh:</b> Nhập mã phòng → nhập tên của em → bấm <b>Vào phòng thi</b> → chờ thầy bấm "Bắt đầu thi" → đọc câu hỏi và bấm vào đáp án để trả lời.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KHU TỔ HỢP CÂU HỎI (v8) -->
+      
+
+      <!-- KHU GIAO LINK LÀM TRONG KHUNG GIỜ (v8) -->
+      
 
       <!-- MÀN HÌNH GIÁO VIÊN -->
       <div id="rtScreen" style="display:none">
@@ -3143,14 +3123,9 @@ function loadQRCodeLib(){
 }
 function roomPaneInit(){
   var has = fbHasConfig();
-  document.getElementById('roomNoFb').style.display = has ? 'none' : 'block';
   document.getElementById('roomEntry').style.display = has ? 'block' : 'none';
   var g = document.getElementById('roomGuideFb');
-  if (g){
-    var embedded = (typeof FIREBASE_EMBEDDED_CONFIG !== 'undefined') && !!FIREBASE_EMBEDDED_CONFIG;
-    g.textContent = embedded ? 'Web đã tích hợp sẵn Firebase — thầy và học sinh không cần dán cấu hình nữa, cứ tạo phòng và quét QR là thi.'
-      : (getFbConfigRaw() ? 'Đang dùng cấu hình Firebase thầy đã dán ở ô Kết nối Firebase trong mục này.' : 'Phòng thi chạy qua Firebase — nếu chưa có cấu hình, thầy xem hướng dẫn 5 bước ngay bên dưới.');
-  }
+  if (g){ g.textContent = 'Phòng thi đã sẵn sàng — thầy tạo phòng, học sinh quét QR hoặc nhập mã phòng là vào thi.'; }
 }
 
 /* == EDU_AUTH_BEGIN == */
@@ -3373,7 +3348,7 @@ function rtCreateRoom(){
   var msg = document.getElementById('rtCreateMsg');
   msg.innerHTML = '<p class="note">⏳ Đang kết nối Firebase...</p>';
   fbEnsure().then(function(ok){
-    if (!ok){ msg.innerHTML = '<p class="warnbox" style="display:block">⚠️ Chưa kết nối được Firebase — thầy kiểm tra mạng và Firebase config trong mục Cài đặt nhé.</p>'; return; }
+    if (!ok){ msg.innerHTML = '<p class="warnbox" style="display:block">⚠️ Chưa kết nối được phòng thi — thầy kiểm tra kết nối mạng rồi thử lại nhé.</p>'; return; }
     var R = readRules('r');
     if (T && T.code && FB.db){ try { roomRef(T.code).off(); } catch(e){} } /* gỡ listener của phòng trước (hay gặp khi dùng mã cố định) */
     var fixed = (document.getElementById('rtFixedCode').value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -3441,7 +3416,7 @@ function rtCleanRoom(){
   if (code.length !== 6){ msg.innerHTML = '<p class="warnbox" style="display:block">⚠️ Thầy nhập mã phòng (đúng 6 ký tự) cần dọn vào ô "Mã phòng cố định" trước nhé.</p>'; return; }
   if (!confirm('Xoá toàn bộ dữ liệu phòng ' + code + ' (học sinh, điểm số, ván cũ)? Phòng sẽ trống sạch cho buổi học sau.')) return;
   fbEnsure().then(function(ok){
-    if (!ok){ msg.innerHTML = '<p class="warnbox" style="display:block">⚠️ Chưa kết nối được Firebase — thầy kiểm tra mạng và Firebase config trong mục Cài đặt nhé.</p>'; return; }
+    if (!ok){ msg.innerHTML = '<p class="warnbox" style="display:block">⚠️ Chưa kết nối được phòng thi — thầy kiểm tra kết nối mạng rồi thử lại nhé.</p>'; return; }
     roomRef(code).remove().then(function(){
       msg.innerHTML = '<p class="okbox" style="display:block">🗑️ Đã dọn sạch phòng ' + esc(code) + '.</p>';
     }).catch(function(e){ msg.innerHTML = '<p class="warnbox" style="display:block">⚠️ Dọn phòng thất bại: ' + esc(e.message || e) + '</p>'; });
@@ -3841,7 +3816,7 @@ function rsJoin(){
   if (!name){ msg.innerHTML = '<p class="warnbox" style="display:block">⚠️ Em chưa nhập tên của mình.</p>'; return; }
   msg.innerHTML = '<p class="note">⏳ Đang kết nối phòng...</p>';
   fbEnsure().then(function(ok){
-    if (!ok){ msg.innerHTML = '<p class="warnbox" style="display:block">⚠️ Chưa kết nối được tới phòng thi — em kiểm tra mạng rồi thử lại, hoặc báo thầy kiểm tra cấu hình Firebase nhé.</p>'; return; }
+    if (!ok){ msg.innerHTML = '<p class="warnbox" style="display:block">⚠️ Chưa kết nối được tới phòng thi — em kiểm tra mạng rồi thử lại nhé.</p>'; return; }
     roomRef(code).once('value').then(function(snap){
       if (!snap.exists()){ msg.innerHTML = '<p class="warnbox" style="display:block">⚠️ Không tìm thấy phòng ' + esc(code) + ' — em kiểm tra lại mã phòng.</p>'; return; }
       var room = snap.val();
@@ -5198,7 +5173,7 @@ function taskShowLink(id, rec, localOnly){
     '<p style="margin:2px 0">🔗 Link cho học sinh: <b>' + esc(link) + '</b> ' +
     '<button type="button" class="btn alt" onclick="taskCopyLink(\'' + id + '\')">📋 Sao chép link</button></p>' +
     '<div class="qrbox" id="taskQR" style="max-width:190px"></div>' +
-    (localOnly ? '<p class="warnbox" style="display:block">⚠️ CHẾ ĐỘ TẠI MÁY: chưa kết nối được Firebase nên bài giao chỉ lưu trên MÁY NÀY — học sinh phải làm bài trên chính máy này (mở link trên máy này) thì thầy mới xem được kết quả. Muốn học sinh làm ở máy/điện thoại khác, thầy kiểm tra kết nối mạng/Firebase rồi tạo lại link.</p>' : '');
+    (localOnly ? '<p class="warnbox" style="display:block">⚠️ CHẾ ĐỘ TẠI MÁY: chưa kết nối được Firebase nên bài giao chỉ lưu trên MÁY NÀY — học sinh phải làm bài trên chính máy này (mở link trên máy này) thì thầy mới xem được kết quả. Muốn học sinh làm ở máy/điện thoại khác, thầy kiểm tra kết nối mạng rồi tạo lại link.</p>' : '');
   try {
     if (typeof fbMakeQR === 'function') fbMakeQR(document.getElementById('taskQR'), link, 180);
     else if (window.QRCode) new QRCode(document.getElementById('taskQR'), { text: link, width: 180, height: 180 });
@@ -5349,7 +5324,7 @@ function v8Init(){
   try { taskFillViewSel(); } catch(e){}
   var warn = document.getElementById('taskLocalWarn');
   if (warn && taskLocalMode()){
-    warn.innerHTML = '<p class="warnbox" style="display:block">⚠️ Hiện CHƯA kết nối Firebase trên máy này: tạo bài giao sẽ chạy <b>chế độ tại máy</b> (học sinh phải làm trên máy này). Khi trang kết nối được Firebase (như phòng thi), link sẽ dùng được trên mọi thiết bị.</p>';
+    warn.innerHTML = '<p class="warnbox" style="display:block">⚠️ Hiện CHƯA kết nối được máy chủ phòng thi trên máy này: tạo bài giao sẽ chạy <b>chế độ tại máy</b> (học sinh phải làm trên máy này). Khi kết nối được, link sẽ dùng được trên mọi thiết bị.</p>';
   }
   var tid = spParseTaskId(location.search);
   if (tid) taskOpenForStudent(tid);
