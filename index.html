@@ -609,6 +609,30 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
   </div>
   <div id="tabLib">
   <nav class="chips" id="subjectChips" aria-label="Chọn môn học"></nav>
+  <section id="hlGuide" style="border:2.5px solid #6a11cb;border-radius:18px;overflow:hidden;margin:4px 0 18px;background:#fff;box-shadow:0 8px 24px rgba(106,17,203,.16)">
+    <div style="background:linear-gradient(90deg,#6a11cb,#2575fc);color:#fff;padding:13px 18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-size:21px;font-weight:900;letter-spacing:.3px">📖 HƯỚNG DẪN SỬ DỤNG</span>
+      <span style="font-size:15.5px;opacity:.92">— web gồm 2 phân hệ: 📚 <b>Kho Học Liệu</b> và 🏆 <b>Đấu Trường Thi</b>, bấm 2 thẻ lớn ở trên để chuyển qua lại</span>
+      <button type="button" onclick="var b=document.getElementById('hlGuideBody');var h=b.style.display==='none';b.style.display=h?'':'none';this.textContent=h?'▾ Thu gọn':'▸ Mở hướng dẫn'" style="margin-left:auto;background:#ffd94d;color:#4a2500;border:0;border-radius:999px;padding:8px 16px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit">▾ Thu gọn</button>
+    </div>
+    <div id="hlGuideBody" style="padding:16px 18px 14px">
+      <div style="display:flex;flex-wrap:wrap;gap:12px">
+        <div style="flex:1 1 250px;border:2px solid #b8860b;border-top:10px solid #b8860b;border-radius:14px;background:#fff8e1;padding:13px 15px">
+          <div style="display:inline-block;background:#b8860b;color:#fff;font-weight:900;font-size:16.5px;border-radius:999px;padding:5px 14px;margin-bottom:8px">👑 ADMIN — THẦY KHẢI</div>
+          <p style="margin:0;font-size:16px;line-height:1.6">Bấm nút <b>🔑 Admin</b> ở đầu trang, nhập <b>mã chủ</b> (trình duyệt nhớ 72 giờ). Admin <b>toàn quyền</b>: xem và tải tài liệu <b>không bị lá chắn chỉ-xem</b>, quản lí kho, tạo phòng thi, giao bài và xem toàn bộ kết quả của lớp.</p>
+        </div>
+        <div style="flex:1 1 250px;border:2px solid #1e88e5;border-top:10px solid #1e88e5;border-radius:14px;background:#e8f2fe;padding:13px 15px">
+          <div style="display:inline-block;background:#1e88e5;color:#fff;font-weight:900;font-size:16.5px;border-radius:999px;padding:5px 14px;margin-bottom:8px">🧑‍🏫 GIÁO VIÊN</div>
+          <p style="margin:0;font-size:16px;line-height:1.6"><b>Kho Học Liệu:</b> chọn <b>Môn</b> (mỗi môn một màu) → <b>Khối</b> → <b>Thể loại</b> → bấm <b>bài học</b>, tài liệu hiện ngay ở khung lớn bên phải. <b>Đấu Trường Thi:</b> lấy câu hỏi từ ngân hàng có sẵn hoặc nạp đề <b>.docx/.txt</b>, mở phòng cho học sinh vào bằng mã/QR, trình chiếu lên màn hình lớn, xem <b>2 bảng xếp hạng</b> và xuất bảng điểm.</p>
+        </div>
+        <div style="flex:1 1 250px;border:2px solid #2e9e4f;border-top:10px solid #2e9e4f;border-radius:14px;background:#e9f9ee;padding:13px 15px">
+          <div style="display:inline-block;background:#2e9e4f;color:#fff;font-weight:900;font-size:16.5px;border-radius:999px;padding:5px 14px;margin-bottom:8px">🎓 HỌC SINH</div>
+          <p style="margin:0;font-size:16px;line-height:1.6"><b>Tự luyện theo từng bài:</b> làm bài tự do, chuyển câu và sửa đáp án thoải mái, <b>nộp bài mới biết điểm</b> và xem lại đúng/sai từng câu. <b>Vào phòng thi:</b> nhập họ tên + mã phòng → trả lời câu hỏi đủ 3 phần (bấm 4 nút màu, chọn Đúng/Sai, gõ đáp án ngắn) — cuối ván thấy cả <b>điểm game</b> và <b>điểm thật trên thang 10</b>.</p>
+        </div>
+      </div>
+      <p style="margin:13px 0 2px;font-size:16px;line-height:1.6;background:#fdf3e3;border:1.5px dashed #e08a00;border-radius:10px;padding:9px 13px">🎓 <b>Ôn thi tốt nghiệp:</b> nằm trong cột trái, ngay dưới danh sách Khối — gồm 2 ngăn 📚 <b>Tài liệu ôn thi</b> và 📝 <b>Đề thi tốt nghiệp</b> của từng môn. Mọi tài liệu trong kho <b>chỉ để XEM trực tuyến</b> — muốn tải, liên hệ tác giả.</p>
+    </div>
+  </section>
   
   <div id="browseArea">
     <div class="lib-layout">
