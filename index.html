@@ -803,7 +803,7 @@ body.hs-mode header,body.hs-mode footer,body.hs-mode .exam-banner,body.hs-mode #
 
 <footer>
   <b>Học Liệu VIP</b> — Thầy Hồ Tấn Khải • Trường THPT Mang Thít<br>
-  Tài liệu chỉ để <b>XEM</b> — muốn tải về, liên hệ tác giả • Phòng thi online chạy ngay trong trang • Phiên bản v37
+  Tài liệu chỉ để <b>XEM</b> — muốn tải về, liên hệ tác giả • Phòng thi online chạy ngay trong trang • Phiên bản v38
 </footer>
 
 <div id="viewerModal" role="dialog" aria-modal="true">
@@ -1183,6 +1183,17 @@ function monHasTn(mon){
   return false;
 }
 
+/* Cổng hiện ô Ôn thi tốt nghiệp: CHỈ render khi đang ở tab 🎓 Ôn thi
+   (thầy dặn 22:36 11/11/2026: "khi bấm vào nó mới hiện ra đề thi và tài
+   liệu"); ở tab Khối thường vùng ô để trống. Lúc khởi tạo trang script v8
+   chưa nạp nên cổng cũng tránh gọi renderTnShelf quá sớm. */
+function hlTnShelf(){
+  var area = document.getElementById('tnShelfArea');
+  if (!area) return;
+  if (state.tnView && monHasTn(state.mon)) renderTnShelf();
+  else area.innerHTML = '';
+}
+
 function renderKhoiTabs(){
   var wrap = document.getElementById('khoiTabs');
   var html = '';
@@ -1268,7 +1279,7 @@ function renderBrowse(){
     document.getElementById('baiList').innerHTML = '';
     document.getElementById('shelfArea').innerHTML = '';
     RENDERED = []; RENDERED_BO = [];
-    renderTnShelf();
+    hlTnShelf();
     return;
   }
   var ds = driveSubjectOf(state.mon);
@@ -1279,7 +1290,7 @@ function renderBrowse(){
   if (!bo){
     document.getElementById('boTitle').textContent = '';
     list.innerHTML = '<div class="empty">Chưa có dữ liệu cho lựa chọn này.</div>';
-    shelf.innerHTML = ''; RENDERED = []; RENDERED_BO = []; renderTnShelf(); return;
+    shelf.innerHTML = ''; RENDERED = []; RENDERED_BO = []; hlTnShelf(); return;
   }
   var nBaiD = {}; bo.bai.forEach(function(x){ nBaiD[x.so] = 1; });
   var nChuDe = (bo.chu_de && bo.chu_de.length) || 0;
@@ -1317,7 +1328,7 @@ function renderBrowse(){
     shelf.innerHTML = '';
   }
   if (bo.khung_chung) shelf.innerHTML += khungShelfHtml();
-  renderTnShelf();
+  hlTnShelf();
 }
 /* ---------- Mục CHUYÊN ĐỀ (v13): ngang hàng danh sách bài, chỉ hiện khi bộ có ---------- */
 var RENDERED_CD = [];
@@ -1491,7 +1502,7 @@ function renderDriveSubject(ds){
         'src="https://drive.google.com/embeddedfolderview?id=' + ds.driveId + '#grid"></iframe>' +
     '</section>';
   shelf.innerHTML = '';
-  renderTnShelf();
+  hlTnShelf();
 }
 var CURRENT_BO = null;
 function xemDeThi(i){
