@@ -626,6 +626,18 @@ main{max-width:1440px;padding:12px 16px 30px;}
 .foot-ver{font-size:12.5px;color:#d9d2f5;white-space:nowrap;}
 main{padding-bottom:70px;}
 @media (max-width:720px){ .foot-pill{font-size:12px;padding:4px 8px;} .foot-brand{font-size:13.5px;} main{padding-bottom:110px;} #paneBody iframe{height:calc(100vh - 300px);min-height:480px;} #tnViewerBody{height:calc(100vh - 300px);min-height:420px;} }
+
+/* Hoan thien trinh bay kho tai lieu (thay dan 05:22-05:23 12/11/2026: dep + khoa hoc, vu online de sau) */
+.side-box{box-shadow:0 2px 8px rgba(60,20,140,.06);}
+.side-h{background:#f6f2ff;border-radius:9px;padding:8px 10px;margin-bottom:10px;display:flex;align-items:center;gap:7px;}
+.side-list{max-height:none;overflow:visible;}
+#baiList{overflow:auto;max-height:calc(100vh - 340px);padding-right:2px;}
+.br-num{background:#ede9fe;border-radius:999px;padding:2px 9px;font-size:13.5px;}
+.bai-row:hover{background:#f6f2ff;}
+.bai-row.on{box-shadow:inset 3px 0 0 #6a11cb;}
+.ktab:hover{border-color:#6a11cb;color:#6a11cb;}
+.ktab.on:hover{color:#fff;}
+.ttab:hover{border-color:#6a11cb;background:#f6f2ff;}
 </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
@@ -664,7 +676,7 @@ main{padding-bottom:70px;}
   
 </header>
 
-<main> <div class="chips-row" id="chipsRow"><nav class="chips" id="subjectChips" aria-label="Chọn môn học"></nav><div class="chips-tools"><button type="button" class="chip tool-exam" id="mtabExam" onclick="hlToggleExam()">🏆 Đấu Trường Thi</button><button type="button" class="chip tool-guide" id="guideBtn" onclick="hlGuideToggle()">📖 Hướng dẫn sử dụng</button></div></div>
+<main> <div class="chips-row" id="chipsRow"><nav class="chips" id="subjectChips" aria-label="Chọn môn học"></nav><div class="chips-tools"><button type="button" class="chip tool-exam" id="mtabExam" onclick="hlToggleExam()">🏆 Thi Online</button><button type="button" class="chip tool-guide" id="guideBtn" onclick="hlGuideToggle()">📖 Hướng dẫn sử dụng</button></div></div>
   
   <section id="hlGuide" style="border:1.5px solid #d9cdf5;border-radius:12px;overflow:hidden;margin:6px 0 12px;background:#fff"> <div id="hlGuideBody" style="display:none;padding:16px 18px 14px">
       <div style="display:flex;flex-wrap:wrap;gap:12px">
@@ -674,7 +686,7 @@ main{padding-bottom:70px;}
         </div>
         <div style="flex:1 1 250px;border:2px solid #1e88e5;border-top:10px solid #1e88e5;border-radius:14px;background:#e8f2fe;padding:13px 15px">
           <div style="display:inline-block;background:#1e88e5;color:#fff;font-weight:900;font-size:16.5px;border-radius:999px;padding:5px 14px;margin-bottom:8px">🧑‍🏫 GIÁO VIÊN</div>
-          <p style="margin:0;font-size:16px;line-height:1.6"><b>Kho Học Liệu:</b> chọn <b>Môn</b> (mỗi môn một màu) → <b>Khối</b> → <b>Thể loại</b> → bấm <b>bài học</b>, tài liệu hiện ngay ở khung lớn bên phải. <b>Đấu Trường Thi:</b> lấy câu hỏi từ ngân hàng có sẵn hoặc nạp đề <b>.docx/.txt</b>, mở phòng cho học sinh vào bằng mã/QR, trình chiếu lên màn hình lớn, xem <b>2 bảng xếp hạng</b> và xuất bảng điểm.</p>
+          <p style="margin:0;font-size:16px;line-height:1.6"><b>Kho Học Liệu:</b> chọn <b>Môn</b> (mỗi môn một màu) → <b>Khối</b> → <b>Thể loại</b> → bấm <b>bài học</b>, tài liệu hiện ngay ở khung lớn bên phải. <b>Thi Online:</b> lấy câu hỏi từ ngân hàng có sẵn hoặc nạp đề <b>.docx/.txt</b>, mở phòng cho học sinh vào bằng mã/QR, trình chiếu lên màn hình lớn, xem <b>2 bảng xếp hạng</b> và xuất bảng điểm.</p>
         </div>
         <div style="flex:1 1 250px;border:2px solid #2e9e4f;border-top:10px solid #2e9e4f;border-radius:14px;background:#e9f9ee;padding:13px 15px">
           <div style="display:inline-block;background:#2e9e4f;color:#fff;font-weight:900;font-size:16.5px;border-radius:999px;padding:5px 14px;margin-bottom:8px">🎓 HỌC SINH</div>
