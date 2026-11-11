@@ -4588,7 +4588,8 @@ function tnDeSo(file){
 }
 function tnDeHue(so){ return Math.round((so - 1) * 137.508) % 360; }
 function tnTlHue(i){ return Math.round(i * 137.508 + 60) % 360; }
-window.tnDeSo = tnDeSo; window.tnDeHue = tnDeHue; window.tnTlHue = tnTlHue;
+function tnMonShort(mon){ var m = { 'Toán': 'Toán', 'Kinh tế & Pháp luật': 'KTPL', 'Hoá học': 'Hoá', 'Lịch sử': 'Sử', 'Ngữ văn': 'Văn', 'Sinh học': 'Sinh', 'Vật lí': 'Lí', 'Công nghệ công nghiệp': 'CNCN', 'Công nghệ nông nghiệp': 'CNNN', 'Địa lí': 'Địa', 'Tiếng Anh': 'Anh', 'Tin học': 'Tin' }; return m[mon] || mon || ''; }
+window.tnDeSo = tnDeSo; window.tnDeHue = tnDeHue; window.tnTlHue = tnTlHue; window.tnMonShort = tnMonShort;
 window.renderTnShelf = function(){
   var area = document.getElementById('tnShelfArea'); if (!area) return;
   if (!state || TN_SUBJECTS.indexOf(state.mon) < 0){ area.innerHTML = ''; return; }
@@ -4606,7 +4607,7 @@ window.renderTnShelf = function(){
         if (x.so){
           var hue = tnDeHue(x.so);
           return '<div class="tn-file" style="background:hsl(' + hue + ',85%,95%);border-left:7px solid hsl(' + hue + ',70%,45%);border-radius:8px">' +
-                 '<span class="nm"><span style="display:inline-block;background:hsl(' + hue + ',70%,42%);color:#fff;font-weight:900;border-radius:999px;padding:3px 14px;font-size:16px">Đề ' + x.so + '</span></span>' +
+                 '<span class="nm"><span style="display:inline-block;background:hsl(' + hue + ',70%,42%);color:#fff;font-weight:900;border-radius:999px;padding:3px 14px;font-size:16px">' + tnMonShort(state.mon) + ' Đề ' + x.so + '</span></span>' +
                  '<button type="button" class="view-btn" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + x.i + ')">👁 Xem</button></div>';
         }
         if (f.kind === 'tl'){
@@ -4639,7 +4640,7 @@ window.xemOnThiTnFolder = function(kind){
 };
 window.xemOnThiTnFile = function(kind, i){
   var files = tnFilesOf(state.mon, kind);
-  if (files[i]){ var tnSo = kind === 'de' ? tnDeSo(files[i].file) : 0; openDoc(files[i], '🎓 Ôn thi tốt nghiệp — ' + state.mon + ' — ' + (tnSo ? 'Đề ' + tnSo : files[i].file)); }
+  if (files[i]){ var tnSo = kind === 'de' ? tnDeSo(files[i].file) : 0; openDoc(files[i], '🎓 Ôn thi tốt nghiệp — ' + state.mon + ' — ' + (tnSo ? tnMonShort(state.mon) + ' Đề ' + tnSo : files[i].file)); }
 };
 
 /* ---------- Màn hình dùng chung: tự luyện + bài giao link ---------- */
