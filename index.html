@@ -689,6 +689,21 @@ footer{background:transparent;}
 #sec-game #rtLive{background:#101a31;border:2px solid #0284c7;border-radius:16px;color:#fff;--ink:#e2e8f0;--muted:#94a3b8;}
 #rtLB,#psLB{background:#0f172a;border:2px solid #f59e0b;border-radius:16px;padding:12px;}
 #rtLB .lb-row,#psLB .lb-row{background:#0b1222;border-color:#1e293b;color:#e2e8f0;}
+#examMenu{background:#0f172a;border:2px solid #0284c7;border-radius:24px;padding:16px 18px;margin-bottom:16px;}
+#examMenu h3{margin:0 0 4px;font-size:20px;font-weight:900;color:#fcd34d;}
+.exam-menu-sub{margin:0 0 12px;color:#94a3b8;font-size:14px;}
+.exam-khoi{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.exam-khoi{background:#0b1222;border:1.5px solid #1e293b;color:#e2e8f0;border-radius:999px;padding:8px 18px;font-weight:800;cursor:pointer;font-size:15px;font-family:inherit;}
+.exam-khoi.on{background:#2563eb;border-color:#2563eb;color:#fff;}
+.exam-groups{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+@media (max-width:900px){ .exam-groups{grid-template-columns:1fr;} }
+.exam-group h4{margin:0 0 8px;font-size:15px;font-weight:800;color:#67e8f9;}
+.exam-list{display:flex;flex-direction:column;gap:7px;max-height:420px;overflow:auto;padding-right:2px;}
+.exam-row{display:flex;align-items:center;gap:8px;background:#0b1222;border:1.5px solid #1e293b;border-radius:10px;padding:9px 12px;cursor:pointer;font-size:14.5px;color:#e2e8f0;}
+.exam-row:hover{background:#113c52;border-color:#22d3ee;}
+.exam-row-t{flex:1 1 auto;}
+.exam-tag{flex:0 0 auto;font-size:12.5px;font-weight:800;color:#94a3b8;white-space:nowrap;}
+.exam-tag.ok{color:#4ade80;}
 #sec-practice{background:linear-gradient(180deg,#0b1530,#070b14);}
 @media (max-width:900px){ #libSide{width:100%;flex:none;} }
 </style>
@@ -813,7 +828,19 @@ footer{background:transparent;}
   </div>
   </div><!-- /#tabLib -->
   <section class="page" id="sec-game" style="display:none">
-    <h2 class="ptitle">🏆 Phòng thi online — Game Rung chuông vàng &amp; thi trực tuyến thời gian thực</h2>
+    <h2 class="ptitle">🏆 Thi Online — Học sinh tự thi • Phòng thi trực tuyến • Rung chuông vàng</h2>
+    <div id="examMenu">
+      <div class="exam-menu-head">
+        <h3>🏆 Thi Online — <span id="examMenuMon"></span></h3>
+        <p class="exam-menu-sub">Học sinh tự thi: chọn bài, chọn đề hoặc chọn đề thi tốt nghiệp — bấm vào là thi ngay, làm xong nộp bài mới biết điểm.</p>
+      </div>
+      <div class="exam-khoi" id="examKhoi"></div>
+      <div class="exam-groups">
+        <div class="exam-group"><h4>📚 Chọn bài — thi theo bài</h4><div id="examBaiList" class="exam-list"></div></div>
+        <div class="exam-group"><h4>📝 Chọn đề thi</h4><div id="examDeList" class="exam-list"></div></div>
+        <div class="exam-group"><h4>🎓 Thi tốt nghiệp</h4><div id="examTnList" class="exam-list"></div></div>
+      </div>
+    </div>
     
     
 
@@ -1434,16 +1461,19 @@ function renderChips(){
     });
   });
 }
-function pickMon(mon){ hlShowTab('lib'); state.tnView = false;
+function hlInExam(){ var g = document.getElementById('sec-game'); return !!(g && g.style.display !== 'none'); }
+function pickMon(mon){ var inEx = hlInExam(); if (!inEx) hlShowTab('lib'); state.tnView = false;
   state.mon = mon;
   var ks = khoisOf(mon);
   if (ks.indexOf(state.khoi) < 0) state.khoi = ks[0];
   renderAll();
+  if (inEx && window.renderExamMenu) window.renderExamMenu();
 }
-function pickDriveMon(mon){ hlShowTab('lib'); state.tnView = false;
+function pickDriveMon(mon){ var inEx = hlInExam(); if (!inEx) hlShowTab('lib'); state.tnView = false;
   state.mon = mon;
   state.khoi = null;
   renderAll();
+  if (inEx && window.renderExamMenu) window.renderExamMenu();
 }
 
 /* ---------- Duyệt theo bộ ---------- */
@@ -2109,14 +2139,49 @@ var EduParse = (function(){
      (4) bảng đáp án ở cuối văn bản (sau dòng "Đáp án:"/"Bảng đáp án": "1B 2A 3C 4D" hoặc từng dòng "Câu 1: B");
      (5) dãy đáp án đứng RIÊNG ở cuối văn bản ("1B 2A 3C", "1.A 2.B", "1-A 2-B") — nhận cả khi KHÔNG có dòng "Đáp án:" đứng trước.
      Trả về { questions: [{no, q, opts:[4], ans(-1 = chưa rõ), src}], usedKeyTable } */
+  /* Tach phuong an viet don tren 1 dong ("A. ...B. ...C. ...D. ...", kieu de thi tot nghiep) thanh nhieu dong rieng.
+     Chi tach khi cac moc A./B./C./D. xuat hien LIEN TIEP theo thu tu (tranh tach nham chu cai trong than cau). */
+  function expandInlineOptions(lines){
+    var out = [];
+    lines.forEach(function(raw){
+      var line = String(raw || '');
+      var marks = [], re = /(?:\*\*\*)?([A-D])\./g, m;
+      while ((m = re.exec(line)) !== null) marks.push({ letter: m[1], idx: m.index });
+      var ok = marks.length >= 2;
+      if (ok){ for (var k = 1; k < marks.length; k++){ if ('ABCD'.indexOf(marks[k].letter) !== 'ABCD'.indexOf(marks[k - 1].letter) + 1){ ok = false; break; } } }
+      if (ok){
+        var head = line.slice(0, marks[0].idx).trim();
+        if (head) out.push(head);
+        for (var j = 0; j < marks.length; j++){
+          var end = (j + 1 < marks.length) ? marks[j + 1].idx : line.length;
+          out.push(line.slice(marks[j].idx, end).trim());
+        }
+        return;
+      }
+      out.push(line);
+    });
+    return out;
+  }
   function parseQuestionsMulti(text){
-    var lines = String(text || '').split(/\r?\n/);
-    var qs = [], cur = null, keyMap = {}, inKey = false, usedKey = false;
+    var lines = expandInlineOptions(String(text || '').split(/\r?\n/));
+    var qs = [], cur = null, keyMap = {}, tfKeyMap = {}, saKeyMap = {}, inKey = false, usedKey = false, part = 0;
     function pushCur(){ if (cur){ qs.push(cur); cur = null; } }
     function cleanOpt(s){ return String(s || '').replace(/\*\*\*/g, '').trim(); }
-    function scanKeyPairs(s){
+    function scanKeyPairs(s, pt){
       var re = /(\d+)\s*[.:\-]?\s*([A-D])\b/g, m, found = false;
-      while ((m = re.exec(s)) !== null){ keyMap[parseInt(m[1], 10)] = LET.indexOf(m[2].toUpperCase()); found = true; }
+      while ((m = re.exec(s)) !== null){ keyMap[pt + ':' + parseInt(m[1], 10)] = LET.indexOf(m[2].toUpperCase()); found = true; }
+      return found;
+    }
+    /* Bang dap an kieu thi tot nghiep: "Câu 1: a-Đ, b-S, c-S, d-S." (Đúng/Sai) va "Câu 1: 0,4." (tra loi ngan) */
+    function scanTfSaKeys(s, pt){
+      var m = String(s || '').match(/^Câu\s*(\d+)\s*[.:]\s*(.+)$/i);
+      if (!m) return false;
+      var rest = m[2], no = parseInt(m[1], 10), found = false;
+      var tfRe = /([a-d])\s*[-–—]?\s*([ĐS])/gi, t, arr = []; /* KHONG dung \b sau Đ: Đ khong phai ky tu \w nen \b that bai */
+      while ((t = tfRe.exec(rest)) !== null){ arr.push(t[2].toUpperCase() === 'Đ'); }
+      if (arr.length){ tfKeyMap[pt + ':' + no] = arr; found = true; }
+      var saM = rest.match(/^\s*(-?\d{1,6}(?:[.,]\d{1,4})?)\s*\./);
+      if (saM){ saKeyMap[pt + ':' + no] = saM[1]; found = true; }
       return found;
     }
     /* Nhận diện một dòng CHỈ gồm các cặp "số + chữ cái đáp án" liên tiếp (bảng đáp án đứng riêng).
@@ -2146,20 +2211,21 @@ var EduParse = (function(){
       var qCount = 0;
       for (var i = 0; i < start; i++) if (/^Câu\s*\d+\s*[.:)]/i.test(String(lines[i]).trim())) qCount++;
       if (qCount < 1 || block.length > qCount) return;
-      block.forEach(function(p){ keyMap[p[0]] = p[1]; });
+      block.forEach(function(p){ keyMap['0:' + p[0]] = p[1]; });
       usedKey = true;
       lines = lines.slice(0, start);
     })();
     lines.forEach(function(raw){
       var line = String(raw || '').trim();
       if (!line) return;
+      if (/^[-—–\s]*HẾT[-—–\s]*$/i.test(line)) return; /* dấu kết thúc đề, không dính vào thân câu cuối */
       var m;
       /* --- dòng đáp án dạng "Câu n: X" (thuộc bảng đáp án, KHÔNG phải câu hỏi mới) --- */
       if ((m = line.match(/^Câu\s*(\d+)\s*[.:]\s*([A-D])\s*\.?\s*$/i))){
-        keyMap[parseInt(m[1], 10)] = LET.indexOf(m[2].toUpperCase()); usedKey = true; inKey = true; return;
+        keyMap[part + ':' + parseInt(m[1], 10)] = LET.indexOf(m[2].toUpperCase()); usedKey = true; inKey = true; return;
       }
       /* --- tiêu đề PHẦN (I/II/III kiểu thi tốt nghiệp): dòng phân cách, không dính vào câu trước --- */
-      if (/^\s*PHẦN\s+(?:I|II|III|IV|V|\d+)\b/i.test(line)){ inKey = false; return; }
+      if ((m = line.match(/^\s*PHẦN\s+(I|II|III|IV|V|\d+)\b/i))){ var rn = {I:1,II:2,III:3,IV:4,V:5}; part = rn[m[1].toUpperCase()] || parseInt(m[1], 10) || 0; return; }
       /* --- đáp án SỐ của câu trả lời ngắn: "Đáp án: 900" / "Đáp án: 2,5" / "Đ/A: -3" ---
          Đây là đáp án của câu hiện tại, KHÔNG phải đầu bảng đáp án (bảng đáp án thật là dãy "1B 2A..." chữ cái).
          Đặt TRƯỚC quy tắc bảng đáp án có chữ số để không bị nuốt vào chế độ bảng đáp án. */
@@ -2171,11 +2237,15 @@ var EduParse = (function(){
          KHÔNG dính vào thân câu hay phương án (nếu dính, câu có hình sẽ bị loại khỏi phòng thi oan) --- */
       if (line === '[Hình ảnh]'){ return; }
       /* --- bắt đầu khối bảng đáp án ở cuối --- */
-      if (/^(BẢNG\s+)?ĐÁP\s+ÁN\s*:?\s*$/i.test(line) || /^Đ\/A\s*:?\s*$/i.test(line)){ pushCur(); inKey = true; return; }
-      if (/^(BẢNG\s+)?ĐÁP\s+ÁN\s*:/i.test(line) && /\d/.test(line)){ pushCur(); inKey = true; if (scanKeyPairs(line)) usedKey = true; return; }
+      if (/^(BẢNG\s+)?ĐÁP\s+ÁN\s*:/i.test(line) && /\d/.test(line)){ pushCur(); inKey = true; if (scanKeyPairs(line, part)) usedKey = true; return; }
+      if ((/^(BẢNG\s+)?ĐÁP\s+ÁN\b/i.test(line) && !/^Đáp\s+án\s*:?\s*([A-D]|-?\d)/i.test(line)) || /^Đ\/A\s*:?\s*$/i.test(line)){ pushCur(); inKey = true; return; } /* "Đáp án: B/32" la dap an noi tuyen, KHONG phai tieu de bang dap an */
       if (inKey){
-        if (/^Câu\s*\d+\s*[.:)]\s+\S/i.test(line) && !/^Câu\s*\d+\s*[.:]\s*[A-D]\s*\.?\s*$/i.test(line)){ inKey = false; /* rơi xuống xử lý câu hỏi mới */ }
-        else { if (scanKeyPairs(line)) usedKey = true; return; }
+        if (/^(Câu\s*\d+\s*[.:]\s*[A-D]\s*\.?\s*([|;,]\s*)?)+$/i.test(line)){ if (scanKeyPairs(line, part)) usedKey = true; return; }
+        if (/^Câu\s*\d+\s*[.:]\s*([a-d]\s*[-–—]?\s*[ĐS]\s*\.?\s*([,;]\s*)?)+$/i.test(line)){ if (scanTfSaKeys(line, part)) usedKey = true; return; }
+        var saK = line.match(/^Câu\s*(\d+)\s*[.:]\s*(-?\d{1,6}(?:[.,]\d{1,4})?)\s*\./);
+        if (saK){ saKeyMap[part + ':' + parseInt(saK[1], 10)] = saK[2]; usedKey = true; return; }
+        if (/^Câu\s*\d+\s*[.:)]\s+\S/i.test(line)){ inKey = false; /* rơi xuống xử lý câu hỏi mới */ }
+        else { if (scanKeyPairs(line, part)) usedKey = true; return; }
       }
       /* --- đáp án nội tuyến trong câu --- */
       if (cur && (m = line.match(/^Đáp\s+án\s*:?\s*([A-D])\s*\.?\s*$/i))){ cur.ans = LET.indexOf(m[1].toUpperCase()); cur.src = 'inline'; return; }
@@ -2183,7 +2253,7 @@ var EduParse = (function(){
       /* --- bắt đầu câu hỏi mới --- */
       if ((m = line.match(/^Câu\s*(\d+)\s*[.:)]\s*(.*)$/i))){
         pushCur();
-        cur = { no: parseInt(m[1], 10), q: (m[2] || '').trim(), opts: [], ans: -1, src: null, kind: 'mc', tfItems: null, ansText: null };
+        cur = { no: parseInt(m[1], 10), q: (m[2] || '').trim(), opts: [], ans: -1, src: null, kind: 'mc', tfItems: null, ansText: null, part: part };
         return;
       }
       /* --- dòng phương án (các kiểu ghi) --- */
@@ -2201,7 +2271,7 @@ var EduParse = (function(){
       }
       /* --- ý Đúng/Sai dạng chữ: "a) ... (Đúng)" / "a) ... — Sai" / "a) ... [Đúng]" → câu kind 'tf' với từng ý + đúng/sai --- */
       if (cur && (m = line.match(/^([a-d])\s*[.)]\s*(.*)$/))){
-        var tfM = m[2].match(/\(\s*(Đúng|Sai)\s*\)\s*$/i) || m[2].match(/[—–-]\s*(Đúng|Sai)\s*$/i) || m[2].match(/(?:\(\s*(Đúng|True|Sai|False|Đ|S)\s*\)|\[\s*(Đúng|True|Sai|False|Đ|S)\s*\]|[-–—:→]\s*(Đúng|True|Sai|False|Đ|S))\.?\s*$/i) || m[2].match(/\s(Đúng|Sai)\s*\.?\s*$/i);
+        var tfM = m[2].match(/\(\s*(Đúng|Sai)\s*\)\s*$/i) || m[2].match(/[—–-]\s*(Đúng|Sai)\s*$/i) || m[2].match(/(?:\(\s*(Đúng|True|Sai|False|Đ|S)\s*\)|\[\s*(Đúng|True|Sai|False|Đ|S)\s*\]|[-–—:→]\s*(Đúng|True|Sai|False|Đ|S))\.?\s*$/i) || m[2].match(/\s(Đúng|Sai)\s*\.?\s*$/i) || m[2].match(/\*\*\*\s*(Đúng|Sai)\s*\.?\s*$/i);
         if (tfM){
           var tfWord = (tfM[1] || tfM[2] || tfM[3] || '').toLowerCase();
           var itemTxt = m[2].slice(0, m[2].length - tfM[0].length).trim();
@@ -2209,6 +2279,8 @@ var EduParse = (function(){
           cur.tfItems.push({ t: itemTxt, correct: tfWord === 'đ' || tfWord === 'đúng' || tfWord === 'true' });
           return;
         }
+        var hasOpts = cur.opts.some(function(o){ return o && String(o).trim(); });
+        if (!hasOpts){ if (!cur.tfItems) cur.tfItems = []; cur.tfItems.push({ t: m[2].trim(), correct: null }); return; }
       }
       /* --- dòng tiếp nối: nối vào thân câu (chưa có phương án) hoặc vào phương án cuối --- */
       if (cur){
@@ -2221,13 +2293,18 @@ var EduParse = (function(){
     pushCur();
     /* --- áp bảng đáp án cho câu chưa có đáp án riêng --- */
     qs.forEach(function(q){
-      if (q.ans < 0 && keyMap[q.no] !== undefined){ q.ans = keyMap[q.no]; q.src = 'key'; }
-      for (var k = 0; k < 4; k++) if (typeof q.opts[k] !== 'string') q.opts[k] = '';
+      var k = keyMap[q.part + ':' + q.no]; if (k === undefined) k = keyMap['0:' + q.no];
+      if (q.ans < 0 && k !== undefined){ q.ans = k; q.src = 'key'; }
+      var tk = tfKeyMap[q.part + ':' + q.no]; if (tk === undefined) tk = tfKeyMap['0:' + q.no];
+      if (tk && q.tfItems){ q.tfItems.forEach(function(it, j){ if (tk[j] !== undefined) it.correct = tk[j]; }); }
+      var sk = saKeyMap[q.part + ':' + q.no]; if (sk === undefined) sk = saKeyMap['0:' + q.no];
+      if ((q.ansText === null || q.ansText === undefined) && sk !== undefined){ q.ansText = sk; if (!q.src) q.src = 'key'; }
+      for (var k2 = 0; k2 < 4; k2++) if (typeof q.opts[k2] !== 'string') q.opts[k2] = '';
       /* --- chốt dạng câu: tf (có ý Đ/S, không có phương án A–D) / sa (đáp án số, không có phương án) / mc --- */
       var hasLetterOpts = q.opts.some(function(o){ return o && String(o).trim(); });
       if (q.tfItems && q.tfItems.length && !hasLetterOpts){
         q.kind = 'tf';
-        q.tfAns = q.tfItems.map(function(it){ return it.correct ? 'Đ' : 'S'; }).join('');
+        q.tfAns = q.tfItems.map(function(it){ return it.correct === true ? 'Đ' : (it.correct === false ? 'S' : '?'); }).join('');
       } else if (q.ansText !== null && q.ansText !== undefined && q.ans < 0 && !hasLetterOpts){
         q.kind = 'sa';
       } else if (!q.kind){
@@ -3281,6 +3358,7 @@ function hlShowTab(which){
     lib.style.display = 'none'; ex.style.display = '';
     if (ml) ml.classList.remove('on'); if (me) me.classList.add('on');
     ex.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (window.renderExamMenu) window.renderExamMenu();
   } else {
     lib.style.display = ''; ex.style.display = 'none';
     if (ml) ml.classList.add('on'); if (me) me.classList.remove('on');
@@ -4590,9 +4668,31 @@ function spBuildQuestions(bank){
   var out = [];
   if (!bank) return out;
   (bank.mc || []).forEach(function(m){ out.push({ kind: 'mc', stem: m[0], opts: m[1].slice(), ans: m[2] }); });
-  if (bank.tf) out.push({ kind: 'tf', stem: bank.tf[0], items: bank.tf[1].slice(), bools: bank.tf[2].slice() });
+  if (bank.tf && bank.tf.length){ var tfs = Array.isArray(bank.tf[0]) ? bank.tf : [bank.tf]; tfs.forEach(function(t){ if (t && t[1] && t[2]) out.push({ kind: 'tf', stem: t[0], items: t[1].slice(), bools: t[2].slice() }); }); }
   (bank.sa || []).forEach(function(s){ out.push({ kind: 'sa', stem: s[0], ans: String(s[1]) }); });
   return out;
+}
+/* Chuyen ket qua EduParse thanh bank cho may tu luyen: CHI giu cau cham duoc (co dap an); cau chua ro dap an thi bo qua va dem vao skipped */
+function examBankFromParsed(parsed){
+  var bank = { mc: [], tf: [], sa: [] }, skipped = 0, total = 0;
+  (parsed.questions || []).forEach(function(q){
+    total++;
+    if (q.kind === 'tf'){
+      var items = (q.tfItems || []).map(function(it){ return it.t; });
+      var bools = (q.tfItems || []).map(function(it){ return it.correct; });
+      if (items.length === 4 && bools.every(function(b){ return b === true || b === false; })) bank.tf.push([q.q, items, bools]);
+      else skipped++;
+    } else if (q.kind === 'sa'){
+      if (q.ansText !== null && q.ansText !== undefined && String(q.ansText).trim() !== '') bank.sa.push([q.q, String(q.ansText)]);
+      else skipped++;
+    } else {
+      var good = (q.opts || []).filter(function(o){ return o && String(o).trim(); });
+      if (q.ans >= 0 && good.length >= 2) bank.mc.push([q.q, (q.opts || []).slice(0, 4).map(function(o){ return String(o || ''); }), q.ans]);
+      else skipped++;
+    }
+  });
+  if (!bank.tf.length) bank.tf = null;
+  return { bank: bank, skipped: skipped, total: total };
 }
 /* So khớp đáp án trả lời ngắn theo SỐ HỌC (chấp nhận dấu phẩy thập phân, khoảng trắng, dấu chấm cuối) */
 function spSaMatch(given, ans){
@@ -4739,6 +4839,116 @@ window.xemOnThiTnFile = function(kind, i){
 
 function tnViewerOpen(file, title){ var v = document.getElementById('tnViewer'); var b = document.getElementById('tnViewerBody'); var t = document.getElementById('tnViewerTitle'); var f = document.getElementById('tnViewerFoot'); if (!v || !b){ openDoc(file, title); return false; } var fid = docFidOf(file); if (t) t.textContent = '📄 ' + title; if (f) f.textContent = '📄 ' + file.file + ' • Cuộn xuống để xem hết tài liệu • Bấm ✕ Đóng để về danh sách'; if (fid){ b.innerHTML = '<iframe title="Khung xem tài liệu" src="' + drivePreviewUrl(fid) + '" allow="autoplay" allowfullscreen></iframe>'; } else { b.innerHTML = '<div class="empty">Chưa nối được file này — thầy cô mở thư mục môn trên Drive để xem.</div>'; } v.style.display = ''; try { var sec = v.closest('section'); if (sec){ var r = sec.getBoundingClientRect(); var vh = window.innerHeight || 800; if (r.top < 150 || r.top > vh * 0.5) sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); } } catch (e){} return true; }
 window.tnViewerClose = function(){ var v = document.getElementById('tnViewer'); if (v) v.style.display = 'none'; var b = document.getElementById('tnViewerBody'); if (b) b.innerHTML = ''; };
+
+/* ------ TU THI (Hoc Lieu Vip Pro): hoc sinh bam mon -> chon bai / chon de / chon thi tot nghiep -> thi ngay ------ */
+/* Trich text 1 doan <w:p> kem dau *** truoc run dap an (gach chan + to do) de parser nhan ra dap an dung */
+function examParaText(seg){
+  var runs = String(seg || '').split(/<w:r[\s>]/), out = '';
+  for (var i = 1; i < runs.length; i++){
+    var r = runs[i], end = r.indexOf('</w:r>');
+    if (end >= 0) r = r.slice(0, end);
+    var txt = EduDocx._paraText(r);
+    if (!txt) continue;
+    var rPrEnd = r.indexOf('<w:t');
+    var rPr = rPrEnd >= 0 ? r.slice(0, rPrEnd) : r;
+    var marked = /<w:u[\s>\/]/.test(rPr) && /<w:color[^>]*w:val="(?:DC143C|CC0000|C00000|FF0000|E53935|D32F2F|B91C1C|EF4444|F43F5E|E11D48)"/i.test(rPr);
+    if (marked && (/^\s*[A-D][.)]/.test(txt) || /^\s*[A-D]\s*$/.test(txt) || /^\s*(Đúng|Sai)\s*$/i.test(txt))) out += '***' + txt;
+    else out += txt;
+  }
+  return out;
+}
+/* Doc .docx tu Drive: dung JSZip de giu dau dap an; neu JSZip loi thi dung mammoth (mat dau, chi con dap an o bang dap an) */
+function examDocxToText(buf){
+  return loadJSZip().then(function(){ return JSZip.loadAsync(buf); }).then(function(zip){
+    var f = zip.file('word/document.xml');
+    if (!f) throw new Error('no-doc');
+    return f.async('string');
+  }).then(function(xml){
+    var parts = String(xml || '').split(/<w:p[\s>]/), out = [];
+    for (var i = 1; i < parts.length; i++){
+      var seg = parts[i], end = seg.indexOf('</w:p>');
+      if (end >= 0) seg = seg.slice(0, end);
+      var line = examParaText(seg).replace(/\s+/g, ' ').trim();
+      if (line) out.push(line);
+    }
+    return out.join('\n');
+  }).catch(function(){
+    if (window.mammoth) return mammoth.extractRawText({ arrayBuffer: buf }).then(function(r){ return String((r && r.value) || ''); });
+    throw new Error('no-extract');
+  });
+}
+function examStartDoc(file, title){
+  var fid = docFidOf(file);
+  if (!fid){ showToast('⚠️ Chưa nối được file này'); return; }
+  showToast('⏳ Đang tải đề — chờ em chút...');
+  fetch('https://drive.usercontent.google.com/download?id=' + fid + '&export=download&confirm=t').then(function(r){
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.arrayBuffer();
+  }).then(function(buf){ return examDocxToText(buf); }).then(function(text){
+    var parsed = EduParse.parseQuestionsMulti(text);
+    var res = examBankFromParsed(parsed);
+    var n = (res.bank.mc || []).length + (res.bank.sa || []).length + (res.bank.tf ? res.bank.tf.length : 0);
+    if (!n) throw new Error('no-q');
+    if (res.skipped) showToast('📝 Đề có ' + res.total + ' câu — thi được ' + n + ' câu (bỏ ' + res.skipped + ' câu chưa có đáp án).');
+    spStartSession({ mode: 'practice', key: 'doc:' + fid, bank: res.bank, title: title, boLabel: 'Đề thi — ' + file.file, perQ: 30 });
+  }).catch(function(){
+    showToast('⚠️ Chưa tải được đề này để thi — em mở xem trước nhé');
+    openDoc(file, title);
+  });
+}
+window.examStartLesson = function(idx){ spOpen(idx); };
+window.examSetKhoi = function(k){ state.khoi = k; renderAll(); renderExamMenu(); };
+window.examStartDocByIndex = function(i){
+  var bo = boOf(state.mon, state.khoi);
+  if (bo && bo.de_thi[i]) examStartDoc(bo.de_thi[i], 'Đề thi / Ôn tập / Kiểm tra — ' + bo.de_thi[i].file);
+};
+window.examStartTn = function(i){
+  var files = tnFilesOf(state.mon, 'de');
+  if (files[i]){ var so = tnDeSo(files[i].file); examStartDoc(files[i], '🎓 Ôn thi tốt nghiệp — ' + state.mon + ' — ' + (so ? tnMonShort(state.mon) + ' Đề ' + so : files[i].file)); }
+};
+function renderExamMenu(){
+  var box = document.getElementById('examMenu');
+  if (!box) return;
+  var mon = state.mon || '';
+  var titleEl = document.getElementById('examMenuMon');
+  if (titleEl) titleEl.textContent = mon;
+  var khoiEl = document.getElementById('examKhoi');
+  if (khoiEl){
+    var ks = khoisOf(mon);
+    khoiEl.innerHTML = ks.map(function(k){
+      return '<button type="button" class="exam-khoi' + (state.khoi === k ? ' on' : '') + '" onclick="examSetKhoi(' + k + ')">Khối ' + k + '</button>';
+    }).join('') || '<span class="note">Chưa có khối lớp</span>';
+  }
+  var baiEl = document.getElementById('examBaiList');
+  if (baiEl){
+    var rows = '';
+    RENDERED.forEach(function(b, i){
+      var key = hlBankKey(i);
+      var hasBank = !!(typeof BANKS !== 'undefined' && BANKS[key]);
+      rows += '<div class="exam-row" onclick="examStartLesson(' + i + ')"><span class="exam-row-t">Bài ' + esc(String(b.so)) + ' — ' + esc(b.ten) + '</span><span class="exam-tag' + (hasBank ? ' ok' : '') + '">' + (hasBank ? '📝 Thi ngay' : '🕐 Chưa có bộ câu hỏi') + '</span></div>';
+    });
+    baiEl.innerHTML = rows || '<p class="note">Chưa có bài học ở khối này.</p>';
+  }
+  var deEl = document.getElementById('examDeList');
+  if (deEl){
+    var bo = boOf(mon, state.khoi);
+    var dts = (bo && bo.de_thi) || [];
+    deEl.innerHTML = dts.map(function(d, i){
+      var label = String(d.file || '').replace(/\.docx$/i, '').replace(/_/g, ' ');
+      return '<div class="exam-row" onclick="examStartDocByIndex(' + i + ')"><span class="exam-row-t">📝 ' + esc(label) + '</span><span class="exam-tag ok">Thi ngay</span></div>';
+    }).join('') || '<p class="note">Chưa có đề thi ở khối này.</p>';
+  }
+  var tnEl = document.getElementById('examTnList');
+  if (tnEl){
+    var files = tnFilesOf(mon, 'de');
+    tnEl.innerHTML = files.map(function(f, i){
+      var so = tnDeSo(f.file);
+      var label = so ? tnMonShort(mon) + ' Đề ' + so : f.file;
+      return '<div class="exam-row" onclick="examStartTn(' + i + ')"><span class="exam-row-t">🎓 ' + esc(label) + '</span><span class="exam-tag ok">Thi ngay</span></div>';
+    }).join('') || '<p class="note">Môn này chưa có đề thi tốt nghiệp.</p>';
+  }
+}
+window.renderExamMenu = renderExamMenu;
 
 /* ---------- Màn hình dùng chung: tự luyện + bài giao link ---------- */
 function spShow(){ var s = document.getElementById('sec-practice'); if (s) s.style.display = ''; var g = document.getElementById('sec-game'); if (g) g.scrollIntoView({ behavior: 'smooth' }); }
