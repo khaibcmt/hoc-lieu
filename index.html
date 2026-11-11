@@ -645,7 +645,7 @@ main{padding-bottom:70px;}
 .ttab:hover{border-color:#6a11cb;background:#f6f2ff;}
 
 /* Chu de toi kieu BioMaster (kho) + trochoi (Thi Online) — thay dan 05:26-05:27 12/11/2026 */
-:root{--bg:#070c18;--ink:#e2e8f0;--muted:#94a3b8;--card:#141e33;--brand1:#2563eb;--brand2:#6366f1;--gold:#f59e0b;}
+:root{--bg:#070c18;--ink:#e2e8f0;--muted:#94a3b8;--card:#141e33;--brand1:#2563eb;--brand2:#6366f1;--gold:#f59e0b;--mon:#2563eb;--mon-soft:#93b4fd;}
 body{background:#070c18;color:#e2e8f0;font-family:"Plus Jakarta Sans","Segoe UI",Roboto,Arial,sans-serif;}
 header{background:#0f172a;box-shadow:0 3px 14px rgba(0,0,0,.5);}
 .chips-row{background:#070c18;}
@@ -705,6 +705,31 @@ footer{background:transparent;}
 .exam-khoi{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
 .exam-khoi{background:#0b1222;border:1.5px solid #1e293b;color:#e2e8f0;border-radius:999px;padding:8px 18px;font-weight:800;cursor:pointer;font-size:15px;font-family:inherit;}
 .exam-khoi.on{background:#2563eb;border-color:#2563eb;color:#fff;}
+/* 1 trang — mau mon dong nhat --mon (thay dan 06:24 12/11/2026; y tuong Khan/Coursera) */
+.ktab.on,.ttab.on{background:var(--mon);border-color:var(--mon);}
+.bai-row:hover{border-color:var(--mon);}
+.bai-row.on{border-color:var(--mon);box-shadow:inset 3px 0 0 var(--mon);}
+.bai-num{background:var(--mon);}
+.side-h{border-left:3px solid var(--mon);padding-left:8px;}
+#paneViewer{border-top:3px solid var(--mon);}
+.shelf h3,.cd-sec h3{color:var(--mon-soft);}
+.tn-head h3{color:var(--mon-soft);}
+#examMenu{border-color:var(--mon);}
+#examMenu h3{color:var(--mon-soft);}
+.exam-khoi.on{background:var(--mon);border-color:var(--mon);}
+.exam-group{border-left:3px solid #1e293b;padding-left:10px;}
+.exam-group:nth-child(1){border-left-color:#3b82f6;}
+.exam-group:nth-child(1) h4{color:#93c5fd;}
+.exam-group:nth-child(2){border-left-color:#a855f7;}
+.exam-group:nth-child(2) h4{color:#d8b4fe;}
+.exam-group:nth-child(3){border-left-color:#f59e0b;}
+.exam-group:nth-child(3) h4{color:#fcd34d;}
+.exam-list{max-height:320px;overflow-y:auto;scrollbar-width:thin;}
+.tn-compact .tn-folders{max-height:420px;overflow-y:auto;scrollbar-width:thin;}
+.slot{border-left:3px solid var(--mon);}
+.slot-phieu{border-left-color:#22c55e;}
+.slot-vip{border-left-color:#f59e0b;}
+.slot-ppt{border-left-color:#f97316;}
 .exam-groups{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
 @media (max-width:900px){ .exam-groups{grid-template-columns:1fr;} }
 .exam-group h4{margin:0 0 8px;font-size:15px;font-weight:800;color:#67e8f9;}
@@ -1429,6 +1454,13 @@ var MON_COLORS = {
   'Hoạt động trải nghiệm, hướng nghiệp': '#8e24aa'
 };
 function chipShort(mon){ var m = { 'Toán': 'Toán', 'Kinh tế & Pháp luật': 'KTPL', 'Hoá học': 'Hoá', 'Lịch sử': 'Sử', 'Ngữ văn': 'Văn', 'Sinh học': 'Sinh', 'Vật lí': 'Lí', 'Công nghệ công nghiệp': 'CNCN', 'Công nghệ nông nghiệp': 'CNNN', 'Địa lí': 'Địa', 'Tiếng Anh': 'Anh', 'Tin học': 'Tin', 'Thể dục': 'Thể dục', 'Hoạt động trải nghiệm, hướng nghiệp': 'Trải nghiệm' }; return m[mon] || mon || ''; }
+function hlApplyMonColor(){
+  try{
+    var c = (typeof MON_COLORS !== 'undefined' && MON_COLORS[state.mon]) || '#2563eb';
+    var r = document.documentElement;
+    if (r && r.style && r.style.setProperty){ r.style.setProperty('--mon', c); r.style.setProperty('--mon-soft', hlLighten(c, 0.55)); }
+  }catch(e){}
+}
 function hlLighten(hex, amt){ var n = parseInt(String(hex).replace('#', ''), 16); var r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255; r = Math.round(r + (255 - r) * amt); g = Math.round(g + (255 - g) * amt); b = Math.round(b + (255 - b) * amt); return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1); }
 function chipStyle(mon, on){ var c = MON_COLORS[mon]; if (!c) return ''; if (on) return ' style="background:' + c + ';border-color:' + c + ';color:#fff;box-shadow:0 4px 14px ' + c + '55"'; var lc = hlLighten(c, 0.30); return ' style="background:' + c + 'b3;border-color:' + lc + ';color:#fff;box-shadow:0 2px 12px ' + c + '66"'; }
 function renderChips(){
@@ -1629,7 +1661,8 @@ var RENDERED_BO = []; /* bộ (key bank) song song với RENDERED — phục v�
 function slotHtml(icon, label, info, okText, waitText, co, onclick){
   var st = co ? '<span class="st-ok">✅ ' + okText + '</span>'
               : '<span class="st-wait">🕐 ' + waitText + '</span>';
-  return '<div class="slot"' + (onclick ? ' onclick="' + onclick + '" style="cursor:pointer" title="Bấm để xem"' : '') + '><h4>' + icon + ' ' + label + '</h4>' +
+  var cls = /Giáo án/.test(label) ? ' slot-ga' : /Phiếu/.test(label) ? ' slot-phieu' : /VIP/.test(label) ? ' slot-vip' : /PPT|Slide/.test(label) ? ' slot-ppt' : '';
+  return '<div class="slot' + cls + '"' + (onclick ? ' onclick="' + onclick + '" style="cursor:pointer" title="Bấm để xem"' : '') + '><h4>' + icon + ' ' + label + '</h4>' +
          (info ? '<div class="fname">' + info + '</div>' : '') +
          '<div class="note">' + st + '</div></div>';
 }
@@ -1968,7 +2001,7 @@ function renderSearch(){
 
 
 function renderAll(){
-  renderChips();
+  renderChips(); hlApplyMonColor();
   if (isSearching()) renderSearch(); else renderBrowse();
 }
 
