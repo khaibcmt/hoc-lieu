@@ -89,6 +89,8 @@
     border:2px solid var(--brand1); background:#fff; color:var(--brand1); min-height:48px;
   }
   .ktab.on{background:var(--brand1); color:#fff;}
+  .ktab-tn{border-color:#e8a100; color:#9a6a00; background:#fff8e1;}
+  .ktab-tn.on{background:linear-gradient(135deg,#f5a623,#e8a100); color:#fff; border-color:#e8a100;}
   .bo-title{font-size:21px; font-weight:800; color:var(--brand1); margin:4px 0 12px;}
 
   /* ===== Thẻ bài ===== */
@@ -801,7 +803,7 @@ body.hs-mode header,body.hs-mode footer,body.hs-mode .exam-banner,body.hs-mode #
 
 <footer>
   <b>Học Liệu VIP</b> — Thầy Hồ Tấn Khải • Trường THPT Mang Thít<br>
-  Tài liệu chỉ để <b>XEM</b> — muốn tải về, liên hệ tác giả • Phòng thi online chạy ngay trong trang • Phiên bản v36
+  Tài liệu chỉ để <b>XEM</b> — muốn tải về, liên hệ tác giả • Phòng thi online chạy ngay trong trang • Phiên bản v37
 </footer>
 
 <div id="viewerModal" role="dialog" aria-modal="true">
@@ -887,7 +889,7 @@ function driveMonId(mon, khoi){
 }
 function driveFolderUrl(folderId){ return 'https://drive.google.com/drive/folders/' + folderId; }
 
-var state = { mon: null, khoi: null };
+var state = { mon: null, khoi: null, tnView: false };
 
 function esc(s){
   return String(s == null ? '' : s)
@@ -1158,29 +1160,52 @@ function renderChips(){
     '⭐ Vật lí + Công nghệ công nghiệp: ĐÃ NẠP ĐẦY ĐỦ TỪNG BÀI • Hoá học: ĐÃ NẠP (Khối 10/11/12 đã có bài — có thêm bộ VIP của thầy) • Hoạt động trải nghiệm, hướng nghiệp: ĐÃ NẠP THEO CHỦ ĐỀ — bấm vào chip của môn để chọn khối và xem từng bài 📚';
 }
 function pickMon(mon){
+  state.tnView = false;
   state.mon = mon;
   var ks = khoisOf(mon);
   if (ks.indexOf(state.khoi) < 0) state.khoi = ks[0];
   renderAll();
 }
 function pickDriveMon(mon){
+  state.tnView = false;
   state.mon = mon;
   state.khoi = null;
   renderAll();
 }
 
 /* ---------- Duyệt theo bộ ---------- */
+/* Môn có dữ liệu Ôn thi tốt nghiệp (on_thi_tn gắn trên bộ khối 12 trong
+   CATALOG — khối script này nạp trước script v8 nên kiểm tra tại đây dùng
+   thẳng dữ liệu catalog, hiện đúng ngay từ lần render đầu tiên). */
+function monHasTn(mon){
+  for (var i = 0; i < CATALOG.length; i++)
+    if (CATALOG[i].mon === mon && CATALOG[i].on_thi_tn && CATALOG[i].on_thi_tn.length) return true;
+  return false;
+}
+
 function renderKhoiTabs(){
   var wrap = document.getElementById('khoiTabs');
   var html = '';
   khoisOf(state.mon).forEach(function(k){
-    html += '<button type="button" class="ktab' + (state.khoi === k ? ' on' : '') +
+    html += '<button type="button" class="ktab' + (state.khoi === k && !state.tnView ? ' on' : '') +
             '" data-khoi="' + k + '">Khối ' + k + '</button>';
   });
+  /* Tab Ôn thi tốt nghiệp: nằm ngay bên phải tab Khối 12 cho dễ thấy
+     (thầy dặn tối 11/11/2026 kèm ảnh chụp hàng tab khối). */
+  if (monHasTn(state.mon)){
+    html += '<button type="button" class="ktab ktab-tn' + (state.tnView ? ' on' : '') +
+            '" data-tn="1">🎓 Ôn thi tốt nghiệp</button>';
+  }
   wrap.innerHTML = html;
   wrap.querySelectorAll('[data-khoi]').forEach(function(btn){
     btn.addEventListener('click', function(){
+      state.tnView = false;
       state.khoi = parseInt(btn.getAttribute('data-khoi'), 10); renderAll();
+    });
+  });
+  wrap.querySelectorAll('[data-tn]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      state.tnView = true; renderAll();
     });
   });
 }
@@ -1238,6 +1263,14 @@ function xemPpt(i){ var b = RENDERED[i]; if (b) openDoc(b.ppt, 'Slide PPT — B�
 
 function renderBrowse(){
   renderKhoiTabs();
+  if (state.tnView && monHasTn(state.mon)){
+    document.getElementById('boTitle').textContent = '🎓 Ôn thi tốt nghiệp — ' + state.mon;
+    document.getElementById('baiList').innerHTML = '';
+    document.getElementById('shelfArea').innerHTML = '';
+    RENDERED = []; RENDERED_BO = [];
+    renderTnShelf();
+    return;
+  }
   var ds = driveSubjectOf(state.mon);
   if (ds){ renderDriveSubject(ds); return; }
   var bo = boOf(state.mon, state.khoi);
