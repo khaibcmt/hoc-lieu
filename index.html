@@ -1430,7 +1430,7 @@ var MON_COLORS = {
 };
 function chipShort(mon){ var m = { 'Toán': 'Toán', 'Kinh tế & Pháp luật': 'KTPL', 'Hoá học': 'Hoá', 'Lịch sử': 'Sử', 'Ngữ văn': 'Văn', 'Sinh học': 'Sinh', 'Vật lí': 'Lí', 'Công nghệ công nghiệp': 'CNCN', 'Công nghệ nông nghiệp': 'CNNN', 'Địa lí': 'Địa', 'Tiếng Anh': 'Anh', 'Tin học': 'Tin', 'Thể dục': 'Thể dục', 'Hoạt động trải nghiệm, hướng nghiệp': 'Trải nghiệm' }; return m[mon] || mon || ''; }
 function hlLighten(hex, amt){ var n = parseInt(String(hex).replace('#', ''), 16); var r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255; r = Math.round(r + (255 - r) * amt); g = Math.round(g + (255 - g) * amt); b = Math.round(b + (255 - b) * amt); return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1); }
-function chipStyle(mon, on){ var c = MON_COLORS[mon]; if (!c) return ''; if (on) return ' style="background:' + c + ';border-color:' + c + ';color:#fff;box-shadow:0 4px 14px ' + c + '55"'; var lc = hlLighten(c, 0.45); return ' style="background:' + c + '40;border-color:' + lc + ';color:#fff;box-shadow:0 2px 10px ' + c + '44"'; }
+function chipStyle(mon, on){ var c = MON_COLORS[mon]; if (!c) return ''; if (on) return ' style="background:' + c + ';border-color:' + c + ';color:#fff;box-shadow:0 4px 14px ' + c + '55"'; var lc = hlLighten(c, 0.30); return ' style="background:' + c + 'b3;border-color:' + lc + ';color:#fff;box-shadow:0 2px 12px ' + c + '66"'; }
 function renderChips(){
   var wrap = document.getElementById('subjectChips');
   var html = '';
@@ -4890,22 +4890,26 @@ function examStartDoc(file, title){
   var fid = docFidOf(file);
   if (!fid){ showToast('⚠️ Chưa nối được file này'); return; }
   showToast('⏳ Đang tải đề — chờ em chút...');
+  var __st = 'tai';
   fetch('https://drive.usercontent.google.com/download?id=' + fid + '&export=download&confirm=t').then(function(r){
     if (!r.ok){ var eh = new Error('HTTP ' + r.status); eh.stage = 'tai'; throw eh; }
     return r.arrayBuffer();
   }).then(function(buf){ return examDocxToText(buf); }).then(function(text){
+    __st = 'phan-tich';
     var parsed = EduParse.parseQuestionsMulti(text);
     var res = examBankFromParsed(parsed);
     var n = (res.bank.mc || []).length + (res.bank.sa || []).length + (res.bank.tf ? res.bank.tf.length : 0);
     if (!n){ var eq = new Error('no-q'); eq.stage = 'cau'; throw eq; }
     if (res.skipped) showToast('📝 Đề có ' + res.total + ' câu — thi được ' + n + ' câu (bỏ ' + res.skipped + ' câu chưa có đáp án).');
+    __st = 'mo-phien';
     spStartSession({ mode: 'practice', key: 'doc:' + fid, bank: res.bank, title: title, boLabel: 'Đề thi — ' + file.file, perQ: 30 });
   }).catch(function(err){
-    var st = (err && err.stage) || 'tai';
-    window.__examErr = st;
-    try { console.warn('[exam] loi mo de:', st, err); } catch(e){}
-    var msg = st === 'doc' ? '⚠️ Đề này chưa đọc được để thi — em mở xem trước nhé' : (st === 'cau' ? '⚠️ Đề này chưa tách được câu hỏi có đáp án — em mở xem trước nhé' : '⚠️ Mạng chưa tải được đề này — em mở xem trước nhé');
-    showToast(msg);
+    var st = (err && err.stage) || __st;
+    var det = (err && err.message) ? String(err.message).slice(0, 80) : '';
+    window.__examErr = st + (det ? ':' + det : '');
+    try { console.warn('[exam] loi mo de:', window.__examErr, err); } catch(e){}
+    var msg = st === 'doc' ? '⚠️ Đề này chưa đọc được để thi — em mở xem trước nhé' : (st === 'cau' ? '⚠️ Đề này chưa tách được câu hỏi có đáp án — em mở xem trước nhé' : (st === 'phan-tich' ? '⚠️ Đề này chưa tách được câu hỏi — em mở xem trước nhé' : (st === 'mo-phien' ? '⚠️ Chưa mở được phiên thi — em mở xem trước nhé' : '⚠️ Mạng chưa tải được đề này — em mở xem trước nhé')));
+    showToast(msg + (det ? ' (' + det + ')' : ''));
     openDoc(file, title);
   });
 }
