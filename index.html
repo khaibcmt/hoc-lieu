@@ -603,6 +603,29 @@ main{max-width:1440px;padding:12px 16px 30px;}
 .chip.tool-exam.on{background:#b45309;border-color:#92400e;color:#fff;}
 .chip.tool-guide{background:#ede9fe;border-color:#c4b5fd;color:#5b21b6;font-weight:800;}
 .chip.tool-guide.on{background:#7c3aed;border-color:#6d28d9;color:#fff;}
+
+/* Khung xem giong BioMaster + chan trang khoa (thay dan 05:10-05:14 12/11/2026) */
+#paneViewer{scroll-margin-top:150px;background:#e9e7f2;padding:16px 12px;}
+#paneBody{background:#e9e7f2;}
+#paneBody iframe{width:100%;max-width:920px;margin:0 auto;display:block;background:#fff;border-radius:6px;box-shadow:0 8px 30px rgba(60,20,140,.18);height:calc(100vh - 330px);min-height:560px;}
+.tn-compact{scroll-margin-top:150px;}
+#tnViewer{margin:0 0 8px;border:1.5px solid #b8860b;border-radius:10px;overflow:hidden;background:#e9e7f2;}
+.tn-viewer-head{display:flex;align-items:center;gap:8px;background:#fff3c4;padding:8px 10px;border-bottom:1.5px solid #eadfc0;}
+#tnViewerTitle{font-weight:800;font-size:15px;color:#4a2500;flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tn-viewer-close{flex:0 0 auto;border:none;background:#e53935;color:#fff;font-weight:800;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:14px;}
+#tnViewerBody{height:calc(100vh - 330px);min-height:480px;padding:14px 12px;}
+#tnViewerBody iframe{width:100%;max-width:920px;height:100%;margin:0 auto;display:block;background:#fff;border:0;border-radius:6px;box-shadow:0 8px 30px rgba(60,20,140,.18);}
+.tn-viewer-foot{background:#241243;color:#d9d2f5;font-size:13px;padding:7px 10px;text-align:center;}
+.foot-lock{position:fixed;left:0;right:0;bottom:0;z-index:55;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;background:#241243;padding:9px 12px;box-shadow:0 -3px 14px rgba(0,0,0,.25);}
+.foot-brand{font-size:15px;font-weight:800;color:#ffd94d;white-space:nowrap;}
+.foot-pill{display:inline-block;border-radius:999px;padding:5px 12px;font-size:13.5px;font-weight:800;color:#fff;white-space:nowrap;text-decoration:none;}
+.fp-author{background:#e53935;}
+.fp-school{background:#1e88e5;}
+.fp-mail{background:#f9a825;color:#4a2500;}
+.fp-zalo{background:#43a047;}
+.foot-ver{font-size:12.5px;color:#d9d2f5;white-space:nowrap;}
+main{padding-bottom:70px;}
+@media (max-width:720px){ .foot-pill{font-size:12px;padding:4px 8px;} .foot-brand{font-size:13.5px;} main{padding-bottom:110px;} #paneBody iframe{height:calc(100vh - 300px);min-height:480px;} #tnViewerBody{height:calc(100vh - 300px);min-height:420px;} }
 </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
@@ -962,8 +985,15 @@ main{max-width:1440px;padding:12px 16px 30px;}
 </main>
 
 <footer>
-  <b>Học Liệu VIP</b> — Thầy Hồ Tấn Khải • Trường THPT Mang Thít<br>
-  Tài liệu chỉ để <b>XEM</b> — muốn tải về, liên hệ tác giả • Phòng thi online chạy ngay trong trang • Phiên bản v44
+  <div class="foot-note">Tài liệu chỉ để <b>XEM</b> — muốn tải về, liên hệ tác giả • Phòng thi online chạy ngay trong trang</div>
+  <div class="foot-lock">
+    <span class="foot-brand">📚 <b>Học Liệu Vip Pro</b></span>
+    <span class="foot-pill fp-author">👑 Hồ Tấn Khải</span>
+    <span class="foot-pill fp-school">🏫 Trường THPT Mang Thít</span>
+    <a class="foot-pill fp-mail" href="mailto:khaibcmt@gmail.com">✉️ khaibcmt@gmail.com</a>
+    <a class="foot-pill fp-zalo" href="https://zalo.me/0933560382" target="_blank" rel="noopener">📞 Zalo: 0933560382</a>
+    <span class="foot-ver">Phiên bản v44</span>
+  </div>
 </footer>
 
 <div id="viewerModal" role="dialog" aria-modal="true">
@@ -1420,12 +1450,8 @@ function hlPaneFallback(viewUrl){
     }).catch(function(){});
   }
 }
-function hlPaneOpenDoc(slot, title){
-  if (!hlPaneLoad(slot, title)) return false;
-  var pv = document.getElementById('paneViewer');
-  if (pv && window.innerWidth < 900) pv.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  return true;
-}
+function hlPaneEnsureVisible(){ var pv = document.getElementById('paneViewer'); if (!pv) return; try { var r = pv.getBoundingClientRect(); var vh = window.innerHeight || 800; if (r.top < 150 || r.top > vh * 0.5) pv.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e){} }
+function hlPaneOpenDoc(slot, title){ if (!hlPaneLoad(slot, title)) return false; hlPaneEnsureVisible(); return true; }
 function hlPaneOpenBai(i){
   var b = RENDERED[i]; if (!b) return;
   var slot = baiSlotOf(b, state.theLoai);
@@ -1437,7 +1463,7 @@ function hlPaneOpenBai(i){
   var fb = document.getElementById('paneFallback'); if (fb) fb.style.display = 'none';
   body.innerHTML = '<div style="padding:14px">' + baiCardHtml(b, i, '') + '</div>';
   bindCards(body);
-  body.querySelectorAll('.bai-card').forEach(function(c){ c.classList.add('open'); });
+  body.querySelectorAll('.bai-card').forEach(function(c){ c.classList.add('open'); }); hlPaneEnsureVisible();
 }
 function specialIndexHtml(bo, nChuDe, nTd, nTa){
   var rows = '';
@@ -4628,14 +4654,22 @@ window.renderTnShelf = function(){
   area.innerHTML = '<section class="tn-shelf tn-compact" aria-label="Ôn thi tốt nghiệp môn ' + esc(state.mon) + '">' +
     '<div class="tn-head"><h3>🎓 ÔN THI TỐT NGHIỆP — ' + esc(state.mon) + '</h3>' +
     '<span class="tn-scope">Chung cả môn</span></div>' +
+    '<div id="tnViewer" style="display:none">' +
+    '<div class="tn-viewer-head"><span id="tnViewerTitle"></span><button type="button" class="tn-viewer-close" onclick="tnViewerClose()">✕ Đóng</button></div>' +
+    '<div id="tnViewerBody"></div>' +
+    '<div class="tn-viewer-foot"><span id="tnViewerFoot"></span></div>' +
+    '</div>' +
     '<div class="tn-folders">' + rows + '</div>' +
     '</section>';
 };
 
 window.xemOnThiTnFile = function(kind, i){
   var files = tnFilesOf(state.mon, kind);
-  if (files[i]){ var tnSo = kind === 'de' ? tnDeSo(files[i].file) : 0; openDoc(files[i], '🎓 Ôn thi tốt nghiệp — ' + state.mon + ' — ' + (tnSo ? tnMonShort(state.mon) + ' Đề ' + tnSo : files[i].file)); }
+  if (files[i]){ var tnSo = kind === 'de' ? tnDeSo(files[i].file) : 0; tnViewerOpen(files[i], '🎓 Ôn thi tốt nghiệp — ' + state.mon + ' — ' + (tnSo ? tnMonShort(state.mon) + ' Đề ' + tnSo : files[i].file)); }
 };
+
+function tnViewerOpen(file, title){ var v = document.getElementById('tnViewer'); var b = document.getElementById('tnViewerBody'); var t = document.getElementById('tnViewerTitle'); var f = document.getElementById('tnViewerFoot'); if (!v || !b){ openDoc(file, title); return false; } var fid = docFidOf(file); if (t) t.textContent = '📄 ' + title; if (f) f.textContent = '📄 ' + file.file + ' • Cuộn xuống để xem hết tài liệu • Bấm ✕ Đóng để về danh sách'; if (fid){ b.innerHTML = '<iframe title="Khung xem tài liệu" src="' + drivePreviewUrl(fid) + '" allow="autoplay" allowfullscreen></iframe>'; } else { b.innerHTML = '<div class="empty">Chưa nối được file này — thầy cô mở thư mục môn trên Drive để xem.</div>'; } v.style.display = ''; try { var sec = v.closest('section'); if (sec){ var r = sec.getBoundingClientRect(); var vh = window.innerHeight || 800; if (r.top < 150 || r.top > vh * 0.5) sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); } } catch (e){} return true; }
+window.tnViewerClose = function(){ var v = document.getElementById('tnViewer'); if (v) v.style.display = 'none'; var b = document.getElementById('tnViewerBody'); if (b) b.innerHTML = ''; };
 
 /* ---------- Màn hình dùng chung: tự luyện + bài giao link ---------- */
 function spShow(){ var s = document.getElementById('sec-practice'); if (s) s.style.display = ''; var g = document.getElementById('sec-game'); if (g) g.scrollIntoView({ behavior: 'smooth' }); }
