@@ -428,7 +428,7 @@ body.hs-mode .page{display:none!important}
 body.hs-mode #sec-game{display:block!important}
 body.hs-mode #sec-game .ptitle,body.hs-mode #sec-game .pdesc,body.hs-mode #sec-game>.guidebox,body.hs-mode #sec-game .gtabs,body.hs-mode #gSoloPane{display:none!important}
 body.hs-mode #gRoomPane{display:block!important}
-body.hs-mode #roomGuide,body.hs-mode #roomNoFb,body.hs-mode #rtExamCard,body.hs-mode #rtScreen{display:none!important}
+body.hs-mode #roomGuide,body.hs-mode #roomNoFb,body.hs-mode #rtExamCard,body.hs-mode #rtScreen,body.hs-mode #rtModeCard,body.hs-mode #examModal,body.hs-mode #mixCard,body.hs-mode #taskCard{display:none!important}
 body.hs-mode #roomEntry{display:block!important}
 body.hs-mode #roomEntry .row2>.card:first-child{display:none!important}
 /* Biến màu riêng của module phòng thi (theo tông EduMaster) */
@@ -559,7 +559,16 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
 .pq-chip.cur{outline:3px solid #ffd94d;outline-offset:1px}
 .pq-nav{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px;align-items:stretch}
 .pq-det{border-top:1px dashed #4a4370;padding:10px 0}
+
+/* ===== v43: Modal nạp đề ===== */
+.hl-modal{position:fixed;inset:0;z-index:9990;background:rgba(15,10,35,.74);align-items:flex-start;justify-content:center;overflow:auto;padding:22px 12px}
+.hl-modal-card{background:#f7f5ff;border-radius:16px;max-width:880px;width:100%;padding:18px;box-shadow:0 18px 50px rgba(0,0,0,.35)}
+#psOpts .opt-big{cursor:default;margin-bottom:10px}
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
 </head>
 <body>
 
@@ -691,7 +700,22 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
         </div>
       </div>
       <div id="roomEntry">
-        <div class="card" style="margin-bottom:14px" id="rtExamCard">
+        <div class="card" style="margin-bottom:14px" id="rtModeCard">
+          <h3 style="margin:0 0 4px">📝 NGUỒN CÂU HỎI CHO PHÒNG THI — 2 chế độ</h3>
+          <p class="note" style="margin:0 0 10px"><b>⚡ Chế độ 1 — Ngân hàng có sẵn:</b> chọn Môn → Khối → Bài từ bank câu hỏi có sẵn, mở phòng trong ~5 giây. <b>📝 Chế độ 2 — Làm bộ đề thi mới:</b> tải file .docx hoặc dán đề .txt, web tự tách <b>Phần I/II/III</b>, tự nhận đáp án, xem trước bảng kiểm tra rồi mới tạo phòng.</p>
+          <div class="btnrow">
+            <button class="btn" type="button" onclick="hlModeBank()">⚡ Chế độ 1: Ngân hàng có sẵn</button>
+            <button class="btn alt" type="button" onclick="hlExamModalOpen()">📝 Chế độ 2: Làm bộ đề thi mới</button>
+          </div>
+          <p class="note" id="rtModeStatus" style="margin:8px 0 0">📌 Chưa nạp bộ đề riêng — phòng sẽ dùng Ngân hàng câu hỏi mẫu / bộ tổng hợp đã chọn ở khu Tổ hợp.</p>
+        </div>
+        <div id="examModal" class="hl-modal" style="display:none" onclick="if(event.target===this)hlExamModalClose()">
+          <div class="hl-modal-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+              <h3 style="margin:0">📝 Chế độ 2: Làm bộ đề thi mới</h3>
+              <button class="btn alt" type="button" onclick="hlExamModalClose()">✖ Đóng</button>
+            </div>
+        <div class="card" style="margin-top:12px" id="rtExamCard">
           <h3 style="margin:0 0 4px">📝 Ô ĐƯA CÂU HỎI VÀO PHÒNG THI — chọn 1 trong 3 nguồn</h3>
           <p class="note" style="margin:0 0 10px">① <b>Dán đề</b> vào ô bên dưới (hoặc ② <b>tải file .txt/.docx</b>) rồi bấm <b>Đọc bài thi</b> — phòng thi sẽ dùng đúng bộ đề này. ③ Nếu bỏ trống, phòng dùng <b>Ngân hàng câu hỏi mẫu</b> có sẵn. (Bộ câu hỏi của từng bài học có sẵn ở nút <b>🎓 Tự luyện bài này</b> trong từng bài — học sinh tự vào làm, không cần mở phòng.)</p>
           <label class="fl">Tên bài thi</label>
@@ -706,6 +730,9 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
           <div class="warnbox" id="rtExamMsg"></div>
           <div id="rtExamCheck" style="margin-top:10px"></div>
           <p class="note" id="rtExamStatus" style="margin:10px 0 0">📌 Chưa nhập bài thi — phòng sẽ dùng Ngân hàng câu hỏi như hiện nay.</p>
+          <div class="btnrow" style="margin-top:10px"><button class="btn" type="button" onclick="hlExamModalClose()">✔ Dùng bộ đề này — đóng lại</button></div>
+        </div>
+          </div>
         </div>
         <div class="row2">
           <div class="card">
@@ -828,6 +855,7 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
                 <button class="btn" id="rtNextBtn" onclick="rtNext()">⏭️ Câu tiếp theo</button>
                 <button class="btn alt" onclick="rtOpenRevive()">🌟 Mở câu hồi sinh</button>
                 <button class="btn alt" onclick="rtEndRoom()">🛑 Kết thúc phòng</button>
+                <button class="btn alt" onclick="hlPresenterOpen()">🖥️ Trình chiếu</button>
               </div>
             </div>
             <div class="big-timer" id="rtTimer">--</div>
@@ -878,7 +906,7 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
 
 <footer>
   <b>Học Liệu VIP</b> — Thầy Hồ Tấn Khải • Trường THPT Mang Thít<br>
-  Tài liệu chỉ để <b>XEM</b> — muốn tải về, liên hệ tác giả • Phòng thi online chạy ngay trong trang • Phiên bản v42
+  Tài liệu chỉ để <b>XEM</b> — muốn tải về, liên hệ tác giả • Phòng thi online chạy ngay trong trang • Phiên bản v43
 </footer>
 
 <div id="viewerModal" role="dialog" aria-modal="true">
@@ -2027,7 +2055,7 @@ var EduParse = (function(){
       }
       /* --- ý Đúng/Sai dạng chữ: "a) ... (Đúng)" / "a) ... — Sai" / "a) ... [Đúng]" → câu kind 'tf' với từng ý + đúng/sai --- */
       if (cur && (m = line.match(/^([a-d])\s*[.)]\s*(.*)$/))){
-        var tfM = m[2].match(/\(\s*(Đúng|Sai)\s*\)\s*$/i) || m[2].match(/[—–-]\s*(Đúng|Sai)\s*$/i) || m[2].match(/(?:\(\s*(Đúng|True|Sai|False|Đ|S)\s*\)|\[\s*(Đúng|True|Sai|False|Đ|S)\s*\]|[-–—:→]\s*(Đúng|True|Sai|False|Đ|S))\.?\s*$/i);
+        var tfM = m[2].match(/\(\s*(Đúng|Sai)\s*\)\s*$/i) || m[2].match(/[—–-]\s*(Đúng|Sai)\s*$/i) || m[2].match(/(?:\(\s*(Đúng|True|Sai|False|Đ|S)\s*\)|\[\s*(Đúng|True|Sai|False|Đ|S)\s*\]|[-–—:→]\s*(Đúng|True|Sai|False|Đ|S))\.?\s*$/i) || m[2].match(/\s(Đúng|Sai)\s*\.?\s*$/i);
         if (tfM){
           var tfWord = (tfM[1] || tfM[2] || tfM[3] || '').toLowerCase();
           var itemTxt = m[2].slice(0, m[2].length - tfM[0].length).trim();
@@ -3195,6 +3223,20 @@ function rtExamFileLoad(input){
     rd.readAsText(f);
   } else if (/\.docx$/i.test(f.name)){
     showToast('⏳ Đang đọc file Word...');
+    if (window.mammoth){
+      f.arrayBuffer().then(function(buf){ return mammoth.extractRawText({ arrayBuffer: buf }); }).then(function(r){
+        ta.value = String((r && r.value) || '');
+        rtExamParse();
+        showToast('📥 Đã trích nội dung từ file Word (mammoth) — thầy kiểm tra bảng đáp án bên dưới');
+      }).catch(function(){ rtDocxFallback(f, ta); });
+      return;
+    }
+    rtDocxFallback(f, ta);
+  } else {
+    showToast('⚠️ Chỉ nhận file .txt hoặc .docx');
+  }
+}
+function rtDocxFallback(f, ta){
     loadJSZip().then(function(){ return f.arrayBuffer(); }).then(function(buf){ return JSZip.loadAsync(buf); }).then(function(zip){
       var docFile = zip.file('word/document.xml');
       if (!docFile) throw new Error('no-doc');
@@ -3204,11 +3246,77 @@ function rtExamFileLoad(input){
       rtExamParse();
       showToast('📥 Đã trích nội dung từ file Word — thầy kiểm tra bảng đáp án bên dưới');
     }).catch(function(){ showToast('⚠️ Không đọc được file .docx này (file hỏng hoặc không đúng định dạng Word)'); });
-  } else {
-    showToast('⚠️ Chỉ nhận file .txt hoặc .docx');
-  }
 }
 /* Bộ câu hỏi dùng cho phòng: lấy từ ô nhập bài thi nếu đã phân tích hợp lệ, ngược lại trả null (dùng Ngân hàng) */
+/* ---------- Đợt 4: Modal nạp đề + Chế độ 1 + Trình chiếu + KaTeX ---------- */
+window.hlExamModalOpen = function(){ var m = document.getElementById('examModal'); if (m) m.style.display = 'flex'; };
+window.hlExamModalClose = function(){
+  var m = document.getElementById('examModal'); if (m) m.style.display = 'none';
+  var st = document.getElementById('rtExamStatus'), ms = document.getElementById('rtModeStatus');
+  if (st && ms) ms.textContent = st.textContent;
+};
+window.hlModeBank = function(){
+  var c = document.getElementById('mixCard');
+  if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  showToast('⚡ Chế độ 1: ở khu Tổ hợp bên dưới, thầy chọn Môn → Khối → Bài rồi tick câu và bấm "Dùng mở phòng trực tiếp". Để nguyên không chọn gì thì phòng dùng Ngân hàng câu hỏi mẫu.');
+};
+window.hlPresenterOpen = function(){
+  var p = document.getElementById('presenterScreen'); if (!p) return;
+  p.style.display = 'block';
+  try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function(){}); } catch(e){}
+  hlPresenterUpdate();
+};
+window.hlPresenterClose = function(){
+  var p = document.getElementById('presenterScreen'); if (p) p.style.display = 'none';
+  try { if (document.fullscreenElement) document.exitFullscreen().catch(function(){}); } catch(e){}
+};
+function hlPresenterUpdate(){
+  var p = document.getElementById('presenterScreen');
+  if (!p || p.style.display === 'none' || !T) return;
+  var ph = document.getElementById('rtPhase'), q = document.getElementById('rtQ'), op = document.getElementById('rtOpts');
+  var psPh = document.getElementById('psPhase'), psQ = document.getElementById('psQ'), psO = document.getElementById('psOpts');
+  if (psPh && ph) psPh.textContent = ph.textContent;
+  if (psQ && q) psQ.textContent = q.textContent;
+  if (psO && op) psO.innerHTML = op.innerHTML;
+  var ac = document.getElementById('rtAnsCount'), at = document.getElementById('rtAnsTotal'), pc = document.getElementById('psCount');
+  if (pc) pc.textContent = '✋ Đã trả lời: ' + (ac ? ac.textContent : '0') + ' / ' + (at ? at.textContent : '0') + ' học sinh';
+  var cv = document.getElementById('psCanvas'), bs = document.getElementById('psBoss');
+  if (T.R && T.R.mode === 'tug' && cv){
+    cv.style.display = 'block'; if (bs) bs.style.display = 'none';
+    var ctx = cv.getContext('2d'); if (ctx){
+      var W = cv.width, H = cv.height, mid = W / 2, shift = Math.max(-W / 2 + 60, Math.min(W / 2 - 60, (T.tug || 0) * 2));
+      ctx.clearRect(0, 0, W, H);
+      ctx.strokeStyle = '#f5d76e'; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(24, H / 2); ctx.lineTo(W - 24, H / 2); ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(mid + shift, H / 2, 15, 0, Math.PI * 2); ctx.fill();
+      ctx.font = '800 26px sans-serif'; ctx.fillStyle = '#64b5f6'; ctx.fillText('🔵 XANH', 24, 30);
+      ctx.fillStyle = '#ef9a9a'; var tw = ctx.measureText('ĐỎ 🔴').width; ctx.fillText('ĐỎ 🔴', W - 24 - tw, 30);
+      ctx.fillStyle = '#ffd94d'; ctx.fillText('🪢', mid + shift - 13, H / 2 + 42);
+    }
+  } else if (T.R && T.R.mode === 'boss' && bs && T.boss){
+    if (cv) cv.style.display = 'none'; bs.style.display = 'block';
+    var pct = Math.max(0, Math.round((T.boss.hp || 0) / (T.boss.max || 1) * 100));
+    bs.innerHTML = '<p style="font-size:22px;font-weight:800;margin:0 0 8px">👹 MÁU CỦA BOSS: ' + (T.boss.hp || 0) + ' / ' + (T.boss.max || 0) + ' HP</p>' +
+      '<div style="height:30px;border-radius:999px;background:rgba(255,255,255,.12);overflow:hidden"><div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#e53935,#ef9a9a);transition:width .5s"></div></div>';
+  } else {
+    if (cv) cv.style.display = 'none'; if (bs) bs.style.display = 'none';
+  }
+  hlTex(p);
+}
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape'){ if (window.hlExamModalClose) window.hlExamModalClose(); if (window.hlPresenterClose) window.hlPresenterClose(); }
+});
+/* Điểm tô công thức KaTeX trong câu hỏi ($...$, \(...\), $$...$$) — CDN lỗi thì bỏ qua, không chặn trang */
+function hlTex(root){
+  try {
+    if (window.renderMathInElement && root) renderMathInElement(root, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '$', right: '$', display: false },
+        { left: '\\(', right: '\\)', display: false },
+        { left: '\\[', right: '\\]', display: true }
+      ], throwOnError: false });
+  } catch(e){}
+}
 function rtExamQuestions(){
   var ta = document.getElementById('rtExamText');
   var st = _qcStates.room;
@@ -3444,6 +3552,7 @@ function rtRenderCurrent(){
   document.getElementById('rtPhase').className = 'phase-tag' + (T.current && T.current.bonus ? '' : ' blue');
   document.getElementById('rtQ').textContent = qText;
   document.getElementById('rtOpts').innerHTML = optsHTML;
+  hlTex(document.getElementById('rtLive'));
   rtRenderAnsCount();
   rtRenderModeBar();
   rtStartTick();
@@ -3455,6 +3564,7 @@ function rtRenderAnsCount(){
   else if (T.current){ var a = (T.answers || {})[T.current.idx] || {}; n = Object.keys(a).length; }
   var el = document.getElementById('rtAnsCount'); if (el) el.textContent = n;
   var el2 = document.getElementById('rtAnsTotal'); if (el2) el2.textContent = total;
+  try { hlPresenterUpdate(); } catch(e){}
 }
 function rtStartTick(){
   if (window._rtTick) clearInterval(window._rtTick);
@@ -3897,6 +4007,7 @@ function rsRenderQuestion(){
   }
   area.innerHTML = tag + '<p class="big-q">' + esc(q.q) + '</p>' + rsSkillBarHTML() + betHTML +
     ansHTML + (kind === 'mc' ? llHTML : '') + '<div id="rsFb" style="margin-top:12px;font-weight:700;font-size:16px"></div>';
+  hlTex(area);
   if (U.pendingChest) rsShowChestBar();
 }
 function rsSetBet(v, btn, isRound){
@@ -4543,6 +4654,7 @@ function spRenderPQ(){
       '<button type="button" class="btn alt" onclick="spGotoPq(' + (SP.idx + 1) + ')"' + (SP.idx >= total - 1 ? ' disabled' : '') + '>Câu tiếp ➡</button>' +
       '<button type="button" class="sp-bigbtn" style="flex:1" onclick="spPracticeSubmit()">📋 NỘP BÀI</button>' +
     '</div></div>';
+  hlTex(spBox());
 }
 window.spPickPqMc = function(j){ if (!SP) return; SP.answers[SP.idx] = j; spRenderPQ(); };
 window.spPickPqTf = function(j, v){
@@ -4659,6 +4771,7 @@ function spRenderQ(){
     '<div class="qcard"><div class="qmeta"><span>CÂU ' + (SP.idx + 1) + ' / ' + total + ' • ' + kindLabel + (golden ? ' • 🌟 CÂU HỎI VÀNG x2' : '') + '</span><span class="tc-clock" id="spClock">⏱ ' + SP.perQ + 's</span></div>' +
     '<p class="qstem">' + esc(q.stem) + '</p>' + spWagerHtml() + body +
     '<div id="spFb" style="margin-top:10px;font-weight:700;font-size:16.5px"></div></div>';
+  hlTex(spBox());
   spStartTimer();
 }
 function spStartTimer(){
@@ -5207,6 +5320,17 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 else v8Init();
 })();
 </script>
+<div id="presenterScreen" style="display:none;position:fixed;inset:0;z-index:9998;background:#0F172A;color:#fff;overflow:auto;padding:26px">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+    <span id="psPhase" class="phase-tag">Đang chờ...</span>
+    <button type="button" class="btn alt" onclick="hlPresenterClose()">✖ Đóng trình chiếu (Esc)</button>
+  </div>
+  <div id="psQ" style="font-size:34px;font-weight:800;line-height:1.35;margin:20px 0 14px">...</div>
+  <div id="psOpts" style="font-size:22px;max-width:1000px"></div>
+  <canvas id="psCanvas" width="900" height="120" style="width:100%;max-width:1000px;display:none;margin-top:18px;background:rgba(255,255,255,.05);border-radius:12px"></canvas>
+  <div id="psBoss" style="display:none;margin-top:18px;max-width:1000px"></div>
+  <p id="psCount" style="font-size:20px;margin-top:18px;font-weight:700"></p>
+</div>
 <div id="devtoolsNotice" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(10,6,24,.96);color:#fff;align-items:center;justify-content:center;text-align:center;padding:24px">
   <div><div style="font-size:44px">🔒</div>
   <div style="font-size:22px;font-weight:800;margin:10px 0">Tài liệu trên trang này chỉ để XEM trực tuyến</div>
