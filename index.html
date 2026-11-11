@@ -428,7 +428,7 @@ body.hs-mode .page{display:none!important}
 body.hs-mode #sec-game{display:block!important}
 body.hs-mode #sec-game .ptitle,body.hs-mode #sec-game .pdesc,body.hs-mode #sec-game>.guidebox,body.hs-mode #sec-game .gtabs,body.hs-mode #gSoloPane{display:none!important}
 body.hs-mode #gRoomPane{display:block!important}
-body.hs-mode #roomGuide,body.hs-mode #roomNoFb,body.hs-mode #rtExamCard,body.hs-mode #rtScreen,body.hs-mode #rtModeCard,body.hs-mode #examModal,body.hs-mode #mixCard,body.hs-mode #taskCard{display:none!important}
+body.hs-mode #roomGuide,body.hs-mode #roomNoFb,body.hs-mode #rtScreen,body.hs-mode #rtModeCard,body.hs-mode #examModal,body.hs-mode #mixCard,body.hs-mode #taskCard{display:none!important}
 body.hs-mode #hlGuide{display:none!important}
 body.hs-mode #roomEntry{display:block!important}
 body.hs-mode #roomEntry .row2>.card:first-child{display:none!important}
@@ -736,10 +736,9 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
               <h3 style="margin:0">📝 Chế độ 2: Làm bộ đề thi mới</h3>
               <button class="btn alt" type="button" onclick="hlExamModalClose()">✖ Đóng</button>
             </div>
-        <div class="card" style="margin-top:12px" id="rtExamCard">
-          <h3 style="margin:0 0 4px">📝 Ô ĐƯA CÂU HỎI VÀO PHÒNG THI — chọn 1 trong 3 nguồn</h3>
-          <p class="note" style="margin:0 0 10px">① <b>Dán đề</b> vào ô bên dưới (hoặc ② <b>tải file .txt/.docx</b>) rồi bấm <b>Đọc bài thi</b> — phòng thi sẽ dùng đúng bộ đề này. ③ Nếu bỏ trống, phòng dùng <b>Ngân hàng câu hỏi mẫu</b> có sẵn. (Bộ câu hỏi của từng bài học có sẵn ở nút <b>🎓 Tự luyện bài này</b> trong từng bài — học sinh tự vào làm, không cần mở phòng.)</p>
-          <label class="fl">Tên bài thi</label>
+        <div id="rtDropZone" style="border:2px dashed #7b61ff;border-radius:12px;padding:12px;background:#f8f7ff;margin-top:12px" ondragover="event.preventDefault();this.style.borderColor='#2575fc'" ondragleave="this.style.borderColor='#7b61ff'" ondrop="event.preventDefault();this.style.borderColor='#7b61ff';rtExamDrop(event)">
+      <p class="note" style="margin:0 0 10px">📥 <b>Kéo thả file .docx/.txt vào đây</b> — hoặc dán đề vào ô dưới, rồi bấm <b>Đọc bài thi</b>. Web tự tách <b>Phần I/II/III</b> và nhận đáp án. Bỏ trống thì phòng dùng Ngân hàng câu hỏi mẫu.</p>
+      <label class="fl">Tên bài thi</label>
           <input type="text" id="rtExamName" placeholder="Ví dụ: Kiểm tra 15 phút — Bài 5: Các phân tử sinh học">
           <label class="fl">Nội dung đề (mỗi câu bắt đầu "Câu n.", tiếp theo 4 phương án "A. ...", "B. ...", "C. ...", "D. ..."; đáp án ghi "Đáp án: X", hoặc đánh dấu *** trước phương án đúng, hoặc để bảng đáp án ở cuối)</label>
           <textarea id="rtExamText" rows="8" placeholder="Câu 1. ..."></textarea>
@@ -755,6 +754,33 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
         </div>
           </div>
         </div>
+      
+      
+        <div class="row2">
+          <div class="card">
+            <h3 style="margin:0 0 4px">👨‍🏫 Dành cho GIÁO VIÊN — Tạo phòng thi</h3>
+            <p class="note" style="margin:0 0 10px">Chỉnh luật chơi bên dưới (luật sẽ đồng bộ xuống máy học sinh theo thời gian thực), rồi bấm Tạo phòng. Màn hình chờ sẽ hiện <b>mã QR thật to</b> cho học sinh quét vào phòng.</p>
+            
+            <label class="fl">🏷️ Mã phòng cố định (tuỳ chọn — dùng 1 mã cho mọi buổi, QR/link không đổi)</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <input type="text" id="rtFixedCode" placeholder="Để trống = mã ngẫu nhiên" maxlength="6" style="text-transform:uppercase;font-weight:800;letter-spacing:2px;flex:1;min-width:170px">
+              <button class="btn alt" onclick="rtCleanRoom()">🗑️ Dọn phòng</button>
+            </div>
+            <p class="note" style="margin:6px 0 0">Đặt mã cố định gồm đúng 6 ký tự (chữ/số, ví dụ: SINH10). Tạo phòng bằng mã này sẽ mở phòng tại đúng địa chỉ cũ; "Dọn phòng" xoá dữ liệu ván cũ của mã đó để buổi sau sạch sẽ.</p>
+            <div class="btnrow"><button class="btn" onclick="rtCreateRoom()">🚪 Tạo phòng thi</button></div>
+            <div id="rtCreateMsg"></div>
+          </div>
+          <div class="card">
+            <h3 style="margin:0 0 4px">🧑‍🎓 Dành cho HỌC SINH — Vào phòng</h3>
+            <p class="note">Quét mã QR trên màn hình giáo viên, hoặc nhập mã phòng 6 ký tự tại đây.</p>
+            <label class="fl">Mã phòng</label>
+            <input type="text" id="rsCode" placeholder="Ví dụ: K7X2PQ" maxlength="6" style="text-transform:uppercase;font-size:19px;font-weight:800;letter-spacing:3px">
+            <label class="fl">Tên của em</label>
+            <input type="text" id="rsName" placeholder="Ví dụ: Nguyễn Văn An">
+            <div class="btnrow"><button class="btn" onclick="rsJoin()">🎯 Vào phòng thi</button></div>
+            <div id="rsJoinMsg"></div>
+            <div class="guidebox" style="margin-top:10px"><p>📌 <b>Chỉ dẫn cho học sinh:</b> Nhập mã phòng → nhập tên của em → bấm <b>Vào phòng thi</b> → chờ thầy bấm "Bắt đầu thi" → đọc câu hỏi và bấm vào đáp án để trả lời.</p></div>
+          </div>
       <div class="card" style="margin-bottom:14px" id="mixCard">
         <h3 style="margin:0 0 4px">🧩 TẠO CÂU HỎI TỔNG HỢP — tổ hợp bộ câu hỏi từ các câu ĐÃ CÓ</h3>
         <p class="note" style="margin:0 0 8px">Thầy <b>tick chọn từng câu</b> (hoặc chọn cả bài) từ <b>bank câu hỏi của từng bài</b> (Môn → Khối → Bài) và <b>ngân hàng mẫu</b>, hoặc tìm câu theo từ khoá. Bộ đã tổ hợp dùng ngay được cho: <b>mở phòng trực tiếp</b> • <b>tự luyện</b> • <b>giao link khung giờ</b>. Lưu ý trung thực: kệ <b>Đề thi/Ôn tập chương</b> hiện là file .docx cấp bộ, <b>chưa có dữ liệu câu hỏi trích sẵn</b> nên chưa tick chọn được từ kệ đó.</p>
@@ -815,31 +841,6 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
         </div>
         <div id="taskSubs" style="margin-top:8px"><p class="note">Chưa chọn bài giao nào.</p></div>
       </div>
-        <div class="row2">
-          <div class="card">
-            <h3 style="margin:0 0 4px">👨‍🏫 Dành cho GIÁO VIÊN — Tạo phòng thi</h3>
-            <p class="note" style="margin:0 0 10px">Chỉnh luật chơi bên dưới (luật sẽ đồng bộ xuống máy học sinh theo thời gian thực), rồi bấm Tạo phòng. Màn hình chờ sẽ hiện <b>mã QR thật to</b> cho học sinh quét vào phòng.</p>
-            
-            <label class="fl">🏷️ Mã phòng cố định (tuỳ chọn — dùng 1 mã cho mọi buổi, QR/link không đổi)</label>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <input type="text" id="rtFixedCode" placeholder="Để trống = mã ngẫu nhiên" maxlength="6" style="text-transform:uppercase;font-weight:800;letter-spacing:2px;flex:1;min-width:170px">
-              <button class="btn alt" onclick="rtCleanRoom()">🗑️ Dọn phòng</button>
-            </div>
-            <p class="note" style="margin:6px 0 0">Đặt mã cố định gồm đúng 6 ký tự (chữ/số, ví dụ: SINH10). Tạo phòng bằng mã này sẽ mở phòng tại đúng địa chỉ cũ; "Dọn phòng" xoá dữ liệu ván cũ của mã đó để buổi sau sạch sẽ.</p>
-            <div class="btnrow"><button class="btn" onclick="rtCreateRoom()">🚪 Tạo phòng thi</button></div>
-            <div id="rtCreateMsg"></div>
-          </div>
-          <div class="card">
-            <h3 style="margin:0 0 4px">🧑‍🎓 Dành cho HỌC SINH — Vào phòng</h3>
-            <p class="note">Quét mã QR trên màn hình giáo viên, hoặc nhập mã phòng 6 ký tự tại đây.</p>
-            <label class="fl">Mã phòng</label>
-            <input type="text" id="rsCode" placeholder="Ví dụ: K7X2PQ" maxlength="6" style="text-transform:uppercase;font-size:19px;font-weight:800;letter-spacing:3px">
-            <label class="fl">Tên của em</label>
-            <input type="text" id="rsName" placeholder="Ví dụ: Nguyễn Văn An">
-            <div class="btnrow"><button class="btn" onclick="rsJoin()">🎯 Vào phòng thi</button></div>
-            <div id="rsJoinMsg"></div>
-            <div class="guidebox" style="margin-top:10px"><p>📌 <b>Chỉ dẫn cho học sinh:</b> Nhập mã phòng → nhập tên của em → bấm <b>Vào phòng thi</b> → chờ thầy bấm "Bắt đầu thi" → đọc câu hỏi và bấm vào đáp án để trả lời.</p></div>
-          </div>
         </div>
       </div>
 
@@ -889,6 +890,7 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
           <div class="card">
             <h3 style="margin:0 0 10px">🏆 Bảng xếp hạng trực tiếp</h3>
             <div id="rtLB"></div>
+      <div class="btnrow" style="margin-top:10px"><button type="button" class="btn alt" id="rtLbToggle" style="display:none" onclick="rtLbToggle()">🔽 Xem toàn bộ danh sách</button><button type="button" class="btn alt" id="rtLbCsv" style="display:none" onclick="rtDownloadCSV()">📥 Xuất Excel / CSV</button></div>
             <h4 style="margin:16px 0 8px">🚑 Danh sách bị loại / hạ gục</h4>
             <div id="rtOutList"><p class="note">Chưa có em nào bị loại.</p></div>
             <div class="btnrow"><button class="btn alt" onclick="rtRescueAll()">🆘 Cứu trợ tất cả</button></div>
@@ -929,7 +931,7 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
 
 <footer>
   <b>Học Liệu VIP</b> — Thầy Hồ Tấn Khải • Trường THPT Mang Thít<br>
-  Tài liệu chỉ để <b>XEM</b> — muốn tải về, liên hệ tác giả • Phòng thi online chạy ngay trong trang • Phiên bản v43
+  Tài liệu chỉ để <b>XEM</b> — muốn tải về, liên hệ tác giả • Phòng thi online chạy ngay trong trang • Phiên bản v44
 </footer>
 
 <div id="viewerModal" role="dialog" aria-modal="true">
@@ -2531,8 +2533,7 @@ function confettiBurst(){
   }
 }
 function sortedPlayers(players){ return _eduSorted(players); }
-function lbHTML(players, myId, mode){
-  var arr = tcIsMode(mode) ? tcSorted(players, mode) : sortedPlayers(players);
+function lbHTML(players, myId, mode, limit){ var arr = tcIsMode(mode) ? tcSorted(players, mode) : sortedPlayers(players); if (limit) arr = arr.slice(0, limit);
   if (!arr.length) return '<p class="note">Chưa có người chơi.</p>';
   var medals = ['🥇', '🥈', '🥉'];
   return arr.map(function(p, i){
@@ -3245,6 +3246,7 @@ function rtDocxToText(xml){
   }
   return out.join('\n');
 }
+function rtExamDrop(ev){ var f = ev && ev.dataTransfer && ev.dataTransfer.files ? ev.dataTransfer.files[0] : null; if (f) rtExamFileLoad({files:[f]}); }
 function rtExamFileLoad(input){
   var f = input && input.files ? input.files[0] : null;
   try { input.value = ''; } catch(e){}
@@ -3304,6 +3306,14 @@ window.hlPresenterClose = function(){
   var p = document.getElementById('presenterScreen'); if (p) p.style.display = 'none';
   try { if (document.fullscreenElement) document.exitFullscreen().catch(function(){}); } catch(e){}
 };
+function hlPresenterTimer(left, dur){
+  var n = document.getElementById('psTimerNum'), r = document.getElementById('psTimerRing');
+  if (!n || !r) return;
+  var L = Math.max(0, left || 0), D = Math.max(1, dur || 30);
+  n.textContent = Math.ceil(L) + 's';
+  r.setAttribute('stroke-dashoffset', String((326.7 * (1 - L / D)).toFixed(1)));
+  r.setAttribute('stroke', L <= 5 ? '#ef4444' : (L <= 10 ? '#f59e0b' : '#22c55e'));
+}
 function hlPresenterUpdate(){
   var p = document.getElementById('presenterScreen');
   if (!p || p.style.display === 'none' || !T) return;
@@ -3312,6 +3322,12 @@ function hlPresenterUpdate(){
   if (psPh && ph) psPh.textContent = ph.textContent;
   if (psQ && q) psQ.textContent = q.textContent;
   if (psO && op) psO.innerHTML = op.innerHTML;
+  var pl = document.getElementById('psLB'); if (pl) pl.innerHTML = lbHTML(T.players || {}, null, T.R && T.R.mode, 10);
+  var qr = document.getElementById('psQR'), pc2 = document.getElementById('psCode'), pl2 = document.getElementById('psLink');
+  if (pc2) pc2.textContent = T.code || '------';
+  if (pl2) pl2.textContent = T.link || '';
+  if (qr && T.code && T.link && window.__psQrCode !== T.code){ window.__psQrCode = T.code; try { loadQRCodeLib().then(function(has){ if (has && window.QRCode){ qr.innerHTML = ''; new QRCode(qr, { text: T.link, width: 180, height: 180, correctLevel: QRCode.CorrectLevel.M }); } }); } catch(e){} }
+  try { var __src = (T.meta.status === 'reviving' && T.revive) ? T.revive : T.current; if (__src && __src.startAt) hlPresenterTimer(__src.duration - (fbNow() - __src.startAt) / 1000, __src.duration); } catch(e){}
   var ac = document.getElementById('rtAnsCount'), at = document.getElementById('rtAnsTotal'), pc = document.getElementById('psCount');
   if (pc) pc.textContent = '✋ Đã trả lời: ' + (ac ? ac.textContent : '0') + ' / ' + (at ? at.textContent : '0') + ' học sinh';
   var cv = document.getElementById('psCanvas'), bs = document.getElementById('psBoss');
@@ -3479,11 +3495,23 @@ function rtAttach(){
   ref.child('answers').on('value', function(s){ T.answers = s.val() || {}; rtRenderAnsCount(); rtRenderDetail(); });
   ref.child('reviveAns').on('value', function(s){ T.reviveAns = s.val() || {}; rtRenderAnsCount(); });
 }
-function rtRenderPlayers(){
-  var players = T.players, ids = Object.keys(players);
+function lbFullHTML(players, answersMap, totalQ){
+  var rows = rankRows(players, answersMap, totalQ);
+  if (!rows.length) return '<p class="note">Chưa có người chơi.</p>';
+  var medals = ['🥇', '🥈', '🥉'];
+  return '<div style="overflow:auto"><table class="lb-full" style="width:100%;border-collapse:collapse;font-size:15.5px"><thead><tr><th style="text-align:left;padding:6px 8px;border-bottom:2px solid #e3ddf2">Thứ hạng</th><th style="text-align:left;padding:6px 8px;border-bottom:2px solid #e3ddf2">Họ tên</th><th style="text-align:right;padding:6px 8px;border-bottom:2px solid #e3ddf2">Điểm game</th><th style="text-align:right;padding:6px 8px;border-bottom:2px solid #e3ddf2">Điểm thang 10</th><th style="text-align:right;padding:6px 8px;border-bottom:2px solid #e3ddf2">Số câu đúng</th></tr></thead><tbody>' +
+    rows.map(function(r, i){ return '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">' + (i < 3 ? medals[i] : (i + 1)) + '</td><td style="padding:6px 8px;border-bottom:1px solid #eee;font-weight:700">' + esc(r.name) + '</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right">' + r.score + 'đ</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right"><b>' + r.grade + '</b> / 10</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right">' + r.correct + '</td></tr>'; }).join('') +
+    '</tbody></table></div>';
+}
+function rtLbToggle(){ window.__rtLbAll = !window.__rtLbAll; rtRenderPlayers(); }
+function rtRenderPlayers(){ var players = T.players, ids = Object.keys(players);
   document.getElementById('rtPCount').textContent = ids.length;
   document.getElementById('rtPlayers').innerHTML = ids.length ? lbHTML(players, null) : '<p class="note">Chưa có học sinh nào. Đang chờ các em quét mã...</p>';
-  document.getElementById('rtLB').innerHTML = lbHTML(players, null);
+  var __lbAll = !!window.__rtLbAll;
+  document.getElementById('rtLB').innerHTML = __lbAll ? lbFullHTML(players, T.answers || {}, T.mainCount || 10) : lbHTML(players, null, T.R && T.R.mode, 10);
+  var __lbT = document.getElementById('rtLbToggle'), __lbC = document.getElementById('rtLbCsv');
+  if (__lbT){ __lbT.style.display = ids.length > 10 ? '' : 'none'; __lbT.textContent = __lbAll ? '🔼 Thu gọn lại Top 10' : '🔽 Xem toàn bộ danh sách (' + ids.length + ' học sinh)'; }
+  if (__lbC) __lbC.style.display = (__lbAll && ids.length > 10) ? '' : 'none';
   var outIds = ids.filter(function(id){ return players[id].out; });
   document.getElementById('rtOutList').innerHTML = outIds.length ? outIds.map(function(id){
     var p = players[id];
@@ -3608,7 +3636,7 @@ function rtStartTick(){
     var el = document.getElementById('rtTimer');
     if (!src || !src.startAt){ el.textContent = '--'; return; }
     var left = src.duration - (fbNow() - src.startAt) / 1000;
-    el.textContent = left > 0 ? Math.ceil(left) + 's' : '0s';
+    el.textContent = left > 0 ? Math.ceil(left) + 's' : '0s'; try { hlPresenterTimer(left, src.duration); } catch(e){}
     if (tcShouldLock(left) && T.meta.status === 'playing' && T.current){
       /* 2 giây cuối (luật trochoi): đáp án đúng tự hiện trên màn hình giáo viên, phía HS đồng thời bị khoá */
       var qt = T.questions[T.current.idx];
@@ -3630,7 +3658,7 @@ function rtCopyLink(){ if (T && T.link){ if (navigator.clipboard && navigator.cl
 function rtStart(){
   if (!Object.keys(T.players).length){ if (!confirm('Chưa có học sinh nào vào phòng. Thầy vẫn muốn bắt đầu?')) return; }
   roomRef(T.code).child('meta').update({ status: 'playing' });
-  rtGotoQuestion(0);
+  rtGotoQuestion(0); try { if (window.hlPresenterOpen) window.hlPresenterOpen(); } catch(e){}
 }
 function rtGotoQuestion(idx){
   var q = T.questions[idx]; if (!q) { rtFinish(); return; }
@@ -5384,11 +5412,17 @@ else v8Init();
     <span id="psPhase" class="phase-tag">Đang chờ...</span>
     <button type="button" class="btn alt" onclick="hlPresenterClose()">✖ Đóng trình chiếu (Esc)</button>
   </div>
+  <div style="display:flex;gap:26px;flex-wrap:wrap;align-items:center;margin-top:16px">
+    <div style="display:flex;gap:14px;align-items:center"><div id="psQR" style="background:#fff;padding:8px;border-radius:12px;min-width:120px;min-height:120px;display:flex;align-items:center;justify-content:center"><span style="color:#0F172A;font-size:14px">Đang tạo mã QR...</span></div><div><div style="font-size:15px;opacity:.8">Mã phòng</div><div id="psCode" style="font-size:34px;font-weight:900;letter-spacing:6px">------</div><div id="psLink" style="font-size:14px;opacity:.8;word-break:break-all"></div></div></div>
+    <div style="display:flex;align-items:center;gap:12px"><svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="10"/><circle id="psTimerRing" cx="60" cy="60" r="52" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="0" transform="rotate(-90 60 60)"/><text id="psTimerNum" x="60" y="70" text-anchor="middle" fill="#fff" font-size="30" font-weight="800">--</text></svg></div>
+    <p id="psCount" style="font-size:20px;font-weight:700;margin:0"></p>
+  </div>
   <div id="psQ" style="font-size:34px;font-weight:800;line-height:1.35;margin:20px 0 14px">...</div>
   <div id="psOpts" style="font-size:22px;max-width:1000px"></div>
   <canvas id="psCanvas" width="900" height="120" style="width:100%;max-width:1000px;display:none;margin-top:18px;background:rgba(255,255,255,.05);border-radius:12px"></canvas>
   <div id="psBoss" style="display:none;margin-top:18px;max-width:1000px"></div>
-  <p id="psCount" style="font-size:20px;margin-top:18px;font-weight:700"></p>
+  
+  <div id="psLBWrap" style="margin-top:18px;max-width:1000px"><h3 style="margin:0 0 8px;color:#ffd94d">🏆 Bảng xếp hạng — Top 10</h3><div id="psLB"></div></div>
 </div>
 <div id="devtoolsNotice" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(10,6,24,.96);color:#fff;align-items:center;justify-content:center;text-align:center;padding:24px">
   <div><div style="font-size:44px">🔒</div>
