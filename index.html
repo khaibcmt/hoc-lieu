@@ -601,6 +601,8 @@ main{max-width:1440px;padding:12px 16px 30px;}
 /* Chip mon noi bat tren nen toi (thay dan 12/11/2026: mot so mon khong thay do khong co mau) */
 #subjectChips .chip{font-weight:800;letter-spacing:.01em;}
 #subjectChips .chip:hover{filter:brightness(1.2);}
+.chip-short{display:none;}
+@media(max-width:900px){ #subjectChips .chip-full{display:none;} #subjectChips .chip-short{display:inline;} #subjectChips .chip{font-size:14px;padding:7px 11px;min-height:36px;} }
 .chips-tools{display:flex;gap:8px;flex:0 0 auto;margin-left:auto;}
 .chip.tool-exam{background:#ffd94d;border-color:#d4a017;color:#4a2500;font-weight:800;}
 .chip.tool-exam.on{background:#b45309;border-color:#92400e;color:#fff;}
@@ -672,6 +674,11 @@ header{background:#0f172a;box-shadow:0 3px 14px rgba(0,0,0,.5);}
 .slot{background:#0b1222;border-color:#1e293b;color:#e2e8f0;}
 .slot[onclick]:hover{border-color:#22d3ee;}
 .bai-card{border-color:#1e293b;box-shadow:0 2px 10px rgba(0,0,0,.4);}
+.shelf{background:#141e33;border-color:#1e293b;box-shadow:0 2px 10px rgba(0,0,0,.4);color:#e2e8f0;}
+.shelf h3{color:#fcd34d;}
+.cd-sec{background:#141e33;border-color:#1e293b;box-shadow:0 2px 10px rgba(0,0,0,.4);color:#e2e8f0;}
+.cd-sec h3{color:#4ade80;}
+.bai-body{background:#0a0f1d;border-top-color:#1e293b;}
 .card{border-color:#1e293b;box-shadow:0 6px 18px rgba(0,0,0,.4);}
 footer{background:transparent;}
 .foot-lock{background:rgba(9,13,34,.95);backdrop-filter:blur(8px);border-top:1px solid #312e81;justify-content:space-between;padding:6px 16px;box-shadow:0 -4px 25px rgba(0,0,0,.6);}
@@ -1421,6 +1428,7 @@ var MON_COLORS = {
   'Thể dục': '#f4511e', 'Quốc phòng – An ninh': '#827717',
   'Hoạt động trải nghiệm, hướng nghiệp': '#8e24aa'
 };
+function chipShort(mon){ var m = { 'Toán': 'Toán', 'Kinh tế & Pháp luật': 'KTPL', 'Hoá học': 'Hoá', 'Lịch sử': 'Sử', 'Ngữ văn': 'Văn', 'Sinh học': 'Sinh', 'Vật lí': 'Lí', 'Công nghệ công nghiệp': 'CNCN', 'Công nghệ nông nghiệp': 'CNNN', 'Địa lí': 'Địa', 'Tiếng Anh': 'Anh', 'Tin học': 'Tin', 'Thể dục': 'Thể dục', 'Hoạt động trải nghiệm, hướng nghiệp': 'Trải nghiệm' }; return m[mon] || mon || ''; }
 function hlLighten(hex, amt){ var n = parseInt(String(hex).replace('#', ''), 16); var r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255; r = Math.round(r + (255 - r) * amt); g = Math.round(g + (255 - g) * amt); b = Math.round(b + (255 - b) * amt); return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1); }
 function chipStyle(mon, on){ var c = MON_COLORS[mon]; if (!c) return ''; if (on) return ' style="background:' + c + ';border-color:' + c + ';color:#fff;box-shadow:0 4px 14px ' + c + '55"'; var lc = hlLighten(c, 0.45); return ' style="background:' + c + '40;border-color:' + lc + ';color:#fff;box-shadow:0 2px 10px ' + c + '44"'; }
 function renderChips(){
@@ -1428,7 +1436,7 @@ function renderChips(){
   var html = '';
   monsAvailable().forEach(function(mon){
     var on = (state.mon === mon && !isSearching()) ? ' on' : '';
-    html += '<button type="button" class="chip' + on + '"' + chipStyle(mon, !!on) + ' data-mon="' + esc(mon) + '">' + esc(mon) + '</button>';
+    html += '<button type="button" class="chip' + on + '"' + chipStyle(mon, !!on) + ' data-mon="' + esc(mon) + '"><span class="chip-full">' + esc(mon) + '</span><span class="chip-short">' + esc(chipShort(mon)) + '</span></button>';
   });
   EXTRA_SUBJECTS.forEach(function(s){
     if (s.catalog_day_du) return; /* v13: đã render ở vòng chip catalog phía trên */
@@ -4791,7 +4799,7 @@ function tnDeSo(file){
 }
 function tnDeHue(so){ return Math.round((so - 1) * 137.508) % 360; }
 function tnTlHue(i){ return Math.round(i * 137.508 + 60) % 360; }
-function tnMonShort(mon){ var m = { 'Toán': 'Toán', 'Kinh tế & Pháp luật': 'KTPL', 'Hoá học': 'Hoá', 'Lịch sử': 'Sử', 'Ngữ văn': 'Văn', 'Sinh học': 'Sinh', 'Vật lí': 'Lí', 'Công nghệ công nghiệp': 'CNCN', 'Công nghệ nông nghiệp': 'CNNN', 'Địa lí': 'Địa', 'Tiếng Anh': 'Anh', 'Tin học': 'Tin' }; return m[mon] || mon || ''; }
+function tnMonShort(mon){ var m = { 'Toán': 'Toán', 'Kinh tế & Pháp luật': 'KTPL', 'Hoá học': 'Hoá', 'Lịch sử': 'Sử', 'Ngữ văn': 'Văn', 'Sinh học': 'Sinh', 'Vật lí': 'Lí', 'Công nghệ công nghiệp': 'CNCN', 'Công nghệ nông nghiệp': 'CNNN', 'Địa lí': 'Địa', 'Tiếng Anh': 'Anh', 'Tin học': 'Tin', 'Thể dục': 'Thể dục', 'Hoạt động trải nghiệm, hướng nghiệp': 'Trải nghiệm' }; return m[mon] || mon || ''; }
 window.tnDeSo = tnDeSo; window.tnDeHue = tnDeHue; window.tnTlHue = tnTlHue; window.tnMonShort = tnMonShort;
 window.renderTnShelf = function(){
   var area = document.getElementById('tnShelfArea'); if (!area) return;
