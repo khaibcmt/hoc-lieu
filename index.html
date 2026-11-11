@@ -878,7 +878,7 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
 
 <footer>
   <b>Học Liệu VIP</b> — Thầy Hồ Tấn Khải • Trường THPT Mang Thít<br>
-  Tài liệu chỉ để <b>XEM</b> — muốn tải về, liên hệ tác giả • Phòng thi online chạy ngay trong trang • Phiên bản v41
+  Tài liệu chỉ để <b>XEM</b> — muốn tải về, liên hệ tác giả • Phòng thi online chạy ngay trong trang • Phiên bản v42
 </footer>
 
 <div id="viewerModal" role="dialog" aria-modal="true">
@@ -2223,21 +2223,83 @@ function csvCell(v){
   v = String(v === null || v === undefined ? '' : v);
   return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
 }
+/* Điểm thật thang 10 theo TỪNG Ý (thầy chốt 23:06 11/11/2026): Phần I/III mỗi câu = 1 ý,
+   Phần II mỗi ý a–d = 1 ý; điểm = (ý đúng / tổng ý) x 10, làm tròn 1 chữ số thập phân. */
+function hlRealGrade(uC, uT){ if (!uT) return 0; return Math.round(uC / uT * 100) / 10; }
+/* Tổng ý đúng/tổng ý của 1 người chơi từ bản đồ answers (ưu tiên trường units/unitsTotal
+   mà máy học sinh gửi kèm; dữ liệu cũ chưa có thì tính theo câu: đúng = 1 ý). */
+function playerUnits(p, answersMap){
+  var uC = 0, uT = 0, seen = false;
+  if (answersMap && p._id){
+    Object.keys(answersMap).forEach(function(idx){
+      var r = (answersMap[idx] || {})[p._id];
+      if (!r) return;
+      seen = true;
+      if (typeof r.units === 'number' && typeof r.unitsTotal === 'number'){ uC += r.units; uT += r.unitsTotal; }
+      else { uT += 1; if (r.correct) uC += 1; }
+    });
+  }
+  if (!seen){ var c = playerCounts(p, null); uC = c.correct; uT = c.answered; }
+  return { uC: uC, uT: uT };
+}
+/* Chuỗi đúng liên tiếp dài nhất theo thứ tự câu */
+function playerMaxStreak(p, answersMap){
+  if (!answersMap || !p._id) return 0;
+  var idxs = Object.keys(answersMap).map(Number).sort(function(a, b){ return a - b; });
+  var best = 0, run = 0;
+  idxs.forEach(function(idx){
+    var r = (answersMap[idx] || {})[p._id];
+    if (r && r.correct){ run++; if (run > best) best = run; } else if (r) run = 0;
+  });
+  return best;
+}
+/* Mốc thời gian trả lời cuối cùng (server timestamp trong answers) */
+function playerFinishMs(p, answersMap){
+  var mx = 0;
+  if (answersMap && p._id){
+    Object.keys(answersMap).forEach(function(idx){
+      var r = (answersMap[idx] || {})[p._id];
+      if (r && typeof r.t === 'number' && r.t > mx) mx = r.t;
+    });
+  }
+  return mx || null;
+}
+/* Hàng dữ liệu cho 2 BXH + bảng đầy đủ: mặc định xếp theo điểm game */
+function rankRows(players, answersMap, totalQ){
+  var arr = Object.keys(players || {}).map(function(id){
+    var p = players[id]; p._id = id;
+    var c = playerCounts(p, answersMap);
+    var u = playerUnits(p, answersMap);
+    var perQ = [];
+    for (var i = 0; i < (totalQ || 0); i++){
+      var r = answersMap && answersMap[i] ? answersMap[i][id] : null;
+      perQ.push(r ? (r.correct ? 1 : 0) : -1);
+    }
+    return { id: id, name: p.name || '...', score: p.score || 0, out: p.out || '',
+      correct: c.correct, answered: c.answered, uC: u.uC, uT: u.uT,
+      grade: hlRealGrade(u.uC, u.uT), maxStreak: playerMaxStreak(p, answersMap),
+      finishMs: playerFinishMs(p, answersMap), perQ: perQ };
+  });
+  arr.sort(function(a, b){ return (b.score - a.score) || (b.grade - a.grade); });
+  return arr;
+}
 function buildResultsCSV(players, answersMap, mode){
   if (tcIsMode(mode)){
     var tarr = tcSorted(players || {}, mode);
-    var tlines = ['Họ tên,Số câu đã trả lời,Số câu đúng,Điểm,Điểm quy đổi (thang 10)'];
+    var tlines = ['Họ tên,Số câu đã trả lời,Số câu đúng,Điểm,Điểm thật (thang 10),Chuỗi thắng tối đa,Điểm quy đổi (thang 10)'];
     tarr.forEach(function(p, i){
       var c = playerCounts(p, answersMap);
-      tlines.push([csvCell(p.name || ''), c.answered, c.correct, (p.score || 0), tcGradeByRank(i + 1)].join(','));
+      var u = playerUnits(p, answersMap);
+      tlines.push([csvCell(p.name || ''), c.answered, c.correct, (p.score || 0), hlRealGrade(u.uC, u.uT), playerMaxStreak(p, answersMap), tcGradeByRank(i + 1)].join(','));
     });
     return tlines.join('\n');
   }
   var arr = _eduSorted(players || {});
-  var lines = ['Họ tên,Số câu đã trả lời,Số câu đúng,Điểm,Huy hiệu'];
+  var lines = ['Họ tên,Số câu đã trả lời,Số câu đúng,Điểm,Điểm thật (thang 10),Chuỗi thắng tối đa,Huy hiệu'];
   arr.forEach(function(p){
     var c = playerCounts(p, answersMap);
-    lines.push([csvCell(p.name || ''), c.answered, c.correct, (p.score || 0), csvCell(_eduBadge(p.score || 0))].join(','));
+    var u = playerUnits(p, answersMap);
+    lines.push([csvCell(p.name || ''), c.answered, c.correct, (p.score || 0), hlRealGrade(u.uC, u.uT), playerMaxStreak(p, answersMap), csvCell(_eduBadge(p.score || 0))].join(','));
   });
   return lines.join('\n');
 }
@@ -2405,11 +2467,12 @@ function sortedPlayers(players){ return _eduSorted(players); }
 function lbHTML(players, myId, mode){
   var arr = tcIsMode(mode) ? tcSorted(players, mode) : sortedPlayers(players);
   if (!arr.length) return '<p class="note">Chưa có người chơi.</p>';
+  var medals = ['🥇', '🥈', '🥉'];
   return arr.map(function(p, i){
     var bd = badgeOf(p.score || 0);
     var st = p.out === 'zero' ? ' 💀' : (p.out === 'wrong' ? ' ☠️' : (p.out === 'boss' ? ' 💔' : (p.out === 'bell' ? ' 🔔' : '')));
     return '<div class="lb-row' + (p._id === myId ? ' me' : '') + (p.out ? ' out' : '') + '">' +
-      '<span class="rk">' + (i + 1) + '</span>' +
+      '<span class="rk">' + (i < 3 ? medals[i] : (i + 1)) + '</span>' +
       '<span class="nm">' + esc(p.name || '...') + st +
       (p.team ? ' <span class="badge">' + (p.team === 'red' ? '🔴 Đỏ' : '🔵 Xanh') + '</span>' : '') +
       (typeof p.hearts === 'number' ? ' <span class="note">❤️×' + Math.max(0, p.hearts) + '</span>' : '') +
@@ -3534,11 +3597,79 @@ function rtShowFinal(){
       return '<div class="pod" style="background:linear-gradient(180deg,' + heights[k] + ',#8e6cc8)">' + medals[k] + '<br>' + esc(p.name) + '<br>' + p.score + ' điểm</div>';
     }).join('') + '</div>' +
     '<div class="btnrow" style="justify-content:center"><button class="btn" onclick="rtLeave()">🚪 Đóng phòng & tạo phòng mới</button></div></div>';
-  document.getElementById('rtFinal').innerHTML += '<div class="card" style="margin-top:14px"><h3 style="margin:0 0 10px">📊 Bảng kết quả cuối cùng — Phòng ' + T.code + (T.examName ? ' • ' + esc(T.examName) : '') + '</h3>' + rtDetailTableHTML() +
-    '<div class="btnrow" style="justify-content:center;margin-top:12px"><button class="btn" onclick="rtDownloadCSV()">📥 Tải kết quả (.csv)</button><button class="btn alt" onclick="rtCopyResults()">📋 Sao chép kết quả</button></div></div>';
+  RT_FULL_OPEN = false; RT_FULL_FILTER = ''; RT_FULL_SORT = 'game';
+  document.getElementById('rtFinal').innerHTML += '<div class="card" style="margin-top:14px"><h3 style="margin:0 0 10px">🏆 Hai bảng xếp hạng chung cuộc — Phòng ' + T.code + (T.examName ? ' • ' + esc(T.examName) : '') + '</h3>' + rtDualBoardsHTML() + '</div>' +
+    '<div class="card" style="margin-top:14px"><h3 style="margin:0 0 10px">📊 Bảng điểm đầy đủ cả lớp</h3>' +
+    '<div class="btnrow" style="justify-content:center"><button class="btn" id="rtFullToggle" onclick="rtToggleFull()">🔽 Xem toàn bộ danh sách (' + Object.keys(T.players).length + ' học sinh)</button></div>' +
+    '<div id="rtFullBoard" style="display:none;margin-top:12px">' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">' +
+      '<input type="text" id="rtFullFilter" placeholder="🔎 Lọc theo tên học sinh..." oninput="rtFullFilter(this.value)" style="flex:1;min-width:180px;padding:9px 12px;border-radius:10px;border:1.5px solid #d9cdf5;font-size:15px">' +
+      '<select id="rtFullSort" onchange="rtFullSort(this.value)" style="padding:9px 12px;border-radius:10px;border:1.5px solid #d9cdf5;font-size:15px">' +
+      '<option value="game">Xếp theo điểm game</option><option value="grade">Xếp theo điểm thật</option></select></div>' +
+      '<div id="rtFullTable"></div></div>' +
+    '<div class="btnrow" style="justify-content:center;margin-top:12px"><button class="btn" onclick="rtDownloadCSV()">📥 Xuất bảng điểm Excel / CSV</button><button class="btn alt" onclick="rtCopyResults()">📋 Sao chép kết quả</button></div></div>';
   var dc2 = document.getElementById('rtDetailCard'); if (dc2) dc2.style.display = 'block';
   rtRenderDetail();
   confettiBurst();
+}
+/* ---------- Đợt 3: 2 BXH (Top 10) + bảng đầy đủ cả lớp ---------- */
+var RT_FULL_OPEN = false, RT_FULL_FILTER = '', RT_FULL_SORT = 'game';
+function rtBoardListHTML(rows, kind){
+  var medals = ['🥇', '🥈', '🥉'];
+  if (!rows.length) return '<p class="note">Chưa có học sinh nào.</p>';
+  return rows.slice(0, 10).map(function(r, i){
+    return '<div class="lb-row"><span class="rk">' + (i < 3 ? medals[i] : (i + 1)) + '</span>' +
+      '<span class="nm">' + esc(r.name) + (r.out ? ' <span class="note">(đã dừng cuộc chơi)</span>' : '') + '</span>' +
+      '<span class="sc">' + (kind === 'grade' ? r.grade + ' điểm' : r.score + 'đ') + '</span></div>';
+  }).join('') + (rows.length > 10 ? '<p class="note" style="margin:6px 0 0">… và ' + (rows.length - 10) + ' bạn nữa — xem ở bảng đầy đủ bên dưới nhé.</p>' : '');
+}
+function rtDualBoardsHTML(){
+  if (!T) return '';
+  var totalQ = (T.meta && T.meta.qCount) || (T.questions ? T.questions.length : 0) || Object.keys(T.answers || {}).length;
+  var rows = rankRows(T.players, T.answers, totalQ);
+  var byId = {}; rows.forEach(function(r){ byId[r.id] = r; });
+  var canon = (T.R && tcIsMode(T.R.mode)) ? tcSorted(T.players, T.R.mode) : sortedPlayers(T.players);
+  var gameRows = canon.map(function(p){ return byId[p._id]; }).filter(Boolean);
+  if (gameRows.length !== rows.length) gameRows = rows;
+  var gradeRows = rows.slice().sort(function(a, b){ return (b.grade - a.grade) || (b.uC - a.uC) || (b.score - a.score); });
+  return '<div class="row2" style="gap:14px">' +
+    '<div><h4 style="margin:0 0 8px">🎮 BXH TRÒ CHƠI — điểm game</h4>' + rtBoardListHTML(gameRows, 'game') + '</div>' +
+    '<div><h4 style="margin:0 0 8px">📊 BXH ĐIỂM THẬT — đúng/tổng × 10</h4>' + rtBoardListHTML(gradeRows, 'grade') + '</div></div>' +
+    '<p class="note" style="margin:8px 0 0">Điểm thật tính theo từng ý: Phần I/III mỗi câu 1 ý, Phần II mỗi ý a–d là 1 ý — làm tròn 1 chữ số thập phân.</p>';
+}
+window.rtToggleFull = function(){
+  RT_FULL_OPEN = !RT_FULL_OPEN;
+  var b = document.getElementById('rtFullBoard');
+  var t = document.getElementById('rtFullToggle');
+  if (b) b.style.display = RT_FULL_OPEN ? '' : 'none';
+  if (t) t.textContent = RT_FULL_OPEN ? '🔼 Thu gọn lại — chỉ xem Top 10' : '🔽 Xem toàn bộ danh sách (' + Object.keys(T ? T.players : {}).length + ' học sinh)';
+  if (RT_FULL_OPEN) rtRenderFullBoard();
+};
+window.rtFullFilter = function(v){ RT_FULL_FILTER = v || ''; rtRenderFullBoard(); };
+window.rtFullSort = function(v){ RT_FULL_SORT = v || 'game'; rtRenderFullBoard(); };
+function rtRenderFullBoard(){
+  var box = document.getElementById('rtFullTable');
+  if (!box || !T) return;
+  var totalQ = (T.meta && T.meta.qCount) || (T.questions ? T.questions.length : 0) || Object.keys(T.answers || {}).length;
+  var rows = rankRows(T.players, T.answers, totalQ);
+  if (RT_FULL_SORT === 'grade') rows = rows.slice().sort(function(a, b){ return (b.grade - a.grade) || (b.uC - a.uC) || (b.score - a.score); });
+  var f = (RT_FULL_FILTER || '').trim().toLowerCase();
+  if (f) rows = rows.filter(function(r){ return r.name.toLowerCase().indexOf(f) >= 0; });
+  var startMs = T.sessionStart || 0;
+  var body = rows.map(function(r, i){
+    var perQ = r.perQ.map(function(v){ return v === 1 ? '✓' : (v === 0 ? '✗' : '—'); }).join(' ');
+    var fin = (r.finishMs && startMs) ? Math.max(0, Math.round((r.finishMs - startMs) / 1000)) : null;
+    var finTxt = fin === null ? '—' : (Math.floor(fin / 60) + 'p' + String(fin % 60).padStart(2, '0') + 's');
+    return '<tr><td style="text-align:center">' + (i + 1) + '</td><td><b>' + esc(r.name) + '</b></td>' +
+      '<td style="text-align:center"><b>' + r.score + '</b></td>' +
+      '<td style="text-align:center">' + r.correct + ' / ' + totalQ + '</td>' +
+      '<td style="text-align:center"><b>' + r.grade + '</b></td>' +
+      '<td style="text-align:center">' + r.maxStreak + '</td>' +
+      '<td style="text-align:center">' + finTxt + '</td>' +
+      '<td style="font-size:12.5px;letter-spacing:1px">' + perQ + '</td></tr>';
+  }).join('');
+  box.innerHTML = '<div style="overflow-x:auto"><table><tr><th>#</th><th>Họ tên</th><th>Điểm game</th><th>Đúng/Tổng câu</th><th>Điểm thật /10</th><th>Chuỗi thắng tối đa</th><th>Thời gian hoàn thành</th><th>Đúng/sai từng câu</th></tr>' + body + '</table></div>' +
+    (rows.length ? '' : '<p class="note">Không có học sinh nào khớp với tên đang lọc.</p>');
 }
 function rtEndRoom(){
   if (!T) return;
@@ -3833,6 +3964,7 @@ window.rsSubmitTf = function(){
   if (!U || U.answered || U.locked || !U.cur || U.cur.kind !== 'tf') return;
   if (U.tfSel.some(function(x){ return x === null; })){ showToast('⚠️ Em chọn Đúng/Sai cho đủ 4 ý rồi mới chốt nhé'); return; }
   U.answered = true;
+  U._units = { c: U.tfSel.reduce(function(a, v, j){ return a + (v === U.cur.bools[j] ? 1 : 0); }, 0), t: 4 };
   rsSubmit(U.tfSel.every(function(v, j){ return v === U.cur.bools[j]; }), -1, false);
 };
 window.rsSubmitSa = function(){
@@ -3841,16 +3973,20 @@ window.rsSubmitSa = function(){
   var v = inp ? inp.value : '';
   if (!String(v).trim()){ showToast('⚠️ Em nhập đáp án trước khi gửi nhé'); return; }
   U.answered = true;
-  rsSubmit(spSaMatch(v, U.cur.ansText), -1, false);
+  var okSa = spSaMatch(v, U.cur.ansText);
+  U._units = { c: okSa ? 1 : 0, t: 1 };
+  rsSubmit(okSa, -1, false);
 };
 function rsTimeout(){
   if (U.answered) return;
   U.answered = true;
+  U._units = null;
   rsSubmit(false, -1, true);
 }
 function rsPick(pos){
   if (!U || U.answered || U.locked || !U.cur || U.cur.hidden[pos]) return;
   U.answered = true;
+  U._units = null;
   rsSubmit(U.cur.disp[pos] === U.cur.correctText, pos, false);
 }
 function rsSubmit(correct, pos, isTimeout){
@@ -3861,7 +3997,7 @@ function rsSubmit(correct, pos, isTimeout){
   var streakBonus = (correct && R.streak && streakAfter >= 2) ? (streakAfter - 1) * 10 : 0;
   var delta = correct ? (sc.gain + streakBonus) : -sc.loss;
   var wrongAfter = correct ? 0 : (me.wrongStreak || 0) + 1;
-  roomRef(U.code).child('answers/' + U.cur.idx + '/' + U.pid).set({ correct: correct, pts: delta, bet: U.bet || 0, timeout: !!isTimeout, t: firebase.database.ServerValue.TIMESTAMP });
+  roomRef(U.code).child('answers/' + U.cur.idx + '/' + U.pid).set({ correct: correct, pts: delta, bet: U.bet || 0, timeout: !!isTimeout, units: (U._units ? U._units.c : (correct ? 1 : 0)), unitsTotal: (U._units ? U._units.t : (U.cur && U.cur.kind === 'tf' ? 4 : 1)), t: firebase.database.ServerValue.TIMESTAMP });
   /* Tổng kết vào node người chơi để màn hình giáo viên hiện "Đã trả lời / Đúng" theo thời gian thực */
   pref.child('answered').transaction(function(cur){ return (cur || 0) + 1; });
   if (correct) pref.child('correct').transaction(function(cur){ return (cur || 0) + 1; });
@@ -3933,7 +4069,7 @@ function rsTcSubmit(correct, pos, isTimeout){
   function finalize(isFB){
     var res = tcScoreAnswer(st, { mode: mode, correct: correct, timeout: !!isTimeout, wager: wager,
       elapsed: elapsed, qIndex: idx, total: total, isFirstBlood: !!isFB, isLast: idx === total - 1 });
-    roomRef(U.code).child('answers/' + idx + '/' + U.pid).set({ correct: correct, pts: res.delta, wager: wager, timeout: !!isTimeout, fb: !!isFB, t: firebase.database.ServerValue.TIMESTAMP });
+    roomRef(U.code).child('answers/' + idx + '/' + U.pid).set({ correct: correct, pts: res.delta, wager: wager, timeout: !!isTimeout, fb: !!isFB, units: (U._units ? U._units.c : (correct ? 1 : 0)), unitsTotal: (U._units ? U._units.t : (U.cur && U.cur.kind === 'tf' ? 4 : 1)), t: firebase.database.ServerValue.TIMESTAMP });
     pref.child('answered').transaction(function(cur){ return (cur || 0) + 1; });
     if (correct) pref.child('correct').transaction(function(cur){ return (cur || 0) + 1; });
     pref.child('score').transaction(function(cur){ return (cur || 0) + res.delta; });
@@ -4106,7 +4242,10 @@ function rsShowFinal(){
   } else if (U.R.mode === 'fast' && arr.length){
     modeLine = '<p class="score-big">⚡ NHANH NHẤT PHÒNG: ' + esc(arr[0].name) + ' — ' + (arr[0].score || 0) + ' điểm</p>';
   }
-  document.getElementById('rsArea').innerHTML = modeLine + '<p class="wait-big">🏁 VÁN ĐẤU KẾT THÚC!<br>Em xếp hạng <b>' + myRank + '</b> với <b>' + ((U.me && U.me.score) || 0) + ' điểm</b>' + (badgeOf((U.me && U.me.score) || 0) ? ' • ' + badgeOf(U.me.score) : '') + (tcIsMode(U.R.mode) ? '<br>🎓 Điểm quy đổi theo hạng: <b>' + tcGradeByRank(myRank) + ' điểm</b> (thang 10)' : '') + '</p>' +
+  var stuTotalQ = (U.meta && U.meta.qCount) || (U.questions ? U.questions.length : 0);
+  var stuCorrect = (U.me && U.me.correct) || 0;
+  var stuGrade = stuTotalQ ? Math.round(stuCorrect / stuTotalQ * 100) / 10 : 0;
+  document.getElementById('rsArea').innerHTML = modeLine + '<p class="wait-big">🏁 VÁN ĐẤU KẾT THÚC!<br>Em xếp hạng <b>' + myRank + '</b> với <b>' + ((U.me && U.me.score) || 0) + ' điểm</b>' + (badgeOf((U.me && U.me.score) || 0) ? ' • ' + badgeOf(U.me.score) : '') + (tcIsMode(U.R.mode) ? '<br>🎓 Điểm quy đổi theo hạng: <b>' + tcGradeByRank(myRank) + ' điểm</b> (thang 10)' : '') + '<br>📊 Điểm thật của em: <b>' + stuGrade + ' / 10</b> (đúng ' + stuCorrect + ' / ' + stuTotalQ + ' câu)</p>' +
     '<div class="podium">' + [1, 0, 2].map(function(k){
       var p = arr[k]; if (!p) return '<div></div>';
       return '<div class="pod" style="background:linear-gradient(180deg,#b39ddb,#6a11cb)">' + medals[k] + '<br>' + esc(p.name) + '<br>' + p.score + 'đ</div>';
