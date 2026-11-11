@@ -638,11 +638,67 @@ main{padding-bottom:70px;}
 .ktab:hover{border-color:#6a11cb;color:#6a11cb;}
 .ktab.on:hover{color:#fff;}
 .ttab:hover{border-color:#6a11cb;background:#f6f2ff;}
+
+/* Chu de toi kieu BioMaster (kho) + trochoi (Thi Online) — thay dan 05:26-05:27 12/11/2026 */
+:root{--bg:#070c18;--ink:#e2e8f0;--muted:#94a3b8;--card:#141e33;--brand1:#2563eb;--brand2:#6366f1;--gold:#f59e0b;}
+body{background:#070c18;color:#e2e8f0;font-family:"Plus Jakarta Sans","Segoe UI",Roboto,Arial,sans-serif;}
+header{background:#0f172a;box-shadow:0 3px 14px rgba(0,0,0,.5);}
+.chips-row{background:#070c18;}
+.chip{background:#141e33;border-color:#1e293b;color:#e2e8f0;}
+.chip:hover{border-color:#22d3ee;}
+#libSide{width:420px;flex:0 0 420px;}
+.side-box{background:#141e33;border-color:#1e293b;}
+.side-h{background:transparent;color:#e2e8f0;font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:800;padding:2px 2px 0;}
+.ktab{background:#0b1222;border-color:#1e293b;color:#e2e8f0;}
+.ktab.on{background:#2563eb;border-color:#2563eb;color:#fff;}
+.ttab{background:#0b1222;border-color:#1e293b;color:#e2e8f0;}
+.ttab.on{background:#2563eb;border-color:#2563eb;color:#fff;}
+.bai-row{background:#0b1222;border-color:#1e293b;color:#e2e8f0;}
+.bai-row:hover{background:#113c52;border-color:#22d3ee;}
+.bai-row.on{background:#113c52;border-color:#22d3ee;box-shadow:inset 3px 0 0 #22d3ee;}
+.br-num{background:#1e293b;color:#67e8f9;}
+.br-tiet{color:#94a3b8;}
+#paneViewer{background:#0a0f1d;}
+#paneBody{background:#0a0f1d;}
+.tn-compact{background:#141e33;}
+.tn-head h3{color:#fcd34d;}
+.tn-file{color:#e2e8f0;}
+.tn-file[onclick]:hover{outline-color:#f59e0b;}
+.shelf-row{border-bottom-color:#1e293b;}
+.shelf-row[onclick]:hover{background:#113c52;}
+.slot{background:#0b1222;border-color:#1e293b;color:#e2e8f0;}
+.slot[onclick]:hover{border-color:#22d3ee;}
+.bai-card{border-color:#1e293b;box-shadow:0 2px 10px rgba(0,0,0,.4);}
+.card{border-color:#1e293b;box-shadow:0 6px 18px rgba(0,0,0,.4);}
+footer{background:transparent;}
+.foot-lock{background:rgba(9,13,34,.95);backdrop-filter:blur(8px);border-top:1px solid #312e81;justify-content:space-between;padding:6px 16px;box-shadow:0 -4px 25px rgba(0,0,0,.6);}
+.foot-label{color:#fff;font-weight:800;font-size:12px;white-space:nowrap;}
+.foot-brand{color:#22d3ee;font-size:12px;}
+.foot-mid{color:#fff;font-size:12.5px;white-space:nowrap;}
+.foot-pill{padding:4px 12px;font-size:12px;font-weight:900;}
+.fp-author{background:#e11d48;}
+.fp-school{background:#0c172b;border:2px solid #3b82f6;color:#60a5fa;}
+.fp-mail{background:#181305;border:2px solid #ca8a04;color:#facc15;}
+.fp-zalo{background:#071d14;border:2px solid #16a34a;color:#4ade80;}
+.foot-ver{color:#fcd34d;}
+/* Thi Online kieu trochoi: nen toi, the cai dat trang, man thi dau navy */
+#sec-game{font-family:"Nunito","Plus Jakarta Sans",sans-serif;background:linear-gradient(180deg,#0b1530,#070b14);border-radius:24px;padding:18px;}
+#sec-game .card{--ink:#0f172a;--muted:#475569;--card:#ffffff;background:#ffffff;color:#0f172a;border:2px solid #22d3ee;border-radius:24px;}
+#rsArea{background:#101a31;border:2px solid #0284c7;border-radius:16px;padding:14px;color:#fff;}
+#soloArea{background:#101a31;border:2px solid #0284c7;border-radius:16px;padding:14px;color:#fff;}
+#sec-game #rtLive{background:#101a31;border:2px solid #0284c7;border-radius:16px;color:#fff;--ink:#e2e8f0;--muted:#94a3b8;}
+#rtLB,#psLB{background:#0f172a;border:2px solid #f59e0b;border-radius:16px;padding:12px;}
+#rtLB .lb-row,#psLB .lb-row{background:#0b1222;border-color:#1e293b;color:#e2e8f0;}
+#sec-practice{background:linear-gradient(180deg,#0b1530,#070b14);}
+@media (max-width:900px){ #libSide{width:100%;flex:none;} }
 </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -997,13 +1053,14 @@ main{padding-bottom:70px;}
 </main>
 
 <footer>
-  <div class="foot-note">Tài liệu chỉ để <b>XEM</b> — muốn tải về, liên hệ tác giả • Phòng thi online chạy ngay trong trang</div>
   <div class="foot-lock">
-    <span class="foot-brand">📚 <b>Học Liệu Vip Pro</b></span>
+    <span class="foot-label">Liên hệ &amp; góp ý:</span>
     <span class="foot-pill fp-author">👑 Hồ Tấn Khải</span>
     <span class="foot-pill fp-school">🏫 Trường THPT Mang Thít</span>
     <a class="foot-pill fp-mail" href="mailto:khaibcmt@gmail.com">✉️ khaibcmt@gmail.com</a>
     <a class="foot-pill fp-zalo" href="https://zalo.me/0933560382" target="_blank" rel="noopener">📞 Zalo: 0933560382</a>
+    <span class="foot-brand">📚 <b>Học Liệu Vip Pro</b></span>
+    <span class="foot-mid">Tài liệu chỉ để <b>XEM</b> • Phòng thi online chạy ngay trong trang</span>
     <span class="foot-ver">Phiên bản v44</span>
   </div>
 </footer>
@@ -1337,7 +1394,7 @@ var MON_COLORS = {
 function chipStyle(mon, on){
   var c = MON_COLORS[mon]; if (!c) return '';
   return on ? ' style="background:' + c + ';border-color:' + c + ';color:#fff;box-shadow:0 4px 14px ' + c + '55"'
-            : ' style="background:' + c + '1c;border-color:' + c + ';color:#263069"';
+            : ' style="background:' + c + '26;border-color:' + c + ';color:#fff"';
 }
 function renderChips(){
   var wrap = document.getElementById('subjectChips');
