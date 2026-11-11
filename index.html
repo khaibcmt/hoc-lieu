@@ -598,6 +598,9 @@ main{max-width:1440px;padding:12px 16px 30px;}
 .chips{flex-wrap:wrap;overflow-x:visible;position:static;}
 .chips-row{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start;position:sticky;top:54px;z-index:40;background:var(--bg);padding:6px 0 8px;}
 .chips-row .chips{flex:1 1 420px;}
+/* Chip mon noi bat tren nen toi (thay dan 12/11/2026: mot so mon khong thay do khong co mau) */
+#subjectChips .chip{font-weight:800;letter-spacing:.01em;}
+#subjectChips .chip:hover{filter:brightness(1.2);}
 .chips-tools{display:flex;gap:8px;flex:0 0 auto;margin-left:auto;}
 .chip.tool-exam{background:#ffd94d;border-color:#d4a017;color:#4a2500;font-weight:800;}
 .chip.tool-exam.on{background:#b45309;border-color:#92400e;color:#fff;}
@@ -1418,11 +1421,8 @@ var MON_COLORS = {
   'Thể dục': '#f4511e', 'Quốc phòng – An ninh': '#827717',
   'Hoạt động trải nghiệm, hướng nghiệp': '#8e24aa'
 };
-function chipStyle(mon, on){
-  var c = MON_COLORS[mon]; if (!c) return '';
-  return on ? ' style="background:' + c + ';border-color:' + c + ';color:#fff;box-shadow:0 4px 14px ' + c + '55"'
-            : ' style="background:' + c + '26;border-color:' + c + ';color:#fff"';
-}
+function hlLighten(hex, amt){ var n = parseInt(String(hex).replace('#', ''), 16); var r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255; r = Math.round(r + (255 - r) * amt); g = Math.round(g + (255 - g) * amt); b = Math.round(b + (255 - b) * amt); return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1); }
+function chipStyle(mon, on){ var c = MON_COLORS[mon]; if (!c) return ''; if (on) return ' style="background:' + c + ';border-color:' + c + ';color:#fff;box-shadow:0 4px 14px ' + c + '55"'; var lc = hlLighten(c, 0.45); return ' style="background:' + c + '40;border-color:' + lc + ';color:#fff;box-shadow:0 2px 10px ' + c + '44"'; }
 function renderChips(){
   var wrap = document.getElementById('subjectChips');
   var html = '';
@@ -4859,9 +4859,10 @@ function examParaText(seg){
 }
 /* Doc .docx tu Drive: dung JSZip de giu dau dap an; neu JSZip loi thi dung mammoth (mat dau, chi con dap an o bang dap an) */
 function examDocxToText(buf){
+  if (!buf || !buf.byteLength){ var e0 = new Error('empty'); e0.stage = 'tai'; throw e0; }
   return loadJSZip().then(function(){ return JSZip.loadAsync(buf); }).then(function(zip){
     var f = zip.file('word/document.xml');
-    if (!f) throw new Error('no-doc');
+    if (!f){ var e1 = new Error('no-doc'); e1.stage = 'doc'; throw e1; }
     return f.async('string');
   }).then(function(xml){
     var parts = String(xml || '').split(/<w:p[\s>]/), out = [];
@@ -4872,9 +4873,9 @@ function examDocxToText(buf){
       if (line) out.push(line);
     }
     return out.join('\n');
-  }).catch(function(){
-    if (window.mammoth) return mammoth.extractRawText({ arrayBuffer: buf }).then(function(r){ return String((r && r.value) || ''); });
-    throw new Error('no-extract');
+  }).catch(function(err){
+    if (window.mammoth) return mammoth.extractRawText({ arrayBuffer: buf }).then(function(r){ return String((r && r.value) || ''); }).catch(function(){ var e2 = new Error('mammoth-loi'); e2.stage = 'doc'; throw e2; });
+    var e3 = err || new Error('no-extract'); e3.stage = e3.stage || 'doc'; throw e3;
   });
 }
 function examStartDoc(file, title){
@@ -4882,17 +4883,21 @@ function examStartDoc(file, title){
   if (!fid){ showToast('⚠️ Chưa nối được file này'); return; }
   showToast('⏳ Đang tải đề — chờ em chút...');
   fetch('https://drive.usercontent.google.com/download?id=' + fid + '&export=download&confirm=t').then(function(r){
-    if (!r.ok) throw new Error('HTTP ' + r.status);
+    if (!r.ok){ var eh = new Error('HTTP ' + r.status); eh.stage = 'tai'; throw eh; }
     return r.arrayBuffer();
   }).then(function(buf){ return examDocxToText(buf); }).then(function(text){
     var parsed = EduParse.parseQuestionsMulti(text);
     var res = examBankFromParsed(parsed);
     var n = (res.bank.mc || []).length + (res.bank.sa || []).length + (res.bank.tf ? res.bank.tf.length : 0);
-    if (!n) throw new Error('no-q');
+    if (!n){ var eq = new Error('no-q'); eq.stage = 'cau'; throw eq; }
     if (res.skipped) showToast('📝 Đề có ' + res.total + ' câu — thi được ' + n + ' câu (bỏ ' + res.skipped + ' câu chưa có đáp án).');
     spStartSession({ mode: 'practice', key: 'doc:' + fid, bank: res.bank, title: title, boLabel: 'Đề thi — ' + file.file, perQ: 30 });
-  }).catch(function(){
-    showToast('⚠️ Chưa tải được đề này để thi — em mở xem trước nhé');
+  }).catch(function(err){
+    var st = (err && err.stage) || 'tai';
+    window.__examErr = st;
+    try { console.warn('[exam] loi mo de:', st, err); } catch(e){}
+    var msg = st === 'doc' ? '⚠️ Đề này chưa đọc được để thi — em mở xem trước nhé' : (st === 'cau' ? '⚠️ Đề này chưa tách được câu hỏi có đáp án — em mở xem trước nhé' : '⚠️ Mạng chưa tải được đề này — em mở xem trước nhé');
+    showToast(msg);
     openDoc(file, title);
   });
 }
@@ -4987,6 +4992,7 @@ function spRenderName(){
       : '<p class="note">Bộ câu hỏi có <b>' + SP.qs.length + '</b> câu (trích từ Hoạt động 3 của giáo án) • làm như thi thật: trả lời tự do, chuyển qua lại giữa các câu, sửa đáp án thoải mái — <b>chưa hiện đúng/sai</b>; bấm <b>Nộp bài</b> mới xem điểm thật và đáp án chi tiết từng câu.</p>') +
     '<label class="fl" style="color:#c9c2e8">Họ tên của em</label>' +
     '<input type="text" id="spName" class="sp-name" placeholder="Ví dụ: Nguyễn Văn An" value="' + esc(SP.name || '') + '">' +
+    '<p id="spNameHint" style="min-height:20px;margin:2px 0 0;color:#ff8f8f;font-weight:700;font-size:14.5px"></p>' +
     '<button type="button" class="sp-bigbtn" onclick="spBegin()">🚪 VÀO LÀM BÀI NGAY</button>' +
     (isTask ? '' : spLastResultHtml());
 }
@@ -4999,7 +5005,9 @@ function spLastResultHtml(){
 window.spBegin = function(){
   var inp = document.getElementById('spName');
   var name = inp ? inp.value.trim() : '';
-  if (!name){ showToast('⚠️ Em nhập họ tên trước khi làm bài nhé'); if (inp) inp.focus(); return; }
+  var hintEl = document.getElementById('spNameHint');
+  if (!name){ if (hintEl) hintEl.textContent = '⚠️ Em nhập họ tên trước khi làm bài nhé'; showToast('⚠️ Em nhập họ tên trước khi làm bài nhé'); if (inp) inp.focus(); return; }
+  if (hintEl) hintEl.textContent = '';
   SP.name = name;
   try { localStorage.setItem(LS_NAME, name); } catch(e){}
   SP.idx = 0;
