@@ -429,6 +429,7 @@ body.hs-mode #sec-game{display:block!important}
 body.hs-mode #sec-game .ptitle,body.hs-mode #sec-game .pdesc,body.hs-mode #sec-game>.guidebox,body.hs-mode #sec-game .gtabs,body.hs-mode #gSoloPane{display:none!important}
 body.hs-mode #gRoomPane{display:block!important}
 body.hs-mode #roomGuide,body.hs-mode #roomNoFb,body.hs-mode #rtExamCard,body.hs-mode #rtScreen,body.hs-mode #rtModeCard,body.hs-mode #examModal,body.hs-mode #mixCard,body.hs-mode #taskCard{display:none!important}
+body.hs-mode #hlGuide{display:none!important}
 body.hs-mode #roomEntry{display:block!important}
 body.hs-mode #roomEntry .row2>.card:first-child{display:none!important}
 /* Biến màu riêng của module phòng thi (theo tông EduMaster) */
@@ -604,15 +605,13 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
     <button type="button" class="mtab on" id="mtabLib" onclick="hlShowTab('lib')">📚 Kho Học Liệu</button>
     <button type="button" class="mtab" id="mtabExam" onclick="hlShowTab('exam')">🏆 Đấu Trường Thi</button>
   </div>
-  <div id="tabLib">
-  <nav class="chips" id="subjectChips" aria-label="Chọn môn học"></nav>
   <section id="hlGuide" style="border:2.5px solid #6a11cb;border-radius:18px;overflow:hidden;margin:4px 0 18px;background:#fff;box-shadow:0 8px 24px rgba(106,17,203,.16)">
     <div style="background:linear-gradient(90deg,#6a11cb,#2575fc);color:#fff;padding:13px 18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <span style="font-size:21px;font-weight:900;letter-spacing:.3px">📖 HƯỚNG DẪN SỬ DỤNG</span>
-      <span style="font-size:15.5px;opacity:.92">— web gồm 2 phân hệ: 📚 <b>Kho Học Liệu</b> và 🏆 <b>Đấu Trường Thi</b>, bấm 2 thẻ lớn ở trên để chuyển qua lại</span>
-      <button type="button" onclick="var b=document.getElementById('hlGuideBody');var h=b.style.display==='none';b.style.display=h?'':'none';this.textContent=h?'▾ Thu gọn':'▸ Mở hướng dẫn'" style="margin-left:auto;background:#ffd94d;color:#4a2500;border:0;border-radius:999px;padding:8px 16px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit">▾ Thu gọn</button>
+      <span style="font-size:15px;opacity:.92">— vai trò • cách dùng • luật thi • cài đặt</span>
+      <button type="button" onclick="var b=document.getElementById('hlGuideBody');var h=b.style.display==='none';b.style.display=h?'':'none';this.textContent=h?'▾ Thu gọn':'▸ Mở hướng dẫn'" style="margin-left:auto;background:#ffd94d;color:#4a2500;border:0;border-radius:999px;padding:8px 16px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit">▸ Mở hướng dẫn</button>
     </div>
-    <div id="hlGuideBody" style="padding:16px 18px 14px">
+    <div id="hlGuideBody" style="display:none;padding:16px 18px 14px">
       <div style="display:flex;flex-wrap:wrap;gap:12px">
         <div style="flex:1 1 250px;border:2px solid #b8860b;border-top:10px solid #b8860b;border-radius:14px;background:#fff8e1;padding:13px 15px">
           <div style="display:inline-block;background:#b8860b;color:#fff;font-weight:900;font-size:16.5px;border-radius:999px;padding:5px 14px;margin-bottom:8px">👑 ADMIN — THẦY KHẢI</div>
@@ -627,9 +626,37 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
           <p style="margin:0;font-size:16px;line-height:1.6"><b>Tự luyện theo từng bài:</b> làm bài tự do, chuyển câu và sửa đáp án thoải mái, <b>nộp bài mới biết điểm</b> và xem lại đúng/sai từng câu. <b>Vào phòng thi:</b> nhập họ tên + mã phòng → trả lời câu hỏi đủ 3 phần (bấm 4 nút màu, chọn Đúng/Sai, gõ đáp án ngắn) — cuối ván thấy cả <b>điểm game</b> và <b>điểm thật trên thang 10</b>.</p>
         </div>
       </div>
+      <div style="margin-top:14px;border:2px solid #e65100;border-radius:14px;overflow:hidden">
+        <div style="background:linear-gradient(90deg,#e65100,#fb8c00);color:#fff;font-weight:900;font-size:17.5px;padding:9px 15px">🏆 LUẬT THI &amp; CÁCH CHƠI — ĐẤU TRƯỜNG THI</div>
+        <div style="padding:13px 15px;background:#fffaf3">
+          <div style="display:flex;flex-wrap:wrap;gap:12px">
+            <div style="flex:1 1 260px;background:#fff3e0;border:1.5px solid #fb8c00;border-radius:12px;padding:11px 13px">
+              <b style="color:#e65100;font-size:16.5px">⚡ AI NHANH HƠN — đua tốc độ</b>
+              <p style="margin:6px 0 0;font-size:15.5px;line-height:1.6">Cược <b>Bản Lĩnh</b> mỗi câu: An toàn <b>1.000đ</b> • Liều lĩnh <b>1.500đ</b> • Tất Tay <b>2.500đ</b> (cược lớn chỉ 1 lần/trận). Đúng: nhận điểm cược + thưởng tốc độ (≤5s <b>+300</b> • ≤10s <b>+150</b>) + thưởng chuỗi (≥3 câu <b>+200</b> • ≥5 câu <b>+400</b>) + First Blood <b>+500</b>. 🌟 <b>Câu Hỏi Vàng</b> (câu chia hết cho 4 + câu cuối) nhân đôi điểm. Sai: <b>trừ đúng mức đã cược</b> • hết giờ không trả lời: <b>−1.000đ</b>. 2 giây cuối hiện đáp án + khoá trả lời; đáp án trộn riêng từng em. Cuối ván đổi sang điểm 10 theo hạng: 1–3 → <b>10</b> • 4–6 → <b>9</b> • 7–10 → <b>8</b> • 11–15 → <b>7</b> • còn lại <b>6</b>.</p>
+            </div>
+            <div style="flex:1 1 260px;background:#fff8e1;border:1.5px solid #b8860b;border-radius:12px;padding:11px 13px">
+              <b style="color:#b8860b;font-size:16.5px">🔔 RUNG CHUÔNG VÀNG — hệ mạng</b>
+              <p style="margin:6px 0 0;font-size:15.5px;line-height:1.6">Mỗi em có <b>3 ❤️ mạng</b>: sai hoặc hết giờ mất 1 mạng, đúng 3 câu liên tiếp được <b>+1 mạng</b> (tối đa 5). Hết mạng là bị loại — thầy bấm <b>🆘 Cứu trợ</b> để hồi sinh cả lớp. Quán quân xét theo thứ tự: còn trụ → số mạng → số câu đúng → điểm. Ngoài ra còn 2 chế độ cổ điển: 🪢 <b>Kéo Co</b> (chơi 1 người thì máy đóng vai đội Xanh) và 👹 <b>Diệt Boss</b>.</p>
+            </div>
+          </div>
+          <p style="margin:11px 0 0;font-size:15.5px;line-height:1.6">🎮 <b>Cách chơi phòng thi:</b> thầy chọn nguồn câu hỏi → <b>Tạo phòng</b> → học sinh quét QR hoặc nhập mã phòng + họ tên → <b>VÀO PHÒNG</b> → thầy bấm <b>Bắt đầu</b>. Cuối ván hiện <b>2 bảng xếp hạng</b>: 🎮 điểm game và 📊 điểm thật = (ý đúng ÷ tổng ý) × 10.</p>
+          <details style="margin-top:11px;background:#fff;border:1.5px dashed #e65100;border-radius:10px;padding:9px 13px">
+            <summary style="font-weight:800;font-size:15.5px;cursor:pointer;color:#e65100">⚙️ CÀI ĐẶT LUẬT THI — giáo viên chỉnh ở đây, hệ thống đọc các ô này khi bắt đầu ván</summary>
+            <p style="margin:10px 0 4px"><b>🎮 Luật cho chế độ chơi 1 người:</b></p>
+            <div id="sRules"></div>
+            <p class="note" style="margin:10px 0 0">🤖 Riêng chế độ <b>Kéo co (1 người)</b>: máy đóng vai đội Xanh — độ khó của máy:
+          <select id="s-botLevel"><option value="0.4">😊 Dễ (máy đúng ~40%)</option><option value="0.6" selected>😐 Trung bình (máy đúng ~60%)</option><option value="0.8">😤 Khó (máy đúng ~80%)</option></select></p>
+            <p style="margin:12px 0 4px"><b>🏆 Luật cho phòng thi trực tuyến:</b></p>
+            <div id="rRules"></div>
+          </details>
+        </div>
+      </div>
       <p style="margin:13px 0 2px;font-size:16px;line-height:1.6;background:#fdf3e3;border:1.5px dashed #e08a00;border-radius:10px;padding:9px 13px">🎓 <b>Ôn thi tốt nghiệp:</b> nằm trong cột trái, ngay dưới danh sách Khối — gồm 2 ngăn 📚 <b>Tài liệu ôn thi</b> và 📝 <b>Đề thi tốt nghiệp</b> của từng môn. Mọi tài liệu trong kho <b>chỉ để XEM trực tuyến</b> — muốn tải, liên hệ tác giả.</p>
     </div>
   </section>
+  <div id="tabLib">
+  <nav class="chips" id="subjectChips" aria-label="Chọn môn học"></nav>
+  
   
   <div id="browseArea">
     <div class="lib-layout">
@@ -664,8 +691,8 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
   </div><!-- /#tabLib -->
   <section class="page" id="sec-game" style="display:none">
     <h2 class="ptitle">🏆 Phòng thi online — Game Rung chuông vàng &amp; thi trực tuyến thời gian thực</h2>
-    <p class="pdesc">Game thi đấu kiểu game show theo <b>luật trochoi</b>: ⚡ <b>Ai Nhanh Hơn</b> (đua tốc độ — cược bản lĩnh 3 mức, thưởng tốc độ/chuỗi, First Blood, 🌟 Câu Hỏi Vàng x2, 🎁 Rương Bí Ẩn) &amp; 🔔 <b>Rung Chuông Vàng</b> (3 ❤️ — sai mất mạng, đúng 3 câu liên tiếp +1 mạng, cứu trợ hồi sinh), cùng 2 chế độ cổ điển 🪢 Kéo co &amp; 👹 Diệt Boss (cược điểm, trợ giúp 50:50, Gương thần kỳ...). Phương án được <b>trộn riêng cho từng học sinh</b>; <b>2 giây cuối</b> mỗi câu tự hiện đáp án đúng và khoá trả lời. Chơi 1 người ngay trên máy này, hoặc mở <b>Phòng thi trực tuyến</b> cho cả lớp cùng thi (thời gian thực).</p>
-    <div class="guidebox"><p>📌 <b>Chỉ dẫn:</b> Chơi 1 người ngay trên máy này, hoặc mở <b>Phòng thi trực tuyến</b>: thầy tạo phòng, học sinh quét mã QR / nhập mã phòng vào thi — kết quả hiện trực tiếp trên màn hình của thầy.</p></div>
+    
+    
 
     <div class="gtabs">
       <button class="gtab active" id="gtabSolo" onclick="gameTab('solo')">🎮 Chơi 1 người</button>
@@ -674,13 +701,7 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
 
     <!-- ===== CHẾ ĐỘ 1 NGƯỜI ===== -->
     <div id="gSoloPane">
-      <div class="card" style="margin-bottom:14px">
-        <h3 style="margin:0 0 4px">🎛️ Panel Luật chơi (chế độ 1 người)</h3>
-        <p class="note" style="margin:0 0 10px">Chọn luật cho ván đấu rồi bấm Bắt đầu. ⚡ Ai Nhanh Hơn &amp; 🔔 Rung Chuông Vàng dùng <b>luật trochoi</b> (bắt đầu từ <b>0 điểm</b>); 🪢 Kéo co &amp; 👹 Diệt Boss dùng luật cổ điển (điểm khởi đầu <b>100 điểm</b>, mỗi quyền trợ giúp 1 lần/ván).</p>
-        <div id="sRules"></div>
-        <p class="note" style="margin:10px 0 0">🤖 Riêng chế độ <b>Kéo co (1 người)</b>: máy đóng vai đội Xanh — độ khó của máy:
-          <select id="s-botLevel"><option value="0.4">😊 Dễ (máy đúng ~40%)</option><option value="0.6" selected>😐 Trung bình (máy đúng ~60%)</option><option value="0.8">😤 Khó (máy đúng ~80%)</option></select></p>
-      </div>
+      
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
           <span class="score-big" id="soloInfo">Sẵn sàng rung chuông?</span>
@@ -798,7 +819,7 @@ body.hl-admin,body.hl-admin *{-webkit-user-select:text!important;user-select:tex
           <div class="card">
             <h3 style="margin:0 0 4px">👨‍🏫 Dành cho GIÁO VIÊN — Tạo phòng thi</h3>
             <p class="note" style="margin:0 0 10px">Chỉnh luật chơi bên dưới (luật sẽ đồng bộ xuống máy học sinh theo thời gian thực), rồi bấm Tạo phòng. Màn hình chờ sẽ hiện <b>mã QR thật to</b> cho học sinh quét vào phòng.</p>
-            <div id="rRules"></div>
+            
             <label class="fl">🏷️ Mã phòng cố định (tuỳ chọn — dùng 1 mã cho mọi buổi, QR/link không đổi)</label>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <input type="text" id="rtFixedCode" placeholder="Để trống = mã ngẫu nhiên" maxlength="6" style="text-transform:uppercase;font-weight:800;letter-spacing:2px;flex:1;min-width:170px">
