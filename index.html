@@ -2400,7 +2400,7 @@ function renderAll(){
    cấm chọn chữ (CSS) và cấm in (CSS print).
    Đây là lớp ngăn sao chép/tải lén với người dùng phổ thông;
    muốn tải thật thì liên hệ tác giả. */
-var HL_ADMIN_HASH = '0eb8de755cf51e222ac7049e90f664fd1f4e7be66fe654940992609056aaeee1';
+var HL_ADMIN_HASH = 'be7e5cf0fda9a345fc1ef61cb127b0db72fb8c915d72df043468d858d4c5ee3d';
 function hlIsAdmin(){ try { return (+localStorage.getItem('hl_admin_until') || 0) > Date.now(); } catch(e){ return false; } }
 function hlAdminApply(){
   var on = hlIsAdmin();
@@ -2480,15 +2480,32 @@ async function hlAdminToggle(){
     }
     return;
   }
-  var code = prompt('🔑 Nhập mã chủ để bật chế độ Admin (chỉ dành cho chủ sở hữu):');
+  /* Máy đã được ghi nhớ (máy của thầy): vào thẳng, không hỏi key/mật khẩu */
+  if (window.hlLicCheckTrust){
+    var trusted = false;
+    try { trusted = await hlLicCheckTrust(); } catch(e){}
+    if (trusted){
+      try { localStorage.setItem('hl_admin_until', String(Date.now() + 10 * 365 * 24 * 3600 * 1000)); } catch(e){}
+      hlAdminApply(); showToast('👑 Máy này đã được ghi nhớ — đã bật Admin, không cần nhập key.');
+      if (window.hlLicOnAdminLogin) hlLicOnAdminLogin();
+      return;
+    }
+  }
+  /* Máy lạ: bắt buộc đủ 2 lớp — KEY (mã chủ) + mật khẩu của thầy (thầy chốt 13/11/2026) */
+  var code = prompt('🔑 Bước 1/2 — Nhập KEY (mã chủ) để vào Admin:');
   if (!code) return;
   var h = await hlSha256(code.trim());
+  if (h !== HL_ADMIN_HASH){ showToast('❌ Sai KEY (mã chủ).'); return; }
   var pwH = ''; try { pwH = localStorage.getItem('hl_admin_pw_hash') || ''; } catch(e){}
-  if (h === HL_ADMIN_HASH || (pwH && h === pwH)){
-    try { localStorage.setItem('hl_admin_until', String(Date.now() + 72 * 3600 * 1000)); } catch(e){}
-    hlAdminApply(); showToast('👑 Đã bật chế độ Admin — máy này sẽ được ghi nhớ.');
-    if (window.hlLicOnAdminLogin) hlLicOnAdminLogin();
-  } else showToast('❌ Sai mã. Máy này chưa được nhớ — nhập mã chủ hoặc mật khẩu Admin của thầy.');
+  if (pwH){
+    var pw = prompt('🔑 Bước 2/2 — Nhập MẬT KHẨU ADMIN của thầy:');
+    if (!pw){ showToast('⚠️ Máy lạ phải nhập đủ KEY + mật khẩu của thầy mới vào Admin được.'); return; }
+    var h2 = await hlSha256(pw.trim());
+    if (h2 !== pwH){ showToast('❌ Sai mật khẩu của thầy.'); return; }
+  }
+  try { localStorage.setItem('hl_admin_until', String(Date.now() + 72 * 3600 * 1000)); } catch(e){}
+  hlAdminApply(); showToast('👑 Đã bật chế độ Admin — máy này sẽ được ghi nhớ.');
+  if (window.hlLicOnAdminLogin) hlLicOnAdminLogin();
 }
 function shieldActive(){ return !hlIsAdmin(); }
 function shieldInField(t){
@@ -6565,6 +6582,14 @@ window.hlLicSetPw = function(){
       hlLicRenderAdmin();
     }).catch(function(){ showToast('❌ Chưa lưu được — thử lại nhé'); });
   });
+};
+/* Kiểm tra máy này có nằm trong danh sách máy Admin đã nhớ không (hỏi thẳng Firebase) */
+window.hlLicCheckTrust = function(){
+  if (typeof fbEnsure !== 'function') return Promise.resolve(false);
+  return fbEnsure().then(function(ok){
+    if (!ok || !FB.db) return false;
+    return FB.db.ref('hlv_admin_machines/' + hlLicMachineId()).once('value').then(function(s){ return !!s.val(); });
+  }).catch(function(){ return false; });
 };
 /* Khi đăng nhập Admin thành công: ghi nhớ máy này + nạp panel */
 window.hlLicOnAdminLogin = function(){
