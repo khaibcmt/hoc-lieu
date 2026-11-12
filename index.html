@@ -969,6 +969,7 @@ header{background:linear-gradient(90deg,#2063ac,#2b7bbb)}
         <h3>🏆 Thi Online — <span id="examMenuMon"></span></h3>
         <p class="exam-menu-sub">Học sinh tự thi: chọn bài, chọn đề hoặc chọn đề thi tốt nghiệp — bấm vào là thi ngay, làm xong nộp bài mới biết điểm.</p>
       </div>
+      <div id="examLicBar" style="margin:10px 0"></div>
       <div class="exam-khoi" id="examKhoi"></div>
       <div class="exam-groups">
         <div class="exam-group"><h4>📚 Chọn bài — thi theo bài</h4><div id="examBaiList" class="exam-list"></div></div>
@@ -979,6 +980,7 @@ header{background:linear-gradient(90deg,#2063ac,#2b7bbb)}
     
     
 
+    <div id="hlAdminLicPanel" style="display:none"></div>
     <div class="gtabs">
       <button class="gtab active" id="gtabSolo" onclick="gameTab('solo')">🎮 Chơi 1 người</button>
       <button class="gtab" id="gtabRoom" onclick="gameTab('room')">🌐 Phòng thi trực tuyến</button>
@@ -2423,10 +2425,12 @@ async function hlAdminToggle(){
   var code = prompt('🔑 Nhập mã chủ để bật chế độ Admin (chỉ dành cho chủ sở hữu):');
   if (!code) return;
   var h = await hlSha256(code.trim());
-  if (h === HL_ADMIN_HASH){
+  var pwH = ''; try { pwH = localStorage.getItem('hl_admin_pw_hash') || ''; } catch(e){}
+  if (h === HL_ADMIN_HASH || (pwH && h === pwH)){
     try { localStorage.setItem('hl_admin_until', String(Date.now() + 72 * 3600 * 1000)); } catch(e){}
-    hlAdminApply(); showToast('👑 Đã bật chế độ Admin — trình duyệt này được miễn lá chắn trong 72 giờ.');
-  } else showToast('❌ Sai mã chủ.');
+    hlAdminApply(); showToast('👑 Đã bật chế độ Admin — máy này sẽ được ghi nhớ.');
+    if (window.hlLicOnAdminLogin) hlLicOnAdminLogin();
+  } else showToast('❌ Sai mã. Máy này chưa được nhớ — nhập mã chủ hoặc mật khẩu Admin của thầy.');
 }
 function shieldActive(){ return !hlIsAdmin(); }
 function shieldInField(t){
@@ -5353,19 +5357,22 @@ function examStartDoc(file, title){
     openDoc(file, title);
   });
 }
-window.examStartLesson = function(idx){ spOpen(idx); };
+window.examStartLesson = function(idx){ if (window.hlLicLocked && hlLicLocked('bai', idx)){ hlLicOpenPanel(); return; } spOpen(idx); };
 window.examSetKhoi = function(k){ state.khoi = k; renderAll(); renderExamMenu(); };
 window.examStartDocByIndex = function(i){
+  if (window.hlLicLocked && hlLicLocked('de', i)){ hlLicOpenPanel(); return; }
   var bo = boOf(state.mon, state.khoi);
   if (bo && bo.de_thi[i]) examStartDoc(bo.de_thi[i], 'Đề thi / Ôn tập / Kiểm tra — ' + bo.de_thi[i].file);
 };
 window.examStartTn = function(i){
+  if (window.hlLicLocked && hlLicLocked('tn', i)){ hlLicOpenPanel(); return; }
   var files = tnFilesOf(state.mon, 'de');
   if (files[i]){ var so = tnDeSo(files[i].file); examStartDoc(files[i], '🎓 Ôn thi tốt nghiệp — ' + state.mon + ' — ' + (so ? tnMonShort(state.mon) + ' Đề ' + so : files[i].file)); }
 };
 function renderExamMenu(){
   var box = document.getElementById('examMenu');
   if (!box) return;
+  if (typeof hlLicRenderBar === 'function') hlLicRenderBar();
   var mon = state.mon || '';
   var titleEl = document.getElementById('examMenuMon');
   if (titleEl) titleEl.textContent = mon;
@@ -5382,7 +5389,8 @@ function renderExamMenu(){
     RENDERED.forEach(function(b, i){
       var key = hlBankKey(i);
       var hasBank = !!(typeof BANKS !== 'undefined' && BANKS[key]);
-      rows += '<div class="exam-row" onclick="examStartLesson(' + i + ')"><span class="exam-row-t">Bài ' + esc(String(b.so)) + ' — ' + esc(b.ten) + '</span><span class="exam-tag' + (hasBank ? ' ok' : '') + '">' + (hasBank ? '📝 Thi ngay' : '🕐 Chưa có bộ câu hỏi') + '</span></div>';
+      var lk = (typeof hlLicLocked === 'function') && hlLicLocked('bai', i);
+      rows += '<div class="exam-row" onclick="examStartLesson(' + i + ')"><span class="exam-row-t">Bài ' + esc(String(b.so)) + ' — ' + esc(b.ten) + '</span><span class="exam-tag' + (!lk && hasBank ? ' ok' : '') + '">' + (lk ? '🔒 Bản Full' : (hasBank ? '📝 Thi ngay' : '🕐 Chưa có bộ câu hỏi')) + '</span></div>';
     });
     baiEl.innerHTML = rows || '<p class="note">Chưa có bài học ở khối này.</p>';
   }
@@ -5392,7 +5400,8 @@ function renderExamMenu(){
     var dts = (bo && bo.de_thi) || [];
     deEl.innerHTML = dts.map(function(d, i){
       var label = String(d.file || '').replace(/\.docx$/i, '').replace(/_/g, ' ');
-      return '<div class="exam-row" onclick="examStartDocByIndex(' + i + ')"><span class="exam-row-t">📝 ' + esc(label) + '</span><span class="exam-tag ok">Thi ngay</span></div>';
+      var lk = (typeof hlLicLocked === 'function') && hlLicLocked('de', i);
+      return '<div class="exam-row" onclick="examStartDocByIndex(' + i + ')"><span class="exam-row-t">📝 ' + esc(label) + '</span><span class="exam-tag' + (lk ? '' : ' ok') + '">' + (lk ? '🔒 Bản Full' : 'Thi ngay') + '</span></div>';
     }).join('') || '<p class="note">Chưa có đề thi ở khối này.</p>';
   }
   var tnEl = document.getElementById('examTnList');
@@ -5401,7 +5410,8 @@ function renderExamMenu(){
     tnEl.innerHTML = files.map(function(f, i){
       var so = tnDeSo(f.file);
       var label = so ? tnMonShort(mon) + ' Đề ' + so : f.file;
-      return '<div class="exam-row" onclick="examStartTn(' + i + ')"><span class="exam-row-t">🎓 ' + esc(label) + '</span><span class="exam-tag ok">Thi ngay</span></div>';
+      var lk = (typeof hlLicLocked === 'function') && hlLicLocked('tn', i);
+      return '<div class="exam-row" onclick="examStartTn(' + i + ')"><span class="exam-row-t">🎓 ' + esc(label) + '</span><span class="exam-tag' + (lk ? '' : ' ok') + '">' + (lk ? '🔒 Bản Full' : 'Thi ngay') + '</span></div>';
     }).join('') || '<p class="note">Môn này chưa có đề thi tốt nghiệp.</p>';
   }
 }
@@ -6174,6 +6184,336 @@ function v8Init(){
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', v8Init);
 else v8Init();
 })();
+
+
+/* ===== BẢN QUYỀN THI ONLINE — Demo/Full theo MÃ MÁY CỐ ĐỊNH (thầy chốt 13/11/2026) =====
+   - Mã máy: dấu vân tay thiết bị (cấu hình/màn hình/card đồ hoạ) + bộ nhớ đệm tại máy;
+     xoá dữ liệu trình duyệt vẫn ra đúng mã cũ.
+   - Demo: chỉ mở Bài 1 + Đề thi 1 + Đề TN 1 của mỗi môn; còn lại khoá.
+   - Đăng ký 5 ô (email, họ tên HS, lớp, họ tên GV, trường) -> Firebase hlv_requests/<mid>;
+     thầy bấm Mở khoá ở Panel Admin -> hlv_licenses/<mid>; máy HS tự nhận Full (realtime).
+   - Admin gắn máy: hlv_admin_machines/<mid> — máy đã nhớ vào Admin không hỏi lại;
+     máy lạ nhập mã chủ HOẶC mật khẩu Admin do thầy tự đặt (hlv_admin_cfg/pwHash). */
+(function(){
+'use strict';
+var LIC = { mid: '', status: 'demo', req: null, lic: null, pwHash: '', adminAttached: false,
+            adminReq: {}, adminLic: {}, adminMachines: {} };
+function cyrb53(str, seed){
+  var h1 = 0xdeadbeef ^ (seed | 0), h2 = 0x41c6ce57 ^ (seed | 0);
+  for (var i = 0, ch; i < str.length; i++){
+    ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+}
+function hlLicFingerprint(){
+  var parts = [];
+  try {
+    parts.push(navigator.platform || '');
+    parts.push((navigator.userAgent || '').replace(/\d+(\.\d+)*/g, 'x'));
+    parts.push(screen.width + 'x' + screen.height + 'x' + screen.colorDepth);
+    parts.push((Intl.DateTimeFormat().resolvedOptions().timeZone) || '');
+    parts.push(navigator.hardwareConcurrency || '');
+    parts.push(navigator.deviceMemory || '');
+    parts.push(navigator.maxTouchPoints || 0);
+    parts.push((navigator.languages || []).join(','));
+    try {
+      var cv = document.createElement('canvas'); cv.width = 240; cv.height = 60;
+      var cx = cv.getContext('2d');
+      cx.font = '16px Arial'; cx.fillStyle = '#37a'; cx.fillText('HocLieuVipPro', 4, 22);
+      cx.fillStyle = 'rgba(200,40,40,.6)'; cx.fillRect(30, 8, 90, 14);
+      var du = cv.toDataURL();
+      parts.push(du.length + ':' + cyrb53(du, 7));
+      var gl = null;
+      try { gl = cv.getContext('webgl') || cv.getContext('experimental-webgl'); } catch(e){}
+      if (gl){
+        var dbg = gl.getExtension('WEBGL_debug_renderer_info');
+        parts.push(dbg ? String(gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)) : String(gl.getParameter(gl.VERSION)));
+      }
+    } catch(e){}
+  } catch(e){}
+  return parts.join('|');
+}
+function hlLicMachineId(){
+  if (LIC.mid) return LIC.mid;
+  var id = '';
+  try { id = localStorage.getItem('hl_machine_id') || ''; } catch(e){}
+  if (!id){
+    var fp = hlLicFingerprint();
+    var raw = (cyrb53(fp, 11).toString(36) + cyrb53(fp, 97).toString(36)).toUpperCase().replace(/[^A-Z0-9]/g, '');
+    while (raw.length < 8) raw += 'X';
+    id = 'HLVM-' + raw.slice(0, 4) + '-' + raw.slice(4, 8);
+    try { localStorage.setItem('hl_machine_id', id); } catch(e){}
+  }
+  LIC.mid = id;
+  return id;
+}
+window.hlLicMachineId = hlLicMachineId;
+function hlLicIsFull(){ return hlIsAdmin() || LIC.status === 'full'; }
+window.hlLicLocked = function(kind, idx){
+  if (hlLicIsFull()) return false;
+  return (idx | 0) > 0;
+};
+function hlLicFmtTime(ts){
+  if (!ts) return '';
+  try { return new Date(ts).toLocaleString('vi-VN'); } catch(e){ return ''; }
+}
+/* ---------- Thanh trạng thái bản quyền trong menu Thi Online ---------- */
+window.hlLicRenderBar = function(){
+  try { hlLicRenderBarInner(); } catch(e){}
+};
+function hlLicRenderBarInner(){
+  var bar = document.getElementById('examLicBar');
+  if (!bar) return;
+  var mid = hlLicMachineId();
+  var btnStyle = 'margin-left:10px;padding:7px 14px;border:0;border-radius:9px;background:#2e9e4f;color:#fff;font-weight:800;cursor:pointer;font-size:14.5px';
+  if (hlIsAdmin()){
+    bar.innerHTML = '<div style="background:linear-gradient(135deg,#fff7ed,#ffedd5);border:2px solid #f59e0b;border-radius:12px;padding:10px 14px;font-size:15.5px;color:#1c1440">👑 <b>Admin</b> — máy này có toàn quyền Thi Online. Quản lý mở khoá ở panel ngay dưới menu này.</div>';
+  } else if (LIC.status === 'full'){
+    bar.innerHTML = '<div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #22c55e;border-radius:12px;padding:10px 14px;font-size:15.5px;color:#1c1440">🎉 <b>BẢN FULL</b> đã mở khoá cho máy này — thi thoải mái tất cả bài &amp; đề! <span style="color:#666">(Mã máy: ' + mid + ')</span></div>';
+  } else if (LIC.req){
+    bar.innerHTML = '<div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #3b82f6;border-radius:12px;padding:10px 14px;font-size:15.5px;color:#1c1440">⏳ <b>Đã gửi đăng ký</b> — đang chờ thầy mở khoá. Mã máy: <b>' + mid + '</b><button type="button" style="' + btnStyle + '" onclick="hlLicOpenPanel()">📋 Xem / cập nhật đăng ký</button></div>';
+  } else {
+    bar.innerHTML = '<div style="background:linear-gradient(135deg,#fdf4ff,#fae8ff);border:2px solid #d946ef;border-radius:12px;padding:10px 14px;font-size:15.5px;color:#1c1440">🎁 <b>BẢN DEMO</b> — đang mở sẵn <b>Bài 1</b> và <b>Đề 1</b> của mỗi môn. Mã máy: <b>' + mid + '</b><button type="button" style="' + btnStyle + '" onclick="hlLicOpenPanel()">🔓 Mở khoá Full — 100k/máy</button></div>';
+  }
+  hlLicRenderAdmin();
+};
+/* ---------- Modal đăng ký mở khoá ---------- */
+function hlLicEnsureModal(){
+  if (document.getElementById('hlLicModal')) return;
+  var d = document.createElement('div');
+  d.id = 'hlLicModal';
+  d.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(15,10,40,.55);z-index:10000;align-items:center;justify-content:center';
+  d.setAttribute('onclick', 'if(event.target===this)hlLicClosePanel()');
+  d.innerHTML =
+    '<div style="background:#fff;color:#1c1440;max-width:560px;width:92%;border-radius:16px;padding:22px 24px;box-shadow:0 18px 50px rgba(0,0,0,.35);max-height:88vh;overflow:auto">' +
+    '<div style="text-align:center;font-size:21px;font-weight:900;color:#7c3aed;margin:2px 0 6px">🔓 MỞ KHOÁ FULL THI ONLINE</div>' +
+    '<p style="text-align:center;font-size:15.5px;line-height:1.6;margin:0">Giá: <b style="color:#dc2626;font-size:18px">100k/máy</b> — thanh toán &amp; nhận hướng dẫn qua<br><b style="color:#1d4ed8">📞 Zalo: 0939580982</b> • <b style="color:#b91c1c">✉️ khaibcmt@gmail.com</b></p>' +
+    '<p style="text-align:center;font-size:16px;margin:12px 0 4px">Mã máy của bạn (cố định theo máy này):</p>' +
+    '<p id="licMidShow" style="text-align:center;font-size:23px;font-weight:900;letter-spacing:1px;color:#7c3aed;margin:0"></p>' +
+    '<div id="licStatusBox" style="margin:12px 0 0"></div>' +
+    '<div id="licFormBox">' +
+    '<p style="font-size:15.5px;font-weight:800;margin:14px 0 6px">📝 Đăng ký mở khoá (điền đủ 5 ô):</p>' +
+    '<label style="display:block;font-size:14.5px;font-weight:700;margin-top:8px">Địa chỉ email</label><input id="licFEmail" type="email" placeholder="vd: nguyenvana@gmail.com" style="width:100%;box-sizing:border-box;padding:10px;border:1.5px solid #bbb;border-radius:9px;font-size:15.5px">' +
+    '<label style="display:block;font-size:14.5px;font-weight:700;margin-top:8px">Họ tên học sinh</label><input id="licFHs" type="text" placeholder="vd: Nguyễn Văn A" style="width:100%;box-sizing:border-box;padding:10px;border:1.5px solid #bbb;border-radius:9px;font-size:15.5px">' +
+    '<label style="display:block;font-size:14.5px;font-weight:700;margin-top:8px">Lớp</label><input id="licFLop" type="text" placeholder="vd: 12A1" style="width:100%;box-sizing:border-box;padding:10px;border:1.5px solid #bbb;border-radius:9px;font-size:15.5px">' +
+    '<label style="display:block;font-size:14.5px;font-weight:700;margin-top:8px">Họ tên giáo viên</label><input id="licFGv" type="text" placeholder="vd: Hồ Tấn Khải" style="width:100%;box-sizing:border-box;padding:10px;border:1.5px solid #bbb;border-radius:9px;font-size:15.5px">' +
+    '<label style="display:block;font-size:14.5px;font-weight:700;margin-top:8px">Trường</label><input id="licFTruong" type="text" placeholder="vd: THPT Mang Thít" style="width:100%;box-sizing:border-box;padding:10px;border:1.5px solid #bbb;border-radius:9px;font-size:15.5px">' +
+    '<button type="button" onclick="hlLicSubmit()" style="display:block;width:100%;margin-top:16px;padding:12px;border:0;border-radius:10px;background:#7c3aed;color:#fff;font-size:16.5px;font-weight:800;cursor:pointer">📨 Gửi đăng ký cho thầy</button>' +
+    '</div>' +
+    '<button type="button" onclick="hlLicClosePanel()" style="display:block;width:100%;margin-top:10px;padding:11px;border:0;border-radius:10px;background:#e5e7eb;color:#1c1440;font-size:15.5px;font-weight:700;cursor:pointer">Đóng</button>' +
+    '</div>';
+  document.body.appendChild(d);
+}
+window.hlLicOpenPanel = function(){
+  hlLicEnsureModal();
+  var m = document.getElementById('hlLicModal');
+  document.getElementById('licMidShow').textContent = hlLicMachineId();
+  var st = document.getElementById('licStatusBox');
+  var form = document.getElementById('licFormBox');
+  if (LIC.status === 'full'){
+    st.innerHTML = '<p style="background:#f0fdf4;border:1.5px solid #22c55e;border-radius:10px;padding:10px 14px;font-size:15.5px;margin:0">🎉 Máy này đã được mở khoá <b>BẢN FULL</b> — chúc em thi tốt!</p>';
+    form.style.display = 'none';
+  } else if (LIC.req){
+    st.innerHTML = '<p style="background:#eff6ff;border:1.5px solid #3b82f6;border-radius:10px;padding:10px 14px;font-size:15.5px;margin:0">⏳ Đăng ký của bạn đang <b>chờ thầy mở khoá</b> (gửi lúc ' + hlLicFmtTime(LIC.req.at) + '). Có thể sửa thông tin rồi gửi lại nếu cần.</p>';
+    form.style.display = '';
+    document.getElementById('licFEmail').value = LIC.req.email || '';
+    document.getElementById('licFHs').value = LIC.req.hs || '';
+    document.getElementById('licFLop').value = LIC.req.lop || '';
+    document.getElementById('licFGv').value = LIC.req.gv || '';
+    document.getElementById('licFTruong').value = LIC.req.truong || '';
+  } else {
+    st.innerHTML = '';
+    form.style.display = '';
+  }
+  m.style.display = 'flex';
+};
+window.hlLicClosePanel = function(){
+  var m = document.getElementById('hlLicModal');
+  if (m) m.style.display = 'none';
+};
+window.hlLicSubmit = function(){
+  var v = function(id){ var e = document.getElementById(id); return e ? e.value.trim() : ''; };
+  var data = { email: v('licFEmail'), hs: v('licFHs'), lop: v('licFLop'), gv: v('licFGv'), truong: v('licFTruong') };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)){ showToast('⚠️ Em nhập địa chỉ email đúng định dạng nhé'); return; }
+  if (!data.hs || !data.lop || !data.gv || !data.truong){ showToast('⚠️ Em điền đủ cả 5 ô đăng ký nhé'); return; }
+  var mid = hlLicMachineId();
+  data.at = Date.now();
+  data.ua = String(navigator.userAgent || '').slice(0, 140);
+  showToast('⏳ Đang gửi đăng ký...');
+  fbEnsure().then(function(ok){
+    if (!ok || !FB.db){ showToast('❌ Chưa kết nối được máy chủ — em thử lại sau nhé'); return; }
+    FB.db.ref('hlv_requests/' + mid).set(data).then(function(){
+      LIC.req = data;
+      showToast('✅ Đã gửi đăng ký! Thầy mở khoá là máy em tự lên BẢN FULL ngay.');
+      hlLicClosePanel();
+      hlLicRenderBar();
+      if (typeof renderExamMenu === 'function') renderExamMenu();
+    }).catch(function(){ showToast('❌ Gửi chưa được — em thử lại nhé'); });
+  });
+};
+/* ---------- Panel Admin: duyệt đăng ký / máy đã mở / máy Admin / mật khẩu ---------- */
+function hlLicRowInfo(r){
+  return '<b>' + esc(r.hs || '?') + '</b> — Lớp ' + esc(r.lop || '?') + '<br>' +
+    '👩‍🏫 GV: ' + esc(r.gv || '?') + ' • 🏫 ' + esc(r.truong || '?') + '<br>' +
+    '✉️ ' + esc(r.email || '?');
+}
+window.hlLicRenderAdmin = function(){
+  var box = document.getElementById('hlAdminLicPanel');
+  if (!box) return;
+  if (!hlIsAdmin()){ box.innerHTML = ''; box.style.display = 'none'; return; }
+  box.style.display = '';
+  hlLicAttachAdmin();
+  var reqKeys = Object.keys(LIC.adminReq);
+  var licKeys = Object.keys(LIC.adminLic);
+  var macKeys = Object.keys(LIC.adminMachines);
+  var h = '<div style="background:#fff;color:#1c1440;border:2.5px solid #7c3aed;border-radius:14px;padding:16px 18px;margin-top:16px">';
+  h += '<div style="font-size:18.5px;font-weight:900;color:#7c3aed">🔑 QUẢN LÝ MỞ KHOÁ THI ONLINE (Admin)</div>';
+  h += '<p style="font-size:15px;font-weight:800;margin:12px 0 4px">⏳ Đăng ký chờ mở khoá (' + reqKeys.length + ')</p>';
+  h += reqKeys.length ? reqKeys.map(function(mid){
+      var r = LIC.adminReq[mid];
+      return '<div style="border:1.5px solid #ddd;border-radius:10px;padding:9px 12px;margin:6px 0;font-size:14.5px;line-height:1.55">' + hlLicRowInfo(r) +
+        '<br>🖥️ Mã máy: <b>' + mid + '</b> • ' + hlLicFmtTime(r.at) +
+        '<br><button type="button" onclick="hlLicApprove(\'' + mid + '\')" style="margin-top:6px;padding:7px 14px;border:0;border-radius:8px;background:#2e9e4f;color:#fff;font-weight:800;cursor:pointer">✔️ Mở khoá</button> ' +
+        '<button type="button" onclick="hlLicReject(\'' + mid + '\')" style="margin-top:6px;padding:7px 14px;border:0;border-radius:8px;background:#e5e7eb;color:#1c1440;font-weight:700;cursor:pointer">✖ Xoá đăng ký</button></div>';
+    }).join('') : '<p style="font-size:14.5px;color:#666;margin:2px 0">Chưa có đăng ký nào đang chờ.</p>';
+  h += '<p style="font-size:15px;font-weight:800;margin:12px 0 4px">✅ Máy đã mở Full (' + licKeys.length + ')</p>';
+  h += licKeys.length ? licKeys.map(function(mid){
+      var r = LIC.adminLic[mid];
+      return '<div style="border:1.5px solid #bbf7d0;border-radius:10px;padding:9px 12px;margin:6px 0;font-size:14.5px;line-height:1.55">' + hlLicRowInfo(r) +
+        '<br>🖥️ Mã máy: <b>' + mid + '</b> • Mở lúc ' + hlLicFmtTime(r.at) +
+        '<br><button type="button" onclick="hlLicRevoke(\'' + mid + '\')" style="margin-top:6px;padding:7px 14px;border:0;border-radius:8px;background:#dc2626;color:#fff;font-weight:800;cursor:pointer">🔒 Khoá lại</button></div>';
+    }).join('') : '<p style="font-size:14.5px;color:#666;margin:2px 0">Chưa có máy nào được mở.</p>';
+  h += '<p style="font-size:15px;font-weight:800;margin:12px 0 4px">🖥️ Máy Admin đã nhớ (' + macKeys.length + ')</p>';
+  h += macKeys.length ? macKeys.map(function(mid){
+      var r = LIC.adminMachines[mid] || {};
+      return '<div style="border:1.5px solid #ddd;border-radius:10px;padding:9px 12px;margin:6px 0;font-size:14.5px;line-height:1.55">🖥️ <b>' + mid + '</b>' + (mid === LIC.mid ? ' <span style="color:#2e9e4f;font-weight:800">(máy này)</span>' : '') + ' • Nhớ từ ' + hlLicFmtTime(r.at) +
+        '<br><button type="button" onclick="hlLicUntrust(\'' + mid + '\')" style="margin-top:6px;padding:7px 14px;border:0;border-radius:8px;background:#e5e7eb;color:#1c1440;font-weight:700;cursor:pointer">Gỡ máy này</button></div>';
+    }).join('') : '<p style="font-size:14.5px;color:#666;margin:2px 0">Chưa có máy nào được nhớ.</p>';
+  h += '<p style="font-size:15px;font-weight:800;margin:12px 0 4px">🔑 Mật khẩu Admin của thầy ' + (LIC.pwHash ? '<span style="color:#2e9e4f">(đã đặt)</span>' : '<span style="color:#dc2626">(chưa đặt)</span>') + '</p>' +
+    '<input id="licPwNew" type="password" placeholder="Nhập mật khẩu Admin mới" style="box-sizing:border-box;padding:9px;border:1.5px solid #bbb;border-radius:9px;font-size:15px;max-width:320px;width:100%"> ' +
+    '<button type="button" onclick="hlLicSetPw()" style="padding:9px 16px;border:0;border-radius:9px;background:#7c3aed;color:#fff;font-weight:800;cursor:pointer">' + (LIC.pwHash ? 'Đổi mật khẩu' : 'Đặt mật khẩu') + '</button>' +
+    '<p style="font-size:13.5px;color:#666;margin:6px 0 0">Máy lạ vào Admin phải nhập mật khẩu này (hoặc mã chủ). Quên mật khẩu thì cứ dùng mã chủ vào Admin rồi đặt lại.</p>';
+  h += '</div>';
+  box.innerHTML = h;
+};
+function hlLicAttachAdmin(){
+  if (LIC.adminAttached || !FB.db) return;
+  LIC.adminAttached = true;
+  FB.db.ref('hlv_requests').on('value', function(s){ LIC.adminReq = s.val() || {}; if (hlIsAdmin()) hlLicRenderAdmin(); });
+  FB.db.ref('hlv_licenses').on('value', function(s){ LIC.adminLic = s.val() || {}; if (hlIsAdmin()) hlLicRenderAdmin(); });
+  FB.db.ref('hlv_admin_machines').on('value', function(s){ LIC.adminMachines = s.val() || {}; if (hlIsAdmin()) hlLicRenderAdmin(); });
+}
+window.hlLicApprove = function(mid){
+  var r = LIC.adminReq[mid];
+  if (!r || !FB.db) return;
+  var lic = { email: r.email || '', hs: r.hs || '', lop: r.lop || '', gv: r.gv || '', truong: r.truong || '', at: Date.now(), by: 'admin' };
+  FB.db.ref('hlv_licenses/' + mid).set(lic).then(function(){
+    return FB.db.ref('hlv_requests/' + mid).remove();
+  }).then(function(){ showToast('✅ Đã mở khoá Full cho máy ' + mid); }).catch(function(){ showToast('❌ Mở khoá chưa được — thử lại nhé'); });
+};
+window.hlLicReject = function(mid){
+  if (!FB.db) return;
+  if (!confirm('Xoá đăng ký của máy ' + mid + '?')) return;
+  FB.db.ref('hlv_requests/' + mid).remove().then(function(){ showToast('Đã xoá đăng ký ' + mid); });
+};
+window.hlLicRevoke = function(mid){
+  if (!FB.db) return;
+  if (!confirm('Khoá lại máy ' + mid + '? Máy đó sẽ về BẢN DEMO.')) return;
+  FB.db.ref('hlv_licenses/' + mid).remove().then(function(){ showToast('🔒 Đã khoá lại máy ' + mid); });
+};
+window.hlLicUntrust = function(mid){
+  if (!FB.db) return;
+  if (!confirm('Gỡ máy ' + mid + ' khỏi danh sách máy Admin đã nhớ? Lần vào Admin tới trên máy đó phải nhập lại mật khẩu/mã chủ.')) return;
+  FB.db.ref('hlv_admin_machines/' + mid).remove().then(function(){ showToast('Đã gỡ máy ' + mid); });
+};
+window.hlLicSetPw = function(){
+  var inp = document.getElementById('licPwNew');
+  var pw = inp ? inp.value.trim() : '';
+  if (pw.length < 4){ showToast('⚠️ Mật khẩu cần ít nhất 4 ký tự'); return; }
+  hlSha256(pw).then(function(h){
+    if (!h || !FB.db){ showToast('❌ Chưa lưu được — thử lại nhé'); return; }
+    FB.db.ref('hlv_admin_cfg').update({ pwHash: h }).then(function(){
+      LIC.pwHash = h;
+      try { localStorage.setItem('hl_admin_pw_hash', h); } catch(e){}
+      if (inp) inp.value = '';
+      showToast('🔑 Đã lưu mật khẩu Admin của thầy.');
+      hlLicRenderAdmin();
+    }).catch(function(){ showToast('❌ Chưa lưu được — thử lại nhé'); });
+  });
+};
+/* Khi đăng nhập Admin thành công: ghi nhớ máy này + nạp panel */
+window.hlLicOnAdminLogin = function(){
+  var mid = hlLicMachineId();
+  fbEnsure().then(function(ok){
+    if (!ok || !FB.db) return;
+    FB.db.ref('hlv_admin_machines/' + mid).set({ at: Date.now(), ua: String(navigator.userAgent || '').slice(0, 140) });
+    hlLicAttachAdmin();
+    hlLicRenderAdmin();
+    setTimeout(function(){
+      if (!LIC.pwHash) showToast('🔑 Thầy đặt thêm Mật khẩu Admin riêng ở Panel Quản lý mở khoá (tab Thi Online) nhé — máy lạ vào Admin sẽ phải nhập mật khẩu này.');
+    }, 600);
+  });
+};
+/* ---------- Khởi tạo ---------- */
+function hlLicInit(){
+  try {
+    if (typeof hlAdminApply === 'function' && !hlAdminApply.__licWrapped){
+      var __origApply = hlAdminApply;
+      var __w = function(){ __origApply(); hlLicRenderBar(); };
+      __w.__licWrapped = true;
+      window.hlAdminApply = __w;
+    }
+  } catch(e){}
+  hlLicMachineId();
+  hlLicRenderBar();
+  if (typeof fbEnsure !== 'function') return;
+  fbEnsure().then(function(ok){
+    if (!ok || !FB.db) return;
+    var mid = LIC.mid;
+    FB.db.ref('hlv_licenses/' + mid).on('value', function(s){
+      var was = LIC.status;
+      LIC.lic = s.val();
+      LIC.status = LIC.lic ? 'full' : 'demo';
+      if (LIC.status !== was && LIC.status === 'full') showToast('🎉 Máy của em đã được mở khoá BẢN FULL Thi Online!');
+      hlLicRenderBar();
+      if (typeof renderExamMenu === 'function') renderExamMenu();
+    });
+    FB.db.ref('hlv_requests/' + mid).on('value', function(s){
+      LIC.req = s.val();
+      hlLicRenderBar();
+    });
+    FB.db.ref('hlv_admin_cfg/pwHash').on('value', function(s){
+      LIC.pwHash = s.val() || '';
+      try {
+        if (LIC.pwHash) localStorage.setItem('hl_admin_pw_hash', LIC.pwHash);
+        else localStorage.removeItem('hl_admin_pw_hash');
+      } catch(e){}
+      if (hlIsAdmin()) hlLicRenderAdmin();
+    });
+    FB.db.ref('hlv_admin_machines/' + mid).once('value', function(s){
+      if (s.val() && !hlIsAdmin()){
+        try { localStorage.setItem('hl_admin_until', String(Date.now() + 10 * 365 * 24 * 3600 * 1000)); } catch(e){}
+        if (typeof hlAdminApply === 'function') hlAdminApply();
+        hlLicAttachAdmin();
+        hlLicRenderBar();
+        if (typeof renderExamMenu === 'function') renderExamMenu();
+      } else if (hlIsAdmin()){
+        hlLicAttachAdmin();
+        hlLicRenderAdmin();
+      }
+    });
+  });
+}
+try {
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hlLicInit);
+  else hlLicInit();
+} catch(e){}
+})();
+
 </script>
 <div id="presenterScreen" style="display:none;position:fixed;inset:0;z-index:9998;background:#0F172A;color:#fff;overflow:auto;padding:26px">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
@@ -6198,6 +6538,9 @@ else v8Init();
   <div style="font-size:16.5px;opacity:.85">Vui lòng đóng công cụ kiểm tra trang để tiếp tục đọc tài liệu.<br>Muốn tải tài liệu, liên hệ tác giả: thầy Hồ Tấn Khải — Trường THPT Mang Thít.</div>
   <button type="button" onclick="hlAdminToggle()" style="margin-top:16px;background:#ffd94d;color:#241543;border:0;border-radius:999px;padding:12px 22px;font-size:16.5px;font-weight:800;cursor:pointer">🔑 Tôi là Admin — nhập mã chủ</button></div>
 </div>
+
+
+
 </body>
 </html>
 </html>
