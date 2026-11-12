@@ -1520,7 +1520,29 @@ function viewerOpenFile(slot, title){
   m.classList.add('show');
   return true;
 }
+/* File quá lớn (>200MB — PPT CNNN 12 Bài 1/8/11/24): Google không xem trước được nên
+   tự chìa nút "Tải xuống" trong khung — khách chỉ được thấy thông báo liên hệ thầy
+   (thầy phát hiện ở chế độ khách 12/11/2026). Admin vẫn mở bình thường. */
+var HL_HUGE_FIDS = ['1IlPOVCnX5J9Eg7qJgEJeL1pYIkJuFRmz', '1oFpE-J7SslXo0CRMIYRhvH-gJjrSHZ-X', '1zqbxqhRSAbhtVq9lR5mzhss9ajoyg7J2', '16UDC_z7Sn073fFpeQkJS9oxLvnoZd_Py'];
 function openDoc(slot, title){
+  if (slot && !((typeof hlIsAdmin === 'function') && hlIsAdmin())){
+    var __fid = docFidOf(slot);
+    if (__fid && HL_HUGE_FIDS.indexOf(__fid) >= 0){
+      var __tl = document.getElementById('tabLib');
+      var __pb = document.getElementById('paneBody');
+      if (__pb && __tl && __tl.style.display !== 'none'){
+        var __pt = document.getElementById('paneTitle'); if (__pt) __pt.textContent = title || '📊 Slide PPT';
+        var __pf = document.getElementById('paneFallback'); if (__pf) __pf.style.display = 'none';
+        __pb.innerHTML = '<div style="padding:38px 26px;text-align:center"><div style="font-size:52px">📊</div>' +
+          '<div style="font-size:20px;font-weight:900;color:#1c1440;margin:12px 0 8px">Slide này dung lượng rất lớn (trên 200MB)</div>' +
+          '<div style="font-size:16.5px;line-height:1.65;color:#444">Google không xem trước trực tuyến được file cỡ này.<br>Thầy cô và các em cần file slide vui lòng liên hệ thầy Khải:<br><b style="color:#1d4ed8">📞 Zalo: 0939580982</b> • <b style="color:#b91c1c">✉️ khaibcmt@gmail.com</b><br>— thầy gửi riêng nhé!</div></div>';
+        if (typeof hlPaneEnsureVisible === 'function') hlPaneEnsureVisible();
+      } else {
+        showToast('📊 File này rất lớn nên không xem trực tuyến được — nhắn thầy Khải (Zalo 0939580982) để nhận file nhé!');
+      }
+      return;
+    }
+  }
   var tabLib = document.getElementById('tabLib');
   if (slot && docFidOf(slot) && tabLib && tabLib.style.display !== 'none'){
     if (hlPaneOpenDoc(slot, title)) return;
