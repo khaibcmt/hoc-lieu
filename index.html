@@ -752,6 +752,38 @@ footer{background:transparent;}
 .exam-tag.ok{color:#4ade80;}
 #sec-practice{background:linear-gradient(180deg,#0b1530,#070b14);}
 @media (max-width:900px){ #libSide{width:100%;flex:none;} }
+
+/* ===== DON GON + PHOI MAU TUOI (thay chot 08:01-08:11 12/11/2026) ===== */
+body{background:linear-gradient(168deg,#0a1e46 0%,#0e2f63 42%,#083a52 78%,#062a44 100%);background-attachment:fixed;}
+header{background:linear-gradient(90deg,#0c2350,#14335f);}
+.sticky-head{position:sticky;top:54px;z-index:48;background:linear-gradient(180deg,#0a1e46,#0c2757);padding:6px 0 8px;border-bottom:1px solid #1d3a66;}
+.chips-row{position:static;top:auto;background:transparent;padding:0 0 6px;}
+.controls-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.controls-row .khoi-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0;align-items:center;}
+.ctl-label{font-size:12.5px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;color:#93c5fd;white-space:nowrap;}
+.controls-row .ktab{white-space:nowrap;}
+.ktab-tn{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#231a04;border:2px solid #fde68a;font-weight:900;font-size:15.5px;box-shadow:0 4px 18px rgba(245,158,11,.55);}
+.ktab-tn:hover{color:#231a04;border-color:#fff3c4;}
+.ktab-tn.on{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border-color:#fde68a;box-shadow:0 0 0 3px rgba(251,191,36,.4),0 6px 22px rgba(245,158,11,.7);}
+.side-box{background:linear-gradient(180deg,#182c52,#122544);border-color:#2b4a73;}
+.bai-row{background:#10264a;border-color:#274a75;color:#e8f1ff;}
+.bai-row:hover{background:#173a6b;}
+#paneViewer{background:#081a36;scroll-margin-top:225px;}
+.shelf,.cd-sec{background:#16294d;}
+.tn-compact{background:#12294d;scroll-margin-top:225px;}
+.br-num{background:var(--mon);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.35);}
+.br-name{color:var(--mon-soft);font-weight:600;}
+.bai-row.on .br-name{color:#fff;}
+.bai-row.de-row .br-num{background:#f43f5e;}
+.bai-row.de-row .br-name{color:#f8fafc;}
+.tn-compact .tn-file{padding:7px 10px;margin:0 0 5px;}
+.tn-compact .tn-folders{max-height:380px;}
+#hlGuide{position:fixed;inset:0;z-index:300;background:rgba(2,6,17,.74);display:none;overflow-y:auto;padding:20px 10px;}
+#hlGuide.open{display:block;}
+#hlGuide .guide-panel{max-width:880px;margin:0 auto;background:#fff;border-radius:18px;padding:16px 18px;box-shadow:0 24px 70px rgba(0,0,0,.65);}
+.guide-panel-head{display:flex;align-items:center;justify-content:space-between;font-weight:900;font-size:18px;color:#0f172a;margin-bottom:4px;}
+.guide-close{background:#f43f5e;color:#fff;border:none;font-weight:800;font-size:14.5px;padding:8px 14px;border-radius:10px;cursor:pointer;font-family:inherit;}
+@media (max-width:900px){ .controls-row{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;} .controls-row .khoi-tabs{flex-wrap:nowrap;} }
 </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
@@ -793,9 +825,9 @@ footer{background:transparent;}
   
 </header>
 
-<main> <div class="chips-row" id="chipsRow"><nav class="chips" id="subjectChips" aria-label="Chọn môn học"></nav><div class="chips-tools"><button type="button" class="chip tool-exam" id="mtabExam" onclick="hlToggleExam()">🏆 Thi Online</button><button type="button" class="chip tool-guide" id="guideBtn" onclick="hlGuideToggle()">📖 Hướng Dẫn</button></div></div>
+<main> <div class="sticky-head" id="stickyHead"><div class="chips-row" id="chipsRow"><nav class="chips" id="subjectChips" aria-label="Chọn môn học"></nav><div class="chips-tools"><button type="button" class="chip tool-exam" id="mtabExam" onclick="hlToggleExam()">🏆 Thi Online</button><button type="button" class="chip tool-guide" id="guideBtn" onclick="hlGuideToggle()">📖 Hướng Dẫn</button></div></div><div class="controls-row" id="controlsRow"><span class="ctl-label">🏫 Khối lớp</span><div class="khoi-tabs" id="khoiTabs"></div></div></div>
   
-  <section id="hlGuide" style="border:1.5px solid #d9cdf5;border-radius:12px;overflow:hidden;margin:6px 0 12px;background:#fff"> <div id="hlGuideBody" style="display:none;padding:16px 18px 14px">
+  <section id="hlGuide" onclick="if(event.target===this)hlGuideToggle()"><div class="guide-panel"><div class="guide-panel-head"><span>📖 Hướng Dẫn</span><button type="button" class="guide-close" onclick="hlGuideToggle()">✕ Đóng</button></div><div id="hlGuideBody" style="display:none;padding:6px 4px 4px">
       <div style="display:flex;flex-wrap:wrap;gap:12px">
         <div style="flex:1 1 250px;border:2px solid #b8860b;border-top:10px solid #b8860b;border-radius:14px;background:#fff8e1;padding:13px 15px">
           <div style="display:inline-block;background:#b8860b;color:#fff;font-weight:900;font-size:16.5px;border-radius:999px;padding:5px 14px;margin-bottom:8px">👑 ADMIN — THẦY KHẢI</div>
@@ -803,7 +835,7 @@ footer{background:transparent;}
         </div>
         <div style="flex:1 1 250px;border:2px solid #1e88e5;border-top:10px solid #1e88e5;border-radius:14px;background:#e8f2fe;padding:13px 15px">
           <div style="display:inline-block;background:#1e88e5;color:#fff;font-weight:900;font-size:16.5px;border-radius:999px;padding:5px 14px;margin-bottom:8px">🧑‍🏫 GIÁO VIÊN</div>
-          <p style="margin:0;font-size:16px;line-height:1.6"><b>Kho Học Liệu:</b> chọn <b>Môn</b> (mỗi môn một màu) → <b>Khối</b> → <b>Thể loại</b> → bấm <b>bài học</b>, tài liệu hiện ngay ở khung lớn bên phải. <b>Thi Online:</b> lấy câu hỏi từ ngân hàng có sẵn hoặc nạp đề <b>.docx/.txt</b>, mở phòng cho học sinh vào bằng mã/QR, trình chiếu lên màn hình lớn, xem <b>2 bảng xếp hạng</b> và xuất bảng điểm.</p>
+          <p style="margin:0;font-size:16px;line-height:1.6"><b>Kho Học Liệu:</b> chọn <b>Môn</b> (mỗi môn một màu) → <b>Khối</b> → bấm <b>bài học</b>, tài liệu hiện ngay ở khung lớn bên phải. <b>Thi Online:</b> lấy câu hỏi từ ngân hàng có sẵn hoặc nạp đề <b>.docx/.txt</b>, mở phòng cho học sinh vào bằng mã/QR, trình chiếu lên màn hình lớn, xem <b>2 bảng xếp hạng</b> và xuất bảng điểm.</p>
         </div>
         <div style="flex:1 1 250px;border:2px solid #2e9e4f;border-top:10px solid #2e9e4f;border-radius:14px;background:#e9f9ee;padding:13px 15px">
           <div style="display:inline-block;background:#2e9e4f;color:#fff;font-weight:900;font-size:16.5px;border-radius:999px;padding:5px 14px;margin-bottom:8px">🎓 HỌC SINH</div>
@@ -824,20 +856,12 @@ footer{background:transparent;}
             </div>
           </div>
           <p style="margin:11px 0 0;font-size:15.5px;line-height:1.6">🎮 <b>Cách chơi phòng thi:</b> thầy chọn nguồn câu hỏi → <b>Tạo phòng</b> → học sinh quét QR hoặc nhập mã phòng + họ tên → <b>VÀO PHÒNG</b> → thầy bấm <b>Bắt đầu</b>. Cuối ván hiện <b>2 bảng xếp hạng</b>: 🎮 điểm game và 📊 điểm thật = (ý đúng ÷ tổng ý) × 10.</p>
-          <details style="margin-top:11px;background:#fff;border:1.5px dashed #e65100;border-radius:10px;padding:9px 13px">
-            <summary style="font-weight:800;font-size:15.5px;cursor:pointer;color:#e65100">⚙️ CÀI ĐẶT LUẬT THI — giáo viên chỉnh ở đây, hệ thống đọc các ô này khi bắt đầu ván</summary>
-            <p style="margin:10px 0 4px"><b>🎮 Luật cho chế độ chơi 1 người:</b></p>
-            <div id="sRules"></div>
-            <p class="note" style="margin:10px 0 0">🤖 Riêng chế độ <b>Kéo co (1 người)</b>: máy đóng vai đội Xanh — độ khó của máy:
-          <select id="s-botLevel"><option value="0.4">😊 Dễ (máy đúng ~40%)</option><option value="0.6" selected>😐 Trung bình (máy đúng ~60%)</option><option value="0.8">😤 Khó (máy đúng ~80%)</option></select></p>
-            <p style="margin:12px 0 4px"><b>🏆 Luật cho phòng thi trực tuyến:</b></p>
-            <div id="rRules"></div>
-          </details>
+          
         </div>
       </div>
-      <p style="margin:13px 0 2px;font-size:16px;line-height:1.6;background:#fdf3e3;border:1.5px dashed #e08a00;border-radius:10px;padding:9px 13px">🎓 <b>Ôn thi tốt nghiệp:</b> nằm trong cột trái, ngay dưới danh sách Khối — gồm 2 ngăn 📚 <b>Tài liệu ôn thi</b> và 📝 <b>Đề thi tốt nghiệp</b> của từng môn. Mọi tài liệu trong kho <b>chỉ để XEM trực tuyến</b> — muốn tải, liên hệ tác giả.</p>
+      <p style="margin:13px 0 2px;font-size:16px;line-height:1.6;background:#fdf3e3;border:1.5px dashed #e08a00;border-radius:10px;padding:9px 13px">🎓 <b>Ôn thi tốt nghiệp:</b> nằm ở thanh Khối lớp ngay đầu trang (nút vàng nổi bật) — gồm 2 ngăn 📚 <b>Tài liệu ôn thi</b> và 📝 <b>Đề thi tốt nghiệp</b> của từng môn. Mọi tài liệu trong kho <b>chỉ để XEM trực tuyến</b> — muốn tải, liên hệ tác giả.</p>
     </div>
-  </section>
+  </div></section>
   <div id="tabLib">
   
   
@@ -845,8 +869,6 @@ footer{background:transparent;}
   <div id="browseArea">
     <div class="lib-layout">
       <aside id="libSide">
-        <div class="side-box"><div class="side-h">🏫 Khối lớp</div><div class="khoi-tabs side" id="khoiTabs"></div></div>
-        <div class="side-box"><div class="side-h">🗂️ Thể loại</div><div class="type-tabs" id="typeTabs"></div></div>
         <div class="side-box side-list"><div class="side-h">📖 Danh sách bài</div><div id="baiList"></div></div>
       </aside>
       <section id="libMain">
@@ -911,12 +933,21 @@ footer{background:transparent;}
     <!-- ===== PHÒNG THI TRỰC TUYẾN ===== -->
     <div id="gRoomPane" style="display:none">
       <div id="hsBar"><span>🎓 Chế độ học sinh — vào phòng thi</span><button type="button" onclick="exitStudentMode()">Thoát chế độ học sinh</button></div>
-      <div class="guidebox" id="roomGuide" style="margin-bottom:14px"><p>📌 <b>Chỉ dẫn phòng thi:</b> ① Nhập <b>bài thi</b> ở ô ngay bên dưới (hoặc bỏ qua — phòng sẽ dùng Ngân hàng câu hỏi) → ② Chỉnh luật chơi rồi bấm <b>Tạo phòng thi</b> → ③ Học sinh quét mã QR là vào thẳng phòng thi, <b>không cần đăng nhập</b> (hoặc nhập mã phòng) → ④ Thầy bấm <b>Bắt đầu thi</b> → ⑤ Xem kết quả trực tiếp ở <b>Bảng kết quả chi tiết</b> phía dưới; khi kết thúc phòng có nút tải kết quả (.csv). <span id="roomGuideFb">Phòng thi đã sẵn sàng online — cứ tạo phòng và cho học sinh quét QR là thi.</span></p></div>
+      
       
 
 
       
       <div id="roomEntry">
+        <details style="margin:0 0 14px;background:#fff;border:1.5px dashed #e65100;border-radius:10px;padding:9px 13px">
+            <summary style="font-weight:800;font-size:15.5px;cursor:pointer;color:#e65100">⚙️ CÀI ĐẶT LUẬT THI — giáo viên chỉnh ở đây, hệ thống đọc các ô này khi bắt đầu ván</summary>
+            <p style="margin:10px 0 4px"><b>🎮 Luật cho chế độ chơi 1 người:</b></p>
+            <div id="sRules"></div>
+            <p class="note" style="margin:10px 0 0">🤖 Riêng chế độ <b>Kéo co (1 người)</b>: máy đóng vai đội Xanh — độ khó của máy:
+          <select id="s-botLevel"><option value="0.4">😊 Dễ (máy đúng ~40%)</option><option value="0.6" selected>😐 Trung bình (máy đúng ~60%)</option><option value="0.8">😤 Khó (máy đúng ~80%)</option></select></p>
+            <p style="margin:12px 0 4px"><b>🏆 Luật cho phòng thi trực tuyến:</b></p>
+            <div id="rRules"></div>
+          </details>
         <div class="card" style="margin-bottom:14px" id="rtModeCard">
           <h3 style="margin:0 0 4px">📝 NGUỒN CÂU HỎI CHO PHÒNG THI — 2 chế độ</h3>
           <p class="note" style="margin:0 0 10px"><b>⚡ Chế độ 1 — Ngân hàng có sẵn:</b> chọn Môn → Khối → Bài từ bank câu hỏi có sẵn, mở phòng trong ~5 giây. <b>📝 Chế độ 2 — Làm bộ đề thi mới:</b> tải file .docx hoặc dán đề .txt, web tự tách <b>Phần I/II/III</b>, tự nhận đáp án, xem trước bảng kiểm tra rồi mới tạo phòng.</p>
@@ -975,7 +1006,7 @@ footer{background:transparent;}
             <input type="text" id="rsName" placeholder="Ví dụ: Nguyễn Văn An">
             <div class="btnrow"><button class="btn" onclick="rsJoin()">🎯 Vào phòng thi</button></div>
             <div id="rsJoinMsg"></div>
-            <div class="guidebox" style="margin-top:10px"><p>📌 <b>Chỉ dẫn cho học sinh:</b> Nhập mã phòng → nhập tên của em → bấm <b>Vào phòng thi</b> → chờ thầy bấm "Bắt đầu thi" → đọc câu hỏi và bấm vào đáp án để trả lời.</p></div>
+            
           </div>
       <div class="card" style="margin-bottom:14px" id="mixCard">
         <h3 style="margin:0 0 4px">🧩 TẠO CÂU HỎI TỔNG HỢP — tổ hợp bộ câu hỏi từ các câu ĐÃ CÓ</h3>
@@ -1565,17 +1596,6 @@ function baiHasType(b, t){
 function baiSlotOf(b, t){
   return t === 'ga' ? b.giao_an : t === 'phieu' ? b.phieu : t === 'vip' ? b.vip : t === 'ppt' ? b.ppt : null;
 }
-function renderTypeTabs(){
-  var w = document.getElementById('typeTabs'); if (!w) return;
-  w.innerHTML = HL_TYPES.map(function(x){
-    return '<button type="button" class="ttab' + (state.theLoai === x[0] ? ' on' : '') + '" data-type="' + x[0] + '">' + x[1] + '</button>';
-  }).join('');
-  w.querySelectorAll('[data-type]').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      state.tnView = false; state.theLoai = btn.getAttribute('data-type'); state.baiSel = 0; renderBrowse(); hlPaneOpenBai(0);
-    });
-  });
-}
 var __paneSeq = 0, __paneLoaded = false;
 function hlPaneLoad(slot, title){
   var fid = docFidOf(slot);
@@ -1604,7 +1624,7 @@ function hlPaneFallback(viewUrl){
     }).catch(function(){});
   }
 }
-function hlPaneEnsureVisible(){ var pv = document.getElementById('paneViewer'); if (!pv) return; try { var r = pv.getBoundingClientRect(); var vh = window.innerHeight || 800; if (r.top < 150 || r.top > vh * 0.5) pv.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e){} }
+function hlPaneEnsureVisible(){ var pv = document.getElementById('paneViewer'); if (!pv) return; try { var r = pv.getBoundingClientRect(); var vh = window.innerHeight || 800; if (r.top < 235 || r.top > vh * 0.5) pv.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e){} }
 function hlPaneOpenDoc(slot, title){ if (!hlPaneLoad(slot, title)) return false; hlPaneEnsureVisible(); return true; }
 function hlPaneOpenBai(i){
   var b = RENDERED[i]; if (!b) return;
@@ -1649,15 +1669,15 @@ function specialIndexHtml(bo, nChuDe, nTd, nTa){
   var rows = '';
   if (nChuDe){
     rows = (bo.chu_de || []).map(function(c){
-      return '<button type="button" class="bai-row" data-goto="1"><span class="br-num">Chủ đề ' + c.so + '</span><span>' + esc(c.ten) + '</span></button>';
+      return '<button type="button" class="bai-row" data-goto="1"><span class="br-num">Chủ đề ' + c.so + '</span><span class="br-name">' + esc(c.ten) + '</span></button>';
     }).join('');
   } else if (nTd){
     rows = (bo.nhom_the_thao || []).map(function(g){
-      return '<button type="button" class="bai-row" data-goto="1"><span>' + esc(g.ten || 'Nhóm thể thao') + '</span></button>';
+      return '<button type="button" class="bai-row" data-goto="1"><span class="br-name">' + esc(g.ten || 'Nhóm thể thao') + '</span></button>';
     }).join('');
   } else if (nTa){
     rows = (bo.don_vi || []).map(function(u){
-      return '<button type="button" class="bai-row" data-goto="1"><span>' + esc(u.ten || 'Unit') + '</span></button>';
+      return '<button type="button" class="bai-row" data-goto="1"><span class="br-name">' + esc(u.ten || 'Unit') + '</span></button>';
     }).join('');
   }
   return rows || '<div class="empty">—</div>';
@@ -1687,12 +1707,12 @@ function renderKhoiTabs(){
   wrap.querySelectorAll('[data-khoi]').forEach(function(btn){
     btn.addEventListener('click', function(){
       state.tnView = false;
-      state.khoi = parseInt(btn.getAttribute('data-khoi'), 10); state.baiSel = 0; renderAll(); hlPaneOpenBai(0);
+      state.khoi = parseInt(btn.getAttribute('data-khoi'), 10); state.baiSel = 0; renderAll(); var libEl = document.getElementById('tabLib'); if (libEl && libEl.style.display === 'none'){ if (window.renderExamMenu) window.renderExamMenu(); } else { hlPaneOpenBai(0); }
     });
   });
   wrap.querySelectorAll('[data-tn]').forEach(function(btn){
     btn.addEventListener('click', function(){
-      state.tnView = true; state.baiSel = -1; renderAll(); hlTnViewerHint();
+      state.tnView = true; state.baiSel = -1; var libEl2 = document.getElementById('tabLib'); if (libEl2 && libEl2.style.display === 'none' && typeof hlShowTab === 'function') hlShowTab('lib'); renderAll(); hlTnViewerHint();
     });
   });
 }
@@ -1747,10 +1767,24 @@ function xemPhieu(i){ var b = RENDERED[i]; if (!b) return; if (docFidOf(b.phieu)
 function xemVip(i){ var b = RENDERED[i]; if (b) openDoc(b.vip, 'Tài liệu VIP — Bài ' + b.so + ': ' + b.ten); }
 function xemPpt(i){ var b = RENDERED[i]; if (b) openDoc(b.ppt, 'Slide PPT — Bài ' + b.so + ': ' + b.ten); }
 
+function deRowsHtml(bo){
+  if (!bo.de_thi || !bo.de_thi.length) return '';
+  return bo.de_thi.map(function(d, di){
+    return '<button type="button" class="bai-row de-row" data-de="' + di + '"><span class="br-num">📋</span><span class="br-name">' + (d.nhan ? esc(d.nhan) + ' — ' : '') + esc(d.file) + '</span></button>';
+  }).join('');
+}
+function bindDeRows(list){
+  list.querySelectorAll('[data-de]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      list.querySelectorAll('.bai-row').forEach(function(x){ x.classList.remove('on'); });
+      btn.classList.add('on');
+      xemDeThi(parseInt(btn.getAttribute('data-de'), 10));
+    });
+  });
+}
 function renderBrowse(){
   renderKhoiTabs();
   if (state.tnView && monHasTn(state.mon)){
-    renderTypeTabs();
     var spT = document.getElementById('specialArea'); if (spT) spT.innerHTML = '';
     
     document.getElementById('baiList').innerHTML = '';
@@ -1776,41 +1810,25 @@ function renderBrowse(){
   
   RENDERED = bo.bai;
   RENDERED_BO = bo.bai.map(function(){ return bo.mon + ' ' + bo.khoi + '|'; });
-  renderTypeTabs();
   var special = document.getElementById('specialArea');
   var cdHtml = cdSectionHtml(bo);
   if (nChuDe || nTd || nTa){
     /* Bộ đặc biệt (chủ đề / nhóm thể thao / unit): giữ nguyên section ở khung chính,
        cột trái hiện mục lục; nút Xem trong section mở vào khung hiển thị qua openDoc. */
     if (special){ special.innerHTML = (nChuDe ? chuDeSectionHtml(bo) : (nTd ? nhomTheThaoSectionHtml(bo) : unitSectionHtml(bo))) + cdHtml; bindCards(special); }
-    list.innerHTML = specialIndexHtml(bo, nChuDe, nTd, nTa);
-    bindSpecialIndex(list);
-  } else if (state.theLoai === 'de'){
-    if (special){ special.innerHTML = cdHtml; bindCards(special); }
-    if (bo.de_thi && bo.de_thi.length){
-      list.innerHTML = bo.de_thi.map(function(d, i){
-        return '<button type="button" class="bai-row" data-de="' + i + '"><span class="br-num">📄</span><span>' + (d.nhan ? esc(d.nhan) + ' — ' : '') + esc(d.file) + '</span></button>';
-      }).join('');
-      list.querySelectorAll('[data-de]').forEach(function(btn){
-        btn.addEventListener('click', function(){
-          list.querySelectorAll('.bai-row').forEach(function(x){ x.classList.remove('on'); });
-          btn.classList.add('on');
-          xemDeThi(parseInt(btn.getAttribute('data-de'), 10));
-        });
-      });
-    } else {
-      list.innerHTML = '<div class="empty">Bộ này chưa có đề thi / ôn tập / kiểm tra.</div>';
-    }
-  } else if (bo.bai.length){
+    list.innerHTML = specialIndexHtml(bo, nChuDe, nTd, nTa) + deRowsHtml(bo);
+    bindSpecialIndex(list); bindDeRows(list);
+  } else if (bo.bai.length || (bo.de_thi && bo.de_thi.length)){
     if (special){ special.innerHTML = cdHtml; bindCards(special); }
     var rowsHtml = '';
     bo.bai.forEach(function(b, i){
       if (!baiHasType(b, state.theLoai)) return;
       rowsHtml += '<button type="button" class="bai-row' + (state.baiSel === i ? ' on' : '') + '" data-bai="' + i + '">' +
-        '<span class="br-num">Bài ' + b.so + '</span><span>' + esc(b.ten) + (b.ban ? ' (bản ' + esc(b.ban) + ')' : '') + '</span>' +
+        '<span class="br-num">Bài ' + b.so + '</span><span class="br-name">' + esc(b.ten) + (b.ban ? ' (bản ' + esc(b.ban) + ')' : '') + '</span>' +
         (b.so_tiet ? '<span class="br-tiet">' + b.so_tiet + ' tiết</span>' : '') + '</button>';
     });
-    list.innerHTML = rowsHtml || '<div class="empty">Chưa có bài nào có ' + esc(typeLabel(state.theLoai)) + ' — thầy cô chọn thể loại khác nhé!</div>';
+    rowsHtml += deRowsHtml(bo);
+    list.innerHTML = rowsHtml || '<div class="empty">📦 Bộ này đang được cập nhật — tài liệu sẽ sớm có mặt, thầy cô quay lại sau nhé!</div>';
     list.querySelectorAll('[data-bai]').forEach(function(btn){
       btn.addEventListener('click', function(){
         var i = parseInt(btn.getAttribute('data-bai'), 10);
@@ -1820,19 +1838,12 @@ function renderBrowse(){
         hlPaneOpenBai(i);
       });
     });
+    bindDeRows(list);
   } else {
     if (special){ special.innerHTML = cdHtml; bindCards(special); }
     list.innerHTML = '<div class="empty">📦 Bộ này đang được cập nhật — tài liệu sẽ sớm có mặt, thầy cô quay lại sau nhé!</div>';
   }
-  if (bo.de_thi && bo.de_thi.length && state.theLoai !== 'de'){
-    var rows = bo.de_thi.map(function(d, i){
-      return '<div class="shelf-row" onclick="xemDeThi(' + i + ')" style="cursor:pointer"><div class="nm">📄 ' + (d.nhan ? esc(d.nhan) + ' — ' : '') + esc(d.file) + '</div>' +'</div>';
-    }).join('');
-    shelf.innerHTML = '<section class="shelf"><h3>📝 ĐỀ THI • ÔN TẬP • KIỂM TRA — ' +
-                      esc(bo.ten_bo.split(' — ')[0]) + '</h3>' + rows + '</section>';
-  } else {
-    shelf.innerHTML = '';
-  }
+  shelf.innerHTML = '';
   if (bo.khung_chung) shelf.innerHTML += khungShelfHtml();
   hlTnShelf();
 }
@@ -3449,7 +3460,7 @@ function hlShowTab(which){
   }
 }
 function hlToggleExam(){ var ex = document.getElementById('sec-game'); var inExam = ex && ex.style.display !== 'none'; hlShowTab(inExam ? 'lib' : 'exam'); }
-function hlGuideToggle(){ var b = document.getElementById('hlGuideBody'); var g = document.getElementById('guideBtn'); if (!b) return; var open = b.style.display === 'none'; b.style.display = open ? '' : 'none'; if (g){ g.textContent = open ? '📖 Hướng Dẫn ▾' : '📖 Hướng Dẫn'; g.classList.toggle('on', open); } }
+function hlGuideToggle(){ var sec = document.getElementById('hlGuide'); var b = document.getElementById('hlGuideBody'); var g = document.getElementById('guideBtn'); if (!sec || !b) return; var open = !sec.classList.contains('open'); sec.classList.toggle('open', open); b.style.display = open ? '' : 'none'; if (g){ g.classList.toggle('on', open); } }
 function hlShowExam(){ hlShowTab('exam'); }
 function enterStudentMode(roomCode){
   try { document.body.classList.add('hs-mode'); } catch(e){}
@@ -4891,15 +4902,15 @@ window.renderTnShelf = function(){
       h += '<div class="tn-files">' + disp.map(function(x){
         if (x.so){
           var hue = tnDeHue(x.so);
-          return '<div class="tn-file" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + x.i + ')"" style="background:hsl(' + hue + ',85%,95%);border-left:7px solid hsl(' + hue + ',70%,45%);border-radius:8px;cursor:pointer">' +
-                 '<span class="nm"><span style="display:inline-block;background:hsl(' + hue + ',70%,42%);color:#fff;font-weight:900;border-radius:999px;padding:3px 14px;font-size:16px">' + tnMonShort(state.mon) + ' Đề ' + x.so + '</span></span>' +'</div>';
+          return '<div class="tn-file" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + x.i + ')"" style="background:#0b1222;border-left:7px solid hsl(' + hue + ',70%,50%);border-radius:8px;cursor:pointer">' +
+                 '<span class="nm"><span style="display:inline-block;background:hsl(' + hue + ',70%,42%);color:#fff;font-weight:900;border-radius:999px;padding:4px 16px;font-size:17px">' + tnMonShort(state.mon) + ' Đề ' + x.so + '</span></span>' +'</div>';
         }
         if (f.kind === 'tl'){
           var thue = tnTlHue(x.i);
-          return '<div class="tn-file" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + x.i + ')"" style="background:hsl(' + thue + ',85%,95%);border-left:7px solid hsl(' + thue + ',70%,45%);border-radius:8px;cursor:pointer">' +
-                 '<span class="nm"><span style="display:inline-block;background:hsl(' + thue + ',70%,42%);border-radius:999px;padding:3px 10px;font-size:15px">📚</span> ' + esc(x.d.file) + '</span>' +'</div>';
+          return '<div class="tn-file" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + x.i + ')"" style="background:#0b1222;border-left:7px solid hsl(' + thue + ',70%,50%);border-radius:8px;cursor:pointer">' +
+                 '<span class="nm"><span style="display:inline-block;background:hsl(' + thue + ',70%,42%);border-radius:999px;padding:3px 10px;font-size:15px">📚</span> <span style="font-size:17px;font-weight:700;color:#ffffff">' + esc(x.d.file) + '</span></span>' +'</div>';
         }
-        return '<div class="tn-file" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + x.i + ')"" style="cursor:pointer"><span class="nm">📄 ' + esc(x.d.file) + '</span>' +'</div>';
+        return '<div class="tn-file" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + x.i + ')"" style="background:#0b1222;border-left:7px solid #475569;border-radius:8px;cursor:pointer"><span class="nm" style="font-size:16.5px;font-weight:700;color:#ffffff">📄 ' + esc(x.d.file) + '</span>' +'</div>';
       }).join('') + '</div>';
     }
     return h + '</div>';
@@ -4921,7 +4932,7 @@ window.xemOnThiTnFile = function(kind, i){
   if (files[i]){ var tnSo = kind === 'de' ? tnDeSo(files[i].file) : 0; tnViewerOpen(files[i], '🎓 Ôn thi tốt nghiệp — ' + state.mon + ' — ' + (tnSo ? tnMonShort(state.mon) + ' Đề ' + tnSo : files[i].file)); }
 };
 
-function tnViewerOpen(file, title){ var v = document.getElementById('tnViewer'); var b = document.getElementById('tnViewerBody'); var t = document.getElementById('tnViewerTitle'); var f = document.getElementById('tnViewerFoot'); if (!v || !b){ openDoc(file, title); return false; } var fid = docFidOf(file); if (t) t.textContent = '📄 ' + title; if (f) f.textContent = '📄 ' + file.file + ' • Cuộn xuống để xem hết tài liệu • Bấm ✕ Đóng để về danh sách'; if (fid){ b.innerHTML = '<iframe title="Khung xem tài liệu" src="' + drivePreviewUrl(fid) + '" allow="autoplay" allowfullscreen></iframe>'; } else { b.innerHTML = '<div class="empty">Chưa nối được file này — thầy cô mở thư mục môn trên Drive để xem.</div>'; } v.style.display = ''; try { var sec = v.closest('section'); if (sec){ var r = sec.getBoundingClientRect(); var vh = window.innerHeight || 800; if (r.top < 150 || r.top > vh * 0.5) sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); } } catch (e){} return true; }
+function tnViewerOpen(file, title){ var v = document.getElementById('tnViewer'); var b = document.getElementById('tnViewerBody'); var t = document.getElementById('tnViewerTitle'); var f = document.getElementById('tnViewerFoot'); if (!v || !b){ openDoc(file, title); return false; } var fid = docFidOf(file); if (t) t.textContent = '📄 ' + title; if (f) f.textContent = '📄 ' + file.file + ' • Cuộn xuống để xem hết tài liệu • Bấm ✕ Đóng để về danh sách'; if (fid){ b.innerHTML = '<iframe title="Khung xem tài liệu" src="' + drivePreviewUrl(fid) + '" allow="autoplay" allowfullscreen></iframe>'; } else { b.innerHTML = '<div class="empty">Chưa nối được file này — thầy cô mở thư mục môn trên Drive để xem.</div>'; } v.style.display = ''; try { var sec = v.closest('section'); if (sec){ var r = sec.getBoundingClientRect(); var vh = window.innerHeight || 800; if (r.top < 235 || r.top > vh * 0.5) sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); } } catch (e){} return true; }
 window.tnViewerClose = function(){ var v = document.getElementById('tnViewer'); if (v) v.style.display = 'none'; var b = document.getElementById('tnViewerBody'); if (b) b.innerHTML = ''; };
 
 /* ------ TU THI (Hoc Lieu Vip Pro): hoc sinh bam mon -> chon bai / chon de / chon thi tot nghiep -> thi ngay ------ */
