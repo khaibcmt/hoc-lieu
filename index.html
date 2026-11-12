@@ -738,6 +738,9 @@ footer{background:transparent;}
 .ttab:not(.on)[data-type="de"]{border-left:3px solid #f43f5e;}
 #sec-game .gtab{color:#0f172a;}
 .exam-row-t{line-height:1.35;overflow-wrap:break-word;}
+/* O Huong dan: nen trang nhung chu ke thua mau sang cua theme toi -> ep chu dam (07:16 12/11/2026) */
+#hlGuide{color:#0f172a;}
+#hlGuide .note{color:#5b5470;}
 .exam-groups{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
 @media (max-width:900px){ .exam-groups{grid-template-columns:1fr;} }
 .exam-group h4{margin:0 0 8px;font-size:15px;font-weight:800;color:#67e8f9;}
@@ -790,7 +793,7 @@ footer{background:transparent;}
   
 </header>
 
-<main> <div class="chips-row" id="chipsRow"><nav class="chips" id="subjectChips" aria-label="Chọn môn học"></nav><div class="chips-tools"><button type="button" class="chip tool-exam" id="mtabExam" onclick="hlToggleExam()">🏆 Thi Online</button><button type="button" class="chip tool-guide" id="guideBtn" onclick="hlGuideToggle()">📖 Hướng dẫn sử dụng</button></div></div>
+<main> <div class="chips-row" id="chipsRow"><nav class="chips" id="subjectChips" aria-label="Chọn môn học"></nav><div class="chips-tools"><button type="button" class="chip tool-exam" id="mtabExam" onclick="hlToggleExam()">🏆 Thi Online</button><button type="button" class="chip tool-guide" id="guideBtn" onclick="hlGuideToggle()">📖 Hướng Dẫn</button></div></div>
   
   <section id="hlGuide" style="border:1.5px solid #d9cdf5;border-radius:12px;overflow:hidden;margin:6px 0 12px;background:#fff"> <div id="hlGuideBody" style="display:none;padding:16px 18px 14px">
       <div style="display:flex;flex-wrap:wrap;gap:12px">
@@ -3420,7 +3423,7 @@ function hlShowTab(which){
   }
 }
 function hlToggleExam(){ var ex = document.getElementById('sec-game'); var inExam = ex && ex.style.display !== 'none'; hlShowTab(inExam ? 'lib' : 'exam'); }
-function hlGuideToggle(){ var b = document.getElementById('hlGuideBody'); var g = document.getElementById('guideBtn'); if (!b) return; var open = b.style.display === 'none'; b.style.display = open ? '' : 'none'; if (g){ g.textContent = open ? '📖 Hướng dẫn sử dụng ▾' : '📖 Hướng dẫn sử dụng'; g.classList.toggle('on', open); } }
+function hlGuideToggle(){ var b = document.getElementById('hlGuideBody'); var g = document.getElementById('guideBtn'); if (!b) return; var open = b.style.display === 'none'; b.style.display = open ? '' : 'none'; if (g){ g.textContent = open ? '📖 Hướng Dẫn ▾' : '📖 Hướng Dẫn'; g.classList.toggle('on', open); } }
 function hlShowExam(){ hlShowTab('exam'); }
 function enterStudentMode(roomCode){
   try { document.body.classList.add('hs-mode'); } catch(e){}
