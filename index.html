@@ -813,16 +813,36 @@ header{background:linear-gradient(90deg,#1a4a86,#22639f)}
 .tn-file{transition:filter .15s}
 .tn-file:hover{filter:brightness(1.22)}
 .doc-wrap{position:relative}
-.doc-shield{position:absolute;top:0;right:0;width:68px;height:54px;z-index:6;background:rgba(9,17,34,.88);border-radius:0 0 0 14px;display:flex;align-items:center;justify-content:center;font-size:17px}
-.doc-shield::after{content:'\U0001F512'}
+
+
 #paneBody .doc-wrap{max-width:920px;margin:0 auto;height:calc(100vh - 260px);min-height:560px}
 #paneBody .doc-wrap iframe{width:100%;max-width:none;height:100%;min-height:0;margin:0}
 #tnViewerBody .doc-wrap{max-width:920px;margin:0 auto;height:100%}
 #tnViewerBody .doc-wrap iframe{width:100%;max-width:none;height:100%;margin:0}
-#viewerStage .doc-shield{border-radius:0}
+#viewerStage 
 @media (max-width:900px){ #baiList.frames{height:auto;max-height:none} .side-frame.auto .side-frame-list{max-height:220px} .side-frame.grow .side-frame-list{max-height:320px} }
 @media (max-width:720px){ #paneBody .doc-wrap{height:calc(100vh - 300px);min-height:480px} }
 @media (min-width:901px){ #subjectChips .chip{font-size:14.5px;padding:7px 12px} }
+</style>
+<style id="hlLockCss">
+.doc-wrap{overflow:hidden}
+.doc-corner{display:none}
+@media (max-width:900px){.doc-corner{display:block;position:absolute;top:0;right:0;width:66px;height:52px;background:#dfe3e6;border-radius:0 0 0 14px;z-index:6}}
+@media (min-width:901px){
+#paneBody .doc-wrap iframe{width:calc(100% + 120px)!important;max-width:none!important;margin-left:-50px}
+#tnViewerBody .doc-wrap iframe{width:calc(100% + 120px)!important;max-width:none!important;margin-left:-50px}
+#viewerFrame{width:calc(100% + 120px)!important;max-width:none!important;margin-left:-50px}
+}
+#viewerStage{overflow:hidden}
+body:not(.hl-admin) .only-admin{display:none!important}
+.only-guest{display:none}
+body:not(.hl-admin) .only-guest{display:block}
+header{background:linear-gradient(90deg,#2063ac,#2b7bbb)}
+.sticky-head{background:linear-gradient(180deg,#2b74c2,#256aa8)}
+.tn-file{overflow-wrap:anywhere}
+.tn-file span{overflow-wrap:anywhere}
+.side-frame-list{overflow-x:hidden}
+.drive-guest-note{color:#cbd5e1;font-size:15px;line-height:1.6}
 </style>
 </head>
 <body>
@@ -911,9 +931,9 @@ header{background:linear-gradient(90deg,#1a4a86,#22639f)}
           <div id="paneBody"></div>
           <div id="paneFallback" style="display:none">
             <div class="pf-title">⚠️ Khung xem bị trình duyệt chặn</div>
-            <p>Thầy cô bấm nút to dưới đây để mở tài liệu, hoặc quét mã QR bằng điện thoại / iPad để xem:</p>
-            <a id="paneOpenBtn" class="pf-btn" href="#" target="_blank" rel="noopener">📖 MỞ TÀI LIỆU XEM NGAY</a>
-            <div id="paneQR"></div>
+            <p class="only-admin">Thầy cô bấm nút to dưới đây để mở tài liệu, hoặc quét mã QR bằng điện thoại / iPad để xem:</p>
+            <a id="paneOpenBtn" class="pf-btn only-admin" href="#" target="_blank" rel="noopener">📖 MỞ TÀI LIỆU XEM NGAY</a>
+            <div id="paneQR" class="only-admin"></div><p class="only-guest" style="color:#94a3b8;margin:10px 0 0;line-height:1.6">🔒 Tài liệu chỉ xem ngay tại trang này. Thầy cô cần file gốc vui lòng nhắn thầy Khải để được gửi riêng.</p>
           </div>
         </div>
         <div id="specialArea"></div>
@@ -1205,14 +1225,14 @@ header{background:linear-gradient(90deg,#1a4a86,#22639f)}
   <div class="viewer-box">
     <div class="viewer-head">
       <span class="t" id="viewerTitle">Xem tài liệu</span>
-      <a class="viewer-drive-btn" id="viewerDriveBtn" href="#" target="_blank" rel="noopener" style="display:none">📂 Mở trong Drive</a>
+      <a class="viewer-drive-btn only-admin" id="viewerDriveBtn" href="#" target="_blank" rel="noopener" style="display:none">📂 Mở trong Drive</a>
       <button id="viewerClose" type="button">✖ Đóng</button>
     </div>
     <div class="viewer-file" id="viewerFile" style="display:none"></div>
     <div class="viewer-hint" id="viewerHint" style="display:none"></div>
     <div class="viewer-stage" id="viewerStage">
       <iframe id="viewerFrame" title="Khung xem tài liệu" allowfullscreen></iframe>
-      <div class="doc-shield" aria-hidden="true"></div>
+      <div class="doc-corner" aria-hidden="true"></div>
       <div class="viewer-loading" id="viewerLoading" style="display:none">
         <div class="viewer-spinner" aria-hidden="true"></div>
         <div>Đang mở tài liệu...</div>
@@ -1221,12 +1241,12 @@ header{background:linear-gradient(90deg,#1a4a86,#22639f)}
         <div class="viewer-error-box">
           <p><b>⚠️ Chưa mở được tài liệu trong khung xem.</b></p>
           <p>Tài liệu có thể đang được Drive xử lý hoặc trình duyệt chặn khung nhúng. Thầy cô mở thư mục Drive chứa tài liệu để xem trực tiếp nhé.</p>
-          <a class="viewer-error-drive" id="viewerErrorDrive" href="#" target="_blank" rel="noopener">📂 Mở trong Drive</a>
+          <a class="viewer-error-drive only-admin" id="viewerErrorDrive" href="#" target="_blank" rel="noopener">📂 Mở trong Drive</a>
         </div>
       </div>
     </div>
     <div class="viewer-foot" id="viewerFoot" style="display:none">
-      <a id="viewerNewTab" href="#" target="_blank" rel="noopener">↗ Mở trong tab mới</a>
+      <a id="viewerNewTab" class="only-admin" href="#" target="_blank" rel="noopener">↗ Mở trong tab mới</a>
       <span>Nếu khung xem không tải được thư mục (một số trình duyệt chặn), thầy cô bấm nút này để mở kho trong tab mới.</span>
     </div>
   </div>
@@ -1492,6 +1512,8 @@ function openDoc(slot, title){
   }
   if (slot && docFidOf(slot)){
     viewerOpenFile(slot, title);
+  } else if (DRIVE_ROOT && !((typeof hlIsAdmin === 'function') && hlIsAdmin())){
+    showToast('🔒 Tài liệu này chưa xem trực tiếp trong trang được — thầy cô nhắn thầy Khải để nhận file nhé!');
   } else if (DRIVE_ROOT){
     var fb = docFolderFallback(slot);
     document.getElementById('viewerTitle').textContent = fb.title;
@@ -1639,7 +1661,7 @@ function hlPaneLoad(slot, title){
   var tEl = document.getElementById('paneTitle'); if (tEl) tEl.textContent = '📄 ' + (title || 'Tài liệu');
   var fb = document.getElementById('paneFallback'); if (fb) fb.style.display = 'none';
   var body = document.getElementById('paneBody'); if (!body) return false;
-  body.innerHTML = '<div class="doc-wrap"><iframe id="paneFrame" title="Khung xem tài liệu" src="' + drivePreviewUrl(fid) + '" allow="autoplay" allowfullscreen></iframe><div class="doc-shield" aria-hidden="true"></div></div>';
+  body.innerHTML = '<div class="doc-wrap"><iframe id="paneFrame" title="Khung xem tài liệu" src="' + drivePreviewUrl(fid) + '" allow="autoplay" allowfullscreen></iframe><div class="doc-corner" aria-hidden="true"></div></div>';
   var fr = document.getElementById('paneFrame');
   if (fr) fr.addEventListener('load', function(){ if (seq === __paneSeq) __paneLoaded = true; });
   setTimeout(function(){
@@ -1651,6 +1673,7 @@ function hlPaneFallback(viewUrl){
   var fb = document.getElementById('paneFallback'); if (!fb) return;
   var btn = document.getElementById('paneOpenBtn'); if (btn) btn.href = viewUrl;
   fb.style.display = '';
+  if (!((typeof hlIsAdmin === 'function') && hlIsAdmin())) return;
   var qr = document.getElementById('paneQR'); if (!qr) return;
   qr.innerHTML = '';
   if (typeof loadQRCodeLib === 'function'){
@@ -1688,8 +1711,8 @@ function hlPaneOpenPhieu(i){
   var url = 'https://drive.google.com/drive/folders/' + PHIEU_ROOT_ID;
   body.innerHTML = '<div style="padding:18px">'
     + '<div style="font-size:19px;font-weight:900;color:#e2e8f0">🧾 Phiếu học tập — Bài ' + b.so + ': ' + b.ten + '</div>'
-    + '<p style="color:#94a3b8;margin:8px 0 14px;font-size:15.5px;line-height:1.6">' + note + '. Mỗi bài có 3 bản. Em đang nối mã từng file phiếu để xem ngay trong trang; tạm thời thầy cô mở thư mục Phiếu trên Drive để chọn bản:</p>'
-    + '<a href="' + url + '" target="_blank" rel="noopener" style="display:inline-block;background:#22c55e;color:#fff;font-weight:800;font-size:16px;padding:12px 20px;border-radius:12px;text-decoration:none">📂 Mở thư mục Phiếu học tập trên Drive</a>'
+    + '<p style="color:#94a3b8;margin:8px 0 14px;font-size:15.5px;line-height:1.6">' + note + '. Mỗi bài có 3 bản. Em đang nối mã từng file phiếu để xem ngay trong trang.</p>'
+    + '<a class="only-admin" href="' + url + '" target="_blank" rel="noopener" style="display:inline-block;background:#22c55e;color:#fff;font-weight:800;font-size:16px;padding:12px 20px;border-radius:12px;text-decoration:none">📂 Mở thư mục Phiếu học tập trên Drive</a>'     + '<p class="only-guest" style="color:#94a3b8;margin:12px 0 0;font-size:14.5px;line-height:1.6">🔒 Phiếu học tập đang được nối mã để xem ngay trong trang. Thầy cô cần file phiếu vui lòng nhắn thầy Khải để được gửi riêng.</p>'
     + '<p style="color:#94a3b8;margin:12px 0 0;font-size:14px;line-height:1.6">Trong thư mục: chọn bộ (Sinh 10 / 11 / 12, CNNN 10 / 11 / 12) → chọn bản <b>Học sinh</b> / <b>Học sinh có đáp án</b> / <b>Giáo viên</b> → bấm file để xem.</p>'
     + '<p style="margin:12px 0 0"><button type="button" onclick="hlPaneOpenCard(' + i + ')" style="background:#141e33;color:#e2e8f0;border:1px solid #1e293b;border-radius:10px;padding:9px 14px;font-size:15px;cursor:pointer">← Quay lại thẻ bài</button></p>'
     + '</div>';
@@ -2077,9 +2100,10 @@ function renderDriveSubject(ds){
     '<section class="drive-mon">' +
       '<p class="drive-status">✅ <b>Kho ' + esc(ds.mon) + ' đã nạp</b> — danh sách bài chi tiết đang được hoàn thiện. ' +
       'Thầy cô xem toàn bộ tài liệu của môn ngay trong khung thư mục Drive dưới đây (chỉ xem, không tải về).</p>' +
-      '<div class="drive-actions"><a class="view-btn" href="' + driveFolderUrl(ds.driveId) +
+      '<div class="drive-actions"><a class="view-btn only-admin" href="' + driveFolderUrl(ds.driveId) +
         '" target="_blank" rel="noopener">↗ Mở thư mục ' + esc(ds.mon) + ' trong tab mới</a></div>' +
-      '<iframe class="drive-frame" title="Thư mục Drive môn ' + esc(ds.mon) + '" loading="lazy" ' +
+      '<p class="only-guest drive-guest-note">🔒 Kho tài liệu của môn đang được thầy Khải giữ riêng — thầy cô nhắn thầy để nhận file nhé!</p>' +
+      '<iframe class="drive-frame only-admin" title="Thư mục Drive môn ' + esc(ds.mon) + '" loading="lazy" ' +
         'src="https://drive.google.com/embeddedfolderview?id=' + ds.driveId + '#grid"></iframe>' +
     '</section>';
   shelf.innerHTML = '';
@@ -5005,7 +5029,7 @@ function tnPaneOpen(file, title){
   return tnViewerOpen(file, title);
 }
 
-function tnViewerOpen(file, title){ var v = document.getElementById('tnViewer'); var b = document.getElementById('tnViewerBody'); var t = document.getElementById('tnViewerTitle'); var f = document.getElementById('tnViewerFoot'); if (!v || !b){ openDoc(file, title); return false; } var fid = docFidOf(file); if (t) t.textContent = '📄 ' + title; if (f) f.textContent = '📄 ' + file.file + ' • Cuộn xuống để xem hết tài liệu • Bấm ✕ Đóng để về danh sách'; if (fid){ b.innerHTML = '<div class="doc-wrap"><iframe title="Khung xem tài liệu" src="' + drivePreviewUrl(fid) + '" allow="autoplay" allowfullscreen></iframe><div class="doc-shield" aria-hidden="true"></div></div>'; } else { b.innerHTML = '<div class="empty">Chưa nối được file này — thầy cô mở thư mục môn trên Drive để xem.</div>'; } v.style.display = ''; try { var sec = v.closest('section'); if (sec){ var r = sec.getBoundingClientRect(); var vh = window.innerHeight || 800; if (r.top < 235 || r.top > vh * 0.5) sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); } } catch (e){} return true; }
+function tnViewerOpen(file, title){ var v = document.getElementById('tnViewer'); var b = document.getElementById('tnViewerBody'); var t = document.getElementById('tnViewerTitle'); var f = document.getElementById('tnViewerFoot'); if (!v || !b){ openDoc(file, title); return false; } var fid = docFidOf(file); if (t) t.textContent = '📄 ' + title; if (f) f.textContent = '📄 ' + file.file + ' • Cuộn xuống để xem hết tài liệu • Bấm ✕ Đóng để về danh sách'; if (fid){ b.innerHTML = '<div class="doc-wrap"><iframe title="Khung xem tài liệu" src="' + drivePreviewUrl(fid) + '" allow="autoplay" allowfullscreen></iframe><div class="doc-corner" aria-hidden="true"></div></div>'; } else { b.innerHTML = '<div class="empty">Chưa nối được file này — thầy cô mở thư mục môn trên Drive để xem.</div>'; } v.style.display = ''; try { var sec = v.closest('section'); if (sec){ var r = sec.getBoundingClientRect(); var vh = window.innerHeight || 800; if (r.top < 235 || r.top > vh * 0.5) sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); } } catch (e){} return true; }
 window.tnViewerClose = function(){ var v = document.getElementById('tnViewer'); if (v) v.style.display = 'none'; var b = document.getElementById('tnViewerBody'); if (b) b.innerHTML = ''; };
 
 /* ------ TU THI (Hoc Lieu Vip Pro): hoc sinh bam mon -> chon bai / chon de / chon thi tot nghiep -> thi ngay ------ */
