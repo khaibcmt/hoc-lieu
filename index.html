@@ -792,6 +792,38 @@ header{background:linear-gradient(90deg,#0c2350,#14335f);}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style id="hlFramesCss">
+/* ===== Đợt khung trái 12/11/2026: 2 khung cuộn riêng + che nút pop-out Drive + nền tươi hơn ===== */
+body{background:linear-gradient(168deg,#16407c 0%,#1f6ab2 42%,#12809b 78%,#0d6482 100%) fixed}
+header{background:linear-gradient(90deg,#1a4a86,#22639f)}
+.sticky-head{background:linear-gradient(180deg,#1d5a9c,#1a4e88)}
+.chips-row{background:transparent}
+.side-box{background:linear-gradient(180deg,#21406e,#1a3560)}
+#paneViewer{background:#0a2450}
+#baiList.frames{display:flex;flex-direction:column;gap:10px;overflow:hidden;height:calc(100vh - 330px);max-height:calc(100vh - 330px)}
+.side-frame{display:flex;flex-direction:column;min-height:0;border:1.5px solid #2b4a73;border-radius:12px;background:rgba(10,24,48,.45);padding:9px 9px 7px}
+.side-frame.grow{flex:1 1 0}
+.side-frame.auto{flex:0 1 auto}
+.side-frame.auto .side-frame-list{max-height:200px}
+.side-frame-h{font-weight:900;font-size:14px;letter-spacing:.05em;text-transform:uppercase;color:#fcd34d;margin:0 0 8px;display:flex;align-items:center;gap:7px}
+.side-frame-h .sf-n{margin-left:auto;background:#1e293b;color:#a5f3fc;border-radius:999px;padding:1px 9px;font-size:12.5px;font-weight:800;letter-spacing:0;text-transform:none}
+.side-frame-list{overflow-y:auto;min-height:0;flex:1;padding-right:2px;scrollbar-width:thin}
+.bai-row .br-name{min-width:0;overflow-wrap:anywhere}
+.bai-row.cd-row .br-num{background:#0d9488}
+.tn-file{transition:filter .15s}
+.tn-file:hover{filter:brightness(1.22)}
+.doc-wrap{position:relative}
+.doc-shield{position:absolute;top:0;right:0;width:68px;height:54px;z-index:6;background:rgba(9,17,34,.88);border-radius:0 0 0 14px;display:flex;align-items:center;justify-content:center;font-size:17px}
+.doc-shield::after{content:'\U0001F512'}
+#paneBody .doc-wrap{max-width:920px;margin:0 auto;height:calc(100vh - 260px);min-height:560px}
+#paneBody .doc-wrap iframe{width:100%;max-width:none;height:100%;min-height:0;margin:0}
+#tnViewerBody .doc-wrap{max-width:920px;margin:0 auto;height:100%}
+#tnViewerBody .doc-wrap iframe{width:100%;max-width:none;height:100%;margin:0}
+#viewerStage .doc-shield{border-radius:0}
+@media (max-width:900px){ #baiList.frames{height:auto;max-height:none} .side-frame.auto .side-frame-list{max-height:220px} .side-frame.grow .side-frame-list{max-height:320px} }
+@media (max-width:720px){ #paneBody .doc-wrap{height:calc(100vh - 300px);min-height:480px} }
+@media (min-width:901px){ #subjectChips .chip{font-size:14.5px;padding:7px 12px} }
+</style>
 </head>
 <body>
 
@@ -869,7 +901,7 @@ header{background:linear-gradient(90deg,#0c2350,#14335f);}
   <div id="browseArea">
     <div class="lib-layout">
       <aside id="libSide">
-        <div class="side-box side-list"><div class="side-h">📖 Danh sách bài</div><div id="baiList"></div></div>
+        <div class="side-box side-list"><div class="side-h" id="sideListTitle">📖 Danh sách bài</div><div id="baiList"></div></div>
       </aside>
       <section id="libMain">
         
@@ -1180,6 +1212,7 @@ header{background:linear-gradient(90deg,#0c2350,#14335f);}
     <div class="viewer-hint" id="viewerHint" style="display:none"></div>
     <div class="viewer-stage" id="viewerStage">
       <iframe id="viewerFrame" title="Khung xem tài liệu" allowfullscreen></iframe>
+      <div class="doc-shield" aria-hidden="true"></div>
       <div class="viewer-loading" id="viewerLoading" style="display:none">
         <div class="viewer-spinner" aria-hidden="true"></div>
         <div>Đang mở tài liệu...</div>
@@ -1505,12 +1538,14 @@ function hlApplyMonColor(){
 }
 function hlLighten(hex, amt){ var n = parseInt(String(hex).replace('#', ''), 16); var r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255; r = Math.round(r + (255 - r) * amt); g = Math.round(g + (255 - g) * amt); b = Math.round(b + (255 - b) * amt); return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1); }
 function chipStyle(mon, on){ var c = MON_COLORS[mon]; if (!c) return ''; if (on) return ' style="background:' + c + ';border-color:' + c + ';color:#fff;box-shadow:0 4px 14px ' + c + '55"'; var lc = hlLighten(c, 0.30); return ' style="background:' + c + 'b3;border-color:' + lc + ';color:#fff;box-shadow:0 2px 12px ' + c + '66"'; }
+/* Thầy chốt 08:37 12/11/2026: chỉ viết tắt 3 tên môn dài nhất cho gọn thành 2 hàng — KHÔNG viết tắt hết */
+function chipLabel(mon){ var m = { 'Công nghệ nông nghiệp': 'Công nghệ NN', 'Công nghệ công nghiệp': 'Công nghệ CN', 'Hoạt động trải nghiệm, hướng nghiệp': 'Hướng nghiệp' }; return m[mon] || mon; }
 function renderChips(){
   var wrap = document.getElementById('subjectChips');
   var html = '';
   monsAvailable().forEach(function(mon){
     var on = (state.mon === mon && !isSearching()) ? ' on' : '';
-    html += '<button type="button" class="chip' + on + '"' + chipStyle(mon, !!on) + ' data-mon="' + esc(mon) + '"><span class="chip-full">' + esc(mon) + '</span><span class="chip-short">' + esc(chipShort(mon)) + '</span></button>';
+    html += '<button type="button" class="chip' + on + '"' + chipStyle(mon, !!on) + ' data-mon="' + esc(mon) + '"><span class="chip-full">' + esc(chipLabel(mon)) + '</span><span class="chip-short">' + esc(chipShort(mon)) + '</span></button>';
   });
   EXTRA_SUBJECTS.forEach(function(s){
     if (s.catalog_day_du) return; /* v13: đã render ở vòng chip catalog phía trên */
@@ -1604,7 +1639,7 @@ function hlPaneLoad(slot, title){
   var tEl = document.getElementById('paneTitle'); if (tEl) tEl.textContent = '📄 ' + (title || 'Tài liệu');
   var fb = document.getElementById('paneFallback'); if (fb) fb.style.display = 'none';
   var body = document.getElementById('paneBody'); if (!body) return false;
-  body.innerHTML = '<iframe id="paneFrame" title="Khung xem tài liệu" src="' + drivePreviewUrl(fid) + '" allow="autoplay" allowfullscreen></iframe>';
+  body.innerHTML = '<div class="doc-wrap"><iframe id="paneFrame" title="Khung xem tài liệu" src="' + drivePreviewUrl(fid) + '" allow="autoplay" allowfullscreen></iframe><div class="doc-shield" aria-hidden="true"></div></div>';
   var fr = document.getElementById('paneFrame');
   if (fr) fr.addEventListener('load', function(){ if (seq === __paneSeq) __paneLoaded = true; });
   setTimeout(function(){
@@ -1663,7 +1698,7 @@ function hlPaneOpenPhieu(i){
 function hlTnViewerHint(){
   var body = document.getElementById('paneBody'); if (!body) return;
   var fb = document.getElementById('paneFallback'); if (fb) fb.style.display = 'none';
-  body.innerHTML = '<div style="padding:18px;text-align:center;color:#94a3b8;font-size:15.5px;line-height:1.7">🎓 Đang xem <b style="color:#fcd34d">Ôn thi tốt nghiệp</b> — chọn file Tài liệu ôn thi / Đề thi ở danh sách bên trái để xem trong khung riêng của ngăn đó.</div>';
+  body.innerHTML = '<div style="padding:18px;text-align:center;color:#94a3b8;font-size:15.5px;line-height:1.7">🎓 Đang xem <b style="color:#fcd34d">Ôn thi tốt nghiệp</b> — chọn file ở 2 khung <b>Tài liệu ôn thi</b> / <b>Đề thi tốt nghiệp</b> bên trái để xem ngay trong khung lớn này, giống như Giáo án.</div>';
 }
 function specialIndexHtml(bo, nChuDe, nTd, nTa){
   var rows = '';
@@ -1782,8 +1817,30 @@ function bindDeRows(list){
     });
   });
 }
+function sideFrameHtml(icon, label, count, inner, cls){
+  return '<div class="side-frame ' + (cls || '') + '"><div class="side-frame-h">' + icon + ' ' + label +
+    (count != null ? '<span class="sf-n">' + count + '</span>' : '') +
+    '</div><div class="side-frame-list">' + inner + '</div></div>';
+}
+function cdRowsHtml(cds){
+  return cds.map(function(c, i){
+    return '<button type="button" class="bai-row cd-row" data-cd="' + i + '"><span class="br-num">CĐ ' + c.so + '</span><span class="br-name">' + esc(c.ten) + '</span></button>';
+  }).join('');
+}
+function bindCdRows(list){
+  list.querySelectorAll('[data-cd]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var i = parseInt(btn.getAttribute('data-cd'), 10);
+      list.querySelectorAll('.bai-row').forEach(function(x){ x.classList.remove('on'); });
+      btn.classList.add('on');
+      xemChuyenDe(i);
+    });
+  });
+}
 function renderBrowse(){
   renderKhoiTabs();
+  var stT = document.getElementById('sideListTitle');
+  if (stT) stT.textContent = (state.tnView && monHasTn(state.mon)) ? '🎓 Ôn thi tốt nghiệp' : '📖 Danh sách bài';
   if (state.tnView && monHasTn(state.mon)){
     var spT = document.getElementById('specialArea'); if (spT) spT.innerHTML = '';
     
@@ -1794,9 +1851,10 @@ function renderBrowse(){
     return;
   }
   var ds = driveSubjectOf(state.mon);
-  if (ds){ renderDriveSubject(ds); return; }
+  if (ds){ var l0 = document.getElementById('baiList'); if (l0) l0.className = ''; renderDriveSubject(ds); return; }
   var bo = boOf(state.mon, state.khoi);
   var list = document.getElementById('baiList');
+  list.className = '';
   var shelf = document.getElementById('shelfArea');
   if (!bo){
     
@@ -1812,14 +1870,15 @@ function renderBrowse(){
   RENDERED_BO = bo.bai.map(function(){ return bo.mon + ' ' + bo.khoi + '|'; });
   var special = document.getElementById('specialArea');
   var cdHtml = cdSectionHtml(bo);
+  var cds = cdRecords(bo);
   if (nChuDe || nTd || nTa){
     /* Bộ đặc biệt (chủ đề / nhóm thể thao / unit): giữ nguyên section ở khung chính,
        cột trái hiện mục lục; nút Xem trong section mở vào khung hiển thị qua openDoc. */
     if (special){ special.innerHTML = (nChuDe ? chuDeSectionHtml(bo) : (nTd ? nhomTheThaoSectionHtml(bo) : unitSectionHtml(bo))) + cdHtml; bindCards(special); }
     list.innerHTML = specialIndexHtml(bo, nChuDe, nTd, nTa) + deRowsHtml(bo);
     bindSpecialIndex(list); bindDeRows(list);
-  } else if (bo.bai.length || (bo.de_thi && bo.de_thi.length)){
-    if (special){ special.innerHTML = cdHtml; bindCards(special); }
+  } else if (bo.bai.length || (bo.de_thi && bo.de_thi.length) || cds.length){
+    if (special){ special.innerHTML = cds.length ? '' : cdHtml; if (!cds.length) bindCards(special); }
     var rowsHtml = '';
     bo.bai.forEach(function(b, i){
       if (!baiHasType(b, state.theLoai)) return;
@@ -1828,7 +1887,15 @@ function renderBrowse(){
         (b.so_tiet ? '<span class="br-tiet">' + b.so_tiet + ' tiết</span>' : '') + '</button>';
     });
     rowsHtml += deRowsHtml(bo);
-    list.innerHTML = rowsHtml || '<div class="empty">📦 Bộ này đang được cập nhật — tài liệu sẽ sớm có mặt, thầy cô quay lại sau nhé!</div>';
+    if (cds.length){
+      /* Thầy chốt 08:29 12/11/2026: bộ có chuyên đề → cột trái chia 2 khung Giáo án / Chuyên đề, cuộn riêng */
+      list.className = 'frames';
+      list.innerHTML =
+        sideFrameHtml('📗', 'Giáo án', bo.bai.length + ' bài', rowsHtml || '<div class="empty">—</div>', 'grow') +
+        sideFrameHtml('📚', 'Chuyên đề', cds.length + ' chuyên đề', cdRowsHtml(cds), 'grow');
+    } else {
+      list.innerHTML = rowsHtml || '<div class="empty">📦 Bộ này đang được cập nhật — tài liệu sẽ sớm có mặt, thầy cô quay lại sau nhé!</div>';
+    }
     list.querySelectorAll('[data-bai]').forEach(function(btn){
       btn.addEventListener('click', function(){
         var i = parseInt(btn.getAttribute('data-bai'), 10);
@@ -1839,6 +1906,7 @@ function renderBrowse(){
       });
     });
     bindDeRows(list);
+    bindCdRows(list);
   } else {
     if (special){ special.innerHTML = cdHtml; bindCards(special); }
     list.innerHTML = '<div class="empty">📦 Bộ này đang được cập nhật — tài liệu sẽ sớm có mặt, thầy cô quay lại sau nhé!</div>';
@@ -4889,50 +4957,55 @@ function tnTlHue(i){ return Math.round(i * 137.508 + 60) % 360; }
 function tnMonShort(mon){ var m = { 'Toán': 'Toán', 'Kinh tế & Pháp luật': 'KTPL', 'Hoá học': 'Hoá', 'Lịch sử': 'Sử', 'Ngữ văn': 'Văn', 'Sinh học': 'Sinh', 'Vật lí': 'Lí', 'Công nghệ công nghiệp': 'CNCN', 'Công nghệ nông nghiệp': 'CNNN', 'Địa lí': 'Địa', 'Tiếng Anh': 'Anh', 'Tin học': 'Tin', 'Thể dục': 'Thể dục', 'Hoạt động trải nghiệm, hướng nghiệp': 'Trải nghiệm' }; return m[mon] || mon || ''; }
 window.tnDeSo = tnDeSo; window.tnDeHue = tnDeHue; window.tnTlHue = tnTlHue; window.tnMonShort = tnMonShort;
 window.renderTnShelf = function(){
-  var area = document.getElementById('tnShelfArea'); if (!area) return;
-  if (!state || TN_SUBJECTS.indexOf(state.mon) < 0){ area.innerHTML = ''; return; }
-  var rows = TN_FOLDERS.map(function(f){
+  var area = document.getElementById('tnShelfArea'); if (area) area.innerHTML = '';
+  var list = document.getElementById('baiList'); if (!list) return;
+  if (!state || TN_SUBJECTS.indexOf(state.mon) < 0){ return; }
+  /* Thầy chốt 08:29 12/11/2026: Ôn thi TN hiện ở cột trái thành 2 khung — Tài liệu ôn thi
+     ở trên, Đề thi tốt nghiệp ở dưới — mỗi khung cuộn riêng; hàng có màu tươi, KHÔNG nền đen;
+     bấm vào file thì mở ở khung hiển thị lớn bên phải, giống hệt Giáo án. */
+  var frames = TN_FOLDERS.map(function(f){
     var files = tnFilesOf(state.mon, f.kind);
-    var h = '<div class="tn-folder"><span class="tn-folder-name">' + f.icon + ' <b>' + f.ten + '</b></span>' +
-            (files.length ? '' : '<span class="tn-wait">🕐 Đang chờ thầy nạp file</span>') +
-            '';
+    var inner = '';
     if (files.length){
       var disp = files.map(function(d, i){ return { d: d, i: i, so: f.kind === 'de' ? tnDeSo(d.file) : 0 }; });
       if (f.kind === 'de') disp.sort(function(a, b){ return (a.so || 999) - (b.so || 999) || a.i - b.i; });
-      h += '<div class="tn-files">' + disp.map(function(x){
+      inner = disp.map(function(x){
         if (x.so){
           var hue = tnDeHue(x.so);
-          return '<div class="tn-file" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + x.i + ')"" style="background:#0b1222;border-left:7px solid hsl(' + hue + ',70%,50%);border-radius:8px;cursor:pointer">' +
-                 '<span class="nm"><span style="display:inline-block;background:hsl(' + hue + ',70%,42%);color:#fff;font-weight:900;border-radius:999px;padding:4px 16px;font-size:17px">' + tnMonShort(state.mon) + ' Đề ' + x.so + '</span></span>' +'</div>';
+          return '<div class="tn-file" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + x.i + ')" style="background:linear-gradient(180deg,hsl(' + hue + ',52%,34%),hsl(' + hue + ',58%,27%));border-left:7px solid hsl(' + hue + ',85%,62%);border-radius:8px;cursor:pointer">' +
+                 '<span class="nm"><span style="display:inline-block;background:hsl(' + hue + ',70%,42%);color:#fff;font-weight:900;border-radius:999px;padding:4px 16px;font-size:17px">' + tnMonShort(state.mon) + ' Đề ' + x.so + '</span></span></div>';
         }
         if (f.kind === 'tl'){
           var thue = tnTlHue(x.i);
-          return '<div class="tn-file" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + x.i + ')"" style="background:#0b1222;border-left:7px solid hsl(' + thue + ',70%,50%);border-radius:8px;cursor:pointer">' +
-                 '<span class="nm"><span style="display:inline-block;background:hsl(' + thue + ',70%,42%);border-radius:999px;padding:3px 10px;font-size:15px">📚</span> <span style="font-size:17px;font-weight:700;color:#ffffff">' + esc(x.d.file) + '</span></span>' +'</div>';
+          return '<div class="tn-file" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + x.i + ')" style="background:linear-gradient(180deg,hsl(' + thue + ',52%,34%),hsl(' + thue + ',58%,27%));border-left:7px solid hsl(' + thue + ',85%,62%);border-radius:8px;cursor:pointer">' +
+                 '<span class="nm"><span style="display:inline-block;background:hsl(' + thue + ',70%,42%);border-radius:999px;padding:3px 10px;font-size:15px">📚</span> <span style="font-size:17px;font-weight:700;color:#ffffff">' + esc(x.d.file) + '</span></span></div>';
         }
-        return '<div class="tn-file" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + x.i + ')"" style="background:#0b1222;border-left:7px solid #475569;border-radius:8px;cursor:pointer"><span class="nm" style="font-size:16.5px;font-weight:700;color:#ffffff">📄 ' + esc(x.d.file) + '</span>' +'</div>';
-      }).join('') + '</div>';
+        return '<div class="tn-file" onclick="xemOnThiTnFile(\'' + f.kind + '\',' + x.i + ')" style="background:linear-gradient(180deg,#2c5d8f,#224a73);border-left:7px solid #7dd3fc;border-radius:8px;cursor:pointer"><span class="nm" style="font-size:16.5px;font-weight:700;color:#ffffff">📄 ' + esc(x.d.file) + '</span></div>';
+      }).join('');
+    } else {
+      inner = '<div style="color:#fcd34d;font-weight:700;font-size:14px;padding:6px 2px">🕐 Đang chờ thầy nạp file</div>';
     }
-    return h + '</div>';
+    return sideFrameHtml(f.icon, f.ten, files.length + ' file', inner, f.kind === 'tl' ? 'auto' : 'grow');
   }).join('');
-  area.innerHTML = '<section class="tn-shelf tn-compact" aria-label="Ôn thi tốt nghiệp môn ' + esc(state.mon) + '">' +
-    '<div class="tn-head"><h3>🎓 ÔN THI TỐT NGHIỆP — ' + esc(state.mon) + '</h3>' +
-    '<span class="tn-scope">Chung cả môn</span></div>' +
-    '<div id="tnViewer" style="display:none">' +
-    '<div class="tn-viewer-head"><span id="tnViewerTitle"></span><button type="button" class="tn-viewer-close" onclick="tnViewerClose()">✕ Đóng</button></div>' +
-    '<div id="tnViewerBody"></div>' +
-    '<div class="tn-viewer-foot"><span id="tnViewerFoot"></span></div>' +
-    '</div>' +
-    '<div class="tn-folders">' + rows + '</div>' +
-    '</section>';
+  list.className = 'frames';
+  list.innerHTML = frames;
 };
 
 window.xemOnThiTnFile = function(kind, i){
   var files = tnFilesOf(state.mon, kind);
-  if (files[i]){ var tnSo = kind === 'de' ? tnDeSo(files[i].file) : 0; tnViewerOpen(files[i], '🎓 Ôn thi tốt nghiệp — ' + state.mon + ' — ' + (tnSo ? tnMonShort(state.mon) + ' Đề ' + tnSo : files[i].file)); }
+  if (files[i]){ var tnSo = kind === 'de' ? tnDeSo(files[i].file) : 0; tnPaneOpen(files[i], '🎓 Ôn thi tốt nghiệp — ' + state.mon + ' — ' + (tnSo ? tnMonShort(state.mon) + ' Đề ' + tnSo : files[i].file)); }
 };
+function tnPaneOpen(file, title){
+  /* Thầy chốt 08:29 12/11/2026: file Ôn thi TN mở ngay trong khung hiển thị lớn bên phải,
+     dùng chung Smart Viewer như Giáo án (có dự phòng QR khi bị chặn). */
+  if (typeof hlPaneLoad === 'function' && hlPaneLoad(file, title)){
+    if (typeof hlPaneEnsureVisible === 'function') hlPaneEnsureVisible();
+    return true;
+  }
+  return tnViewerOpen(file, title);
+}
 
-function tnViewerOpen(file, title){ var v = document.getElementById('tnViewer'); var b = document.getElementById('tnViewerBody'); var t = document.getElementById('tnViewerTitle'); var f = document.getElementById('tnViewerFoot'); if (!v || !b){ openDoc(file, title); return false; } var fid = docFidOf(file); if (t) t.textContent = '📄 ' + title; if (f) f.textContent = '📄 ' + file.file + ' • Cuộn xuống để xem hết tài liệu • Bấm ✕ Đóng để về danh sách'; if (fid){ b.innerHTML = '<iframe title="Khung xem tài liệu" src="' + drivePreviewUrl(fid) + '" allow="autoplay" allowfullscreen></iframe>'; } else { b.innerHTML = '<div class="empty">Chưa nối được file này — thầy cô mở thư mục môn trên Drive để xem.</div>'; } v.style.display = ''; try { var sec = v.closest('section'); if (sec){ var r = sec.getBoundingClientRect(); var vh = window.innerHeight || 800; if (r.top < 235 || r.top > vh * 0.5) sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); } } catch (e){} return true; }
+function tnViewerOpen(file, title){ var v = document.getElementById('tnViewer'); var b = document.getElementById('tnViewerBody'); var t = document.getElementById('tnViewerTitle'); var f = document.getElementById('tnViewerFoot'); if (!v || !b){ openDoc(file, title); return false; } var fid = docFidOf(file); if (t) t.textContent = '📄 ' + title; if (f) f.textContent = '📄 ' + file.file + ' • Cuộn xuống để xem hết tài liệu • Bấm ✕ Đóng để về danh sách'; if (fid){ b.innerHTML = '<div class="doc-wrap"><iframe title="Khung xem tài liệu" src="' + drivePreviewUrl(fid) + '" allow="autoplay" allowfullscreen></iframe><div class="doc-shield" aria-hidden="true"></div></div>'; } else { b.innerHTML = '<div class="empty">Chưa nối được file này — thầy cô mở thư mục môn trên Drive để xem.</div>'; } v.style.display = ''; try { var sec = v.closest('section'); if (sec){ var r = sec.getBoundingClientRect(); var vh = window.innerHeight || 800; if (r.top < 235 || r.top > vh * 0.5) sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); } } catch (e){} return true; }
 window.tnViewerClose = function(){ var v = document.getElementById('tnViewer'); if (v) v.style.display = 'none'; var b = document.getElementById('tnViewerBody'); if (b) b.innerHTML = ''; };
 
 /* ------ TU THI (Hoc Lieu Vip Pro): hoc sinh bam mon -> chon bai / chon de / chon thi tot nghiep -> thi ngay ------ */
