@@ -1838,7 +1838,7 @@ function renderKhoiTabs(){
           '" data-otv="1">📚 Ôn Tập Vip</button>';
   /* Nút Tải về làm kiểng: nhỏ, kế bên Ôn Tập Vip, cầu vồng đổi màu liên tục;
      bấm chỉ hiện THÔNG BÁO BẢN QUYỀN (Admin cũng không tải được) — thầy chốt 12/11/2026. */
-  html += '<button type="button" class="ktab ktab-dl" onclick="hlShowDlNotice()">⬇️ Tải về</button>';
+  html += '<button type="button" class="ktab ktab-dl" onclick="hlShowDlNotice()">📖 Hướng dẫn tải về &amp; Thi Online</button>';
   wrap.innerHTML = html;
   wrap.querySelectorAll('[data-khoi]').forEach(function(btn){
     btn.addEventListener('click', function(){
