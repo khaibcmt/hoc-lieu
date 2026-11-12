@@ -5309,7 +5309,10 @@ function examStartDoc(file, title){
   if (!fid){ showToast('⚠️ Chưa nối được file này'); return; }
   showToast('⏳ Đang tải đề — chờ em chút...');
   var __st = 'tai';
-  fetch('https://drive.usercontent.google.com/download?id=' + fid + '&export=download&confirm=t').then(function(r){
+  /* Ưu tiên bản sao đề nằm CÙNG web (de/<fid>.docx) — fetch sang Drive bị Google chặn 403
+     vì cross-site; Drive chỉ còn là dự phòng (thầy chốt cách sửa, hoàn tất 12/11/2026). */
+  var __driveUrl = 'https://drive.usercontent.google.com/download?id=' + fid + '&export=download&confirm=t';
+  fetch('de/' + fid + '.docx').then(function(r){ if (!r.ok) throw new Error('no-mirror'); return r; }).catch(function(){ return fetch(__driveUrl); }).then(function(r){
     if (!r.ok){ var eh = new Error('HTTP ' + r.status); eh.stage = 'tai'; throw eh; }
     return r.arrayBuffer();
   }).then(function(buf){ return examDocxToText(buf); }).then(function(text){
