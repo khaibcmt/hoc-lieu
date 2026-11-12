@@ -4062,6 +4062,11 @@ function rtExamQuestions(){
   return out.length ? out : null;
 }
 function rtCreateRoom(){
+  if (window.hlLicCanHost && !hlLicCanHost()){
+    showToast('🔒 Tạo phòng thi là quyền của GIÁO VIÊN đã mở khoá Full — thầy cô đăng ký mở khoá nhé');
+    if (window.hlLicOpenPanel) hlLicOpenPanel('gv');
+    return;
+  }
   var msg = document.getElementById('rtCreateMsg');
   msg.innerHTML = '<p class="note">⏳ Đang kết nối Firebase...</p>';
   fbEnsure().then(function(ok){
@@ -6248,14 +6253,17 @@ else v8Init();
    - Mã máy: dấu vân tay thiết bị (cấu hình/màn hình/card đồ hoạ) + bộ nhớ đệm tại máy;
      xoá dữ liệu trình duyệt vẫn ra đúng mã cũ.
    - Demo: chỉ mở Bài 1 + Đề thi 1 + Đề TN 1 của mỗi môn; còn lại khoá.
-   - Đăng ký 5 ô (email, họ tên HS, lớp, họ tên GV, trường) -> Firebase hlv_requests/<mid>;
-     thầy bấm Mở khoá ở Panel Admin -> hlv_licenses/<mid>; máy HS tự nhận Full (realtime).
+   - Đăng ký TÁCH 2 Ô (thầy chốt thêm 13/11/2026): HỌC SINH (email, họ tên HS, lớp,
+     họ tên GV, trường — quyền: Full Thi Online tự thi) / GIÁO VIÊN (email, họ tên GV,
+     trường — quyền: Full Thi Online + TẠO PHÒNG THI). Vào phòng thi vẫn tự do cho mọi HS.
+   - Đăng ký -> Firebase hlv_requests/<mid> (kèm role); thầy bấm Mở khoá ở Panel Admin
+     -> hlv_licenses/<mid>; máy được mở tự nhận quyền theo thời gian thực.
    - Admin gắn máy: hlv_admin_machines/<mid> — máy đã nhớ vào Admin không hỏi lại;
      máy lạ nhập mã chủ HOẶC mật khẩu Admin do thầy tự đặt (hlv_admin_cfg/pwHash). */
 (function(){
 'use strict';
-var LIC = { mid: '', status: 'demo', req: null, lic: null, pwHash: '', adminAttached: false,
-            adminReq: {}, adminLic: {}, adminMachines: {} };
+var LIC = { mid: '', status: 'demo', req: null, lic: null, pwHash: '', roleSel: 'hs',
+            adminAttached: false, adminReq: {}, adminLic: {}, adminMachines: {} };
 function cyrb53(str, seed){
   var h1 = 0xdeadbeef ^ (seed | 0), h2 = 0x41c6ce57 ^ (seed | 0);
   for (var i = 0, ch; i < str.length; i++){
@@ -6315,6 +6323,9 @@ window.hlLicLocked = function(kind, idx){
   if (hlLicIsFull()) return false;
   return (idx | 0) > 0;
 };
+window.hlLicCanHost = function(){
+  return hlIsAdmin() || (LIC.status === 'full' && LIC.lic && LIC.lic.role === 'gv');
+};
 function hlLicFmtTime(ts){
   if (!ts) return '';
   try { return new Date(ts).toLocaleString('vi-VN'); } catch(e){ return ''; }
@@ -6330,6 +6341,8 @@ function hlLicRenderBarInner(){
   var btnStyle = 'margin-left:10px;padding:7px 14px;border:0;border-radius:9px;background:#2e9e4f;color:#fff;font-weight:800;cursor:pointer;font-size:14.5px';
   if (hlIsAdmin()){
     bar.innerHTML = '<div style="background:linear-gradient(135deg,#fff7ed,#ffedd5);border:2px solid #f59e0b;border-radius:12px;padding:10px 14px;font-size:15.5px;color:#1c1440">👑 <b>Admin</b> — máy này có toàn quyền Thi Online. Quản lý mở khoá ở panel ngay dưới menu này.</div>';
+  } else if (LIC.status === 'full' && LIC.lic && LIC.lic.role === 'gv'){
+    bar.innerHTML = '<div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #22c55e;border-radius:12px;padding:10px 14px;font-size:15.5px;color:#1c1440">🎉 <b>BẢN FULL GIÁO VIÊN</b> đã mở khoá cho máy này — thi Full + <b>tạo phòng thi</b> thoải mái! <span style="color:#666">(Mã máy: ' + mid + ')</span></div>';
   } else if (LIC.status === 'full'){
     bar.innerHTML = '<div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #22c55e;border-radius:12px;padding:10px 14px;font-size:15.5px;color:#1c1440">🎉 <b>BẢN FULL</b> đã mở khoá cho máy này — thi thoải mái tất cả bài &amp; đề! <span style="color:#666">(Mã máy: ' + mid + ')</span></div>';
   } else if (LIC.req){
@@ -6338,8 +6351,12 @@ function hlLicRenderBarInner(){
     bar.innerHTML = '<div style="background:linear-gradient(135deg,#fdf4ff,#fae8ff);border:2px solid #d946ef;border-radius:12px;padding:10px 14px;font-size:15.5px;color:#1c1440">🎁 <b>BẢN DEMO</b> — đang mở sẵn <b>Bài 1</b> và <b>Đề 1</b> của mỗi môn. Mã máy: <b>' + mid + '</b><button type="button" style="' + btnStyle + '" onclick="hlLicOpenPanel()">🔓 Mở khoá Full — 100k/máy</button></div>';
   }
   hlLicRenderAdmin();
-};
-/* ---------- Modal đăng ký mở khoá ---------- */
+}
+/* ---------- Modal đăng ký mở khoá: 2 Ô TÁCH RIÊNG Học sinh / Giáo viên ---------- */
+function licInput(id, ph){
+  return '<input id="' + id + '" type="text" placeholder="' + ph + '" style="width:100%;box-sizing:border-box;padding:10px;border:1.5px solid #bbb;border-radius:9px;font-size:15.5px">';
+}
+function licLabel(t){ return '<label style="display:block;font-size:14.5px;font-weight:700;margin-top:8px">' + t + '</label>'; }
 function hlLicEnsureModal(){
   if (document.getElementById('hlLicModal')) return;
   var d = document.createElement('div');
@@ -6354,39 +6371,72 @@ function hlLicEnsureModal(){
     '<p id="licMidShow" style="text-align:center;font-size:23px;font-weight:900;letter-spacing:1px;color:#7c3aed;margin:0"></p>' +
     '<div id="licStatusBox" style="margin:12px 0 0"></div>' +
     '<div id="licFormBox">' +
-    '<p style="font-size:15.5px;font-weight:800;margin:14px 0 6px">📝 Đăng ký mở khoá (điền đủ 5 ô):</p>' +
-    '<label style="display:block;font-size:14.5px;font-weight:700;margin-top:8px">Địa chỉ email</label><input id="licFEmail" type="email" placeholder="vd: nguyenvana@gmail.com" style="width:100%;box-sizing:border-box;padding:10px;border:1.5px solid #bbb;border-radius:9px;font-size:15.5px">' +
-    '<label style="display:block;font-size:14.5px;font-weight:700;margin-top:8px">Họ tên học sinh</label><input id="licFHs" type="text" placeholder="vd: Nguyễn Văn A" style="width:100%;box-sizing:border-box;padding:10px;border:1.5px solid #bbb;border-radius:9px;font-size:15.5px">' +
-    '<label style="display:block;font-size:14.5px;font-weight:700;margin-top:8px">Lớp</label><input id="licFLop" type="text" placeholder="vd: 12A1" style="width:100%;box-sizing:border-box;padding:10px;border:1.5px solid #bbb;border-radius:9px;font-size:15.5px">' +
-    '<label style="display:block;font-size:14.5px;font-weight:700;margin-top:8px">Họ tên giáo viên</label><input id="licFGv" type="text" placeholder="vd: Hồ Tấn Khải" style="width:100%;box-sizing:border-box;padding:10px;border:1.5px solid #bbb;border-radius:9px;font-size:15.5px">' +
-    '<label style="display:block;font-size:14.5px;font-weight:700;margin-top:8px">Trường</label><input id="licFTruong" type="text" placeholder="vd: THPT Mang Thít" style="width:100%;box-sizing:border-box;padding:10px;border:1.5px solid #bbb;border-radius:9px;font-size:15.5px">' +
+    '<p style="font-size:15.5px;font-weight:800;margin:14px 0 8px">📝 Đăng ký mở khoá — chọn đúng ô của mình:</p>' +
+    '<div style="display:flex;gap:8px">' +
+    '<button type="button" id="licTabHs" onclick="hlLicSetRole(\'hs\')" style="flex:1;padding:11px;border-radius:10px;font-size:16px;font-weight:800;cursor:pointer">🎓 HỌC SINH</button>' +
+    '<button type="button" id="licTabGv" onclick="hlLicSetRole(\'gv\')" style="flex:1;padding:11px;border-radius:10px;font-size:16px;font-weight:800;cursor:pointer">👩‍🏫 GIÁO VIÊN</button>' +
+    '</div>' +
+    '<p id="licScopeNote" style="font-size:14px;color:#7c3aed;font-weight:700;margin:8px 0 0"></p>' +
+    licLabel('Địa chỉ email') + '<input id="licFEmail" type="email" placeholder="vd: nguyenvana@gmail.com" style="width:100%;box-sizing:border-box;padding:10px;border:1.5px solid #bbb;border-radius:9px;font-size:15.5px">' +
+    '<div id="licHsBox">' +
+    licLabel('Họ tên học sinh') + licInput('licFHs', 'vd: Nguyễn Văn A') +
+    licLabel('Lớp') + licInput('licFLop', 'vd: 12A1') +
+    licLabel('Họ tên giáo viên') + licInput('licFGv', 'vd: Hồ Tấn Khải') +
+    licLabel('Trường') + licInput('licFTruong', 'vd: THPT Mang Thít') +
+    '</div>' +
+    '<div id="licGvBox" style="display:none">' +
+    licLabel('Họ tên giáo viên') + licInput('licFGvName', 'vd: Hồ Tấn Khải') +
+    licLabel('Trường') + licInput('licFTruongG', 'vd: THPT Mang Thít') +
+    '</div>' +
     '<button type="button" onclick="hlLicSubmit()" style="display:block;width:100%;margin-top:16px;padding:12px;border:0;border-radius:10px;background:#7c3aed;color:#fff;font-size:16.5px;font-weight:800;cursor:pointer">📨 Gửi đăng ký cho thầy</button>' +
     '</div>' +
     '<button type="button" onclick="hlLicClosePanel()" style="display:block;width:100%;margin-top:10px;padding:11px;border:0;border-radius:10px;background:#e5e7eb;color:#1c1440;font-size:15.5px;font-weight:700;cursor:pointer">Đóng</button>' +
     '</div>';
   document.body.appendChild(d);
 }
-window.hlLicOpenPanel = function(){
+window.hlLicSetRole = function(r){
+  LIC.roleSel = (r === 'gv') ? 'gv' : 'hs';
+  var on = 'background:#7c3aed;color:#fff;border:2px solid #7c3aed';
+  var off = 'background:#f3f4f6;color:#1c1440;border:2px solid #d1d5db';
+  var th = document.getElementById('licTabHs'), tg = document.getElementById('licTabGv');
+  if (th) th.style.cssText += ';' + (LIC.roleSel === 'hs' ? on : off);
+  if (tg) tg.style.cssText += ';' + (LIC.roleSel === 'gv' ? on : off);
+  var hb = document.getElementById('licHsBox'), gb = document.getElementById('licGvBox');
+  if (hb) hb.style.display = LIC.roleSel === 'hs' ? '' : 'none';
+  if (gb) gb.style.display = LIC.roleSel === 'gv' ? '' : 'none';
+  var note = document.getElementById('licScopeNote');
+  if (note) note.textContent = LIC.roleSel === 'gv'
+    ? 'Quyền được mở: Full Thi Online (tự thi) + Tạo phòng thi cho lớp mình.'
+    : 'Quyền được mở: Full Thi Online (tự thi tất cả bài & đề). Vào phòng thi bằng mã phòng của giáo viên thì không cần mở khoá.';
+};
+window.hlLicOpenPanel = function(role){
   hlLicEnsureModal();
   var m = document.getElementById('hlLicModal');
   document.getElementById('licMidShow').textContent = hlLicMachineId();
   var st = document.getElementById('licStatusBox');
   var form = document.getElementById('licFormBox');
+  var wantRole = (role === 'gv' || role === 'hs') ? role : (LIC.req && LIC.req.role) || 'hs';
   if (LIC.status === 'full'){
-    st.innerHTML = '<p style="background:#f0fdf4;border:1.5px solid #22c55e;border-radius:10px;padding:10px 14px;font-size:15.5px;margin:0">🎉 Máy này đã được mở khoá <b>BẢN FULL</b> — chúc em thi tốt!</p>';
+    st.innerHTML = '<p style="background:#f0fdf4;border:1.5px solid #22c55e;border-radius:10px;padding:10px 14px;font-size:15.5px;margin:0">🎉 Máy này đã được mở khoá <b>BẢN FULL</b>' + (LIC.lic && LIC.lic.role === 'gv' ? ' <b>GIÁO VIÊN</b> (kèm quyền tạo phòng thi)' : '') + ' — chúc thi tốt!</p>';
     form.style.display = 'none';
   } else if (LIC.req){
-    st.innerHTML = '<p style="background:#eff6ff;border:1.5px solid #3b82f6;border-radius:10px;padding:10px 14px;font-size:15.5px;margin:0">⏳ Đăng ký của bạn đang <b>chờ thầy mở khoá</b> (gửi lúc ' + hlLicFmtTime(LIC.req.at) + '). Có thể sửa thông tin rồi gửi lại nếu cần.</p>';
+    st.innerHTML = '<p style="background:#eff6ff;border:1.5px solid #3b82f6;border-radius:10px;padding:10px 14px;font-size:15.5px;margin:0">⏳ Đăng ký <b>' + (LIC.req.role === 'gv' ? 'GIÁO VIÊN' : 'HỌC SINH') + '</b> của bạn đang <b>chờ thầy mở khoá</b> (gửi lúc ' + hlLicFmtTime(LIC.req.at) + '). Có thể sửa thông tin rồi gửi lại nếu cần.</p>';
     form.style.display = '';
     document.getElementById('licFEmail').value = LIC.req.email || '';
-    document.getElementById('licFHs').value = LIC.req.hs || '';
-    document.getElementById('licFLop').value = LIC.req.lop || '';
-    document.getElementById('licFGv').value = LIC.req.gv || '';
-    document.getElementById('licFTruong').value = LIC.req.truong || '';
+    if (LIC.req.role === 'gv'){
+      document.getElementById('licFGvName').value = LIC.req.gv || '';
+      document.getElementById('licFTruongG').value = LIC.req.truong || '';
+    } else {
+      document.getElementById('licFHs').value = LIC.req.hs || '';
+      document.getElementById('licFLop').value = LIC.req.lop || '';
+      document.getElementById('licFGv').value = LIC.req.gv || '';
+      document.getElementById('licFTruong').value = LIC.req.truong || '';
+    }
   } else {
     st.innerHTML = '';
     form.style.display = '';
   }
+  hlLicSetRole(wantRole);
   m.style.display = 'flex';
 };
 window.hlLicClosePanel = function(){
@@ -6395,29 +6445,42 @@ window.hlLicClosePanel = function(){
 };
 window.hlLicSubmit = function(){
   var v = function(id){ var e = document.getElementById(id); return e ? e.value.trim() : ''; };
-  var data = { email: v('licFEmail'), hs: v('licFHs'), lop: v('licFLop'), gv: v('licFGv'), truong: v('licFTruong') };
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)){ showToast('⚠️ Em nhập địa chỉ email đúng định dạng nhé'); return; }
-  if (!data.hs || !data.lop || !data.gv || !data.truong){ showToast('⚠️ Em điền đủ cả 5 ô đăng ký nhé'); return; }
+  var email = v('licFEmail');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showToast('⚠️ Nhập địa chỉ email đúng định dạng nhé'); return; }
+  var data;
+  if (LIC.roleSel === 'gv'){
+    data = { role: 'gv', email: email, hs: '', lop: '', gv: v('licFGvName'), truong: v('licFTruongG') };
+    if (!data.gv || !data.truong){ showToast('⚠️ Thầy cô điền đủ: email, họ tên giáo viên, trường nhé'); return; }
+  } else {
+    data = { role: 'hs', email: email, hs: v('licFHs'), lop: v('licFLop'), gv: v('licFGv'), truong: v('licFTruong') };
+    if (!data.hs || !data.lop || !data.gv || !data.truong){ showToast('⚠️ Em điền đủ cả 5 ô đăng ký nhé'); return; }
+  }
   var mid = hlLicMachineId();
   data.at = Date.now();
   data.ua = String(navigator.userAgent || '').slice(0, 140);
   showToast('⏳ Đang gửi đăng ký...');
   fbEnsure().then(function(ok){
-    if (!ok || !FB.db){ showToast('❌ Chưa kết nối được máy chủ — em thử lại sau nhé'); return; }
+    if (!ok || !FB.db){ showToast('❌ Chưa kết nối được máy chủ — thử lại sau nhé'); return; }
     FB.db.ref('hlv_requests/' + mid).set(data).then(function(){
       LIC.req = data;
-      showToast('✅ Đã gửi đăng ký! Thầy mở khoá là máy em tự lên BẢN FULL ngay.');
+      showToast('✅ Đã gửi đăng ký! Thầy mở khoá là máy tự lên BẢN FULL ngay.');
       hlLicClosePanel();
       hlLicRenderBar();
       if (typeof renderExamMenu === 'function') renderExamMenu();
-    }).catch(function(){ showToast('❌ Gửi chưa được — em thử lại nhé'); });
+    }).catch(function(){ showToast('❌ Gửi chưa được — thử lại nhé'); });
   });
 };
 /* ---------- Panel Admin: duyệt đăng ký / máy đã mở / máy Admin / mật khẩu ---------- */
 function hlLicRowInfo(r){
-  return '<b>' + esc(r.hs || '?') + '</b> — Lớp ' + esc(r.lop || '?') + '<br>' +
-    '👩‍🏫 GV: ' + esc(r.gv || '?') + ' • 🏫 ' + esc(r.truong || '?') + '<br>' +
-    '✉️ ' + esc(r.email || '?');
+  if (r && r.role === 'gv'){
+    return '👩‍🏫 <b>GIÁO VIÊN</b> — <b>' + esc(r.gv || '?') + '</b><br>' +
+      '🏫 ' + esc(r.truong || '?') + '<br>✉️ ' + esc(r.email || '?') +
+      '<br><span style="color:#7c3aed;font-weight:700">Quyền: Full Thi Online + Tạo phòng thi</span>';
+  }
+  return '🎓 <b>HỌC SINH</b> — <b>' + esc((r && r.hs) || '?') + '</b> — Lớp ' + esc((r && r.lop) || '?') + '<br>' +
+    '👩‍🏫 GV: ' + esc((r && r.gv) || '?') + ' • 🏫 ' + esc((r && r.truong) || '?') + '<br>' +
+    '✉️ ' + esc((r && r.email) || '?') +
+    '<br><span style="color:#7c3aed;font-weight:700">Quyền: Full Thi Online (tự thi)</span>';
 }
 window.hlLicRenderAdmin = function(){
   var box = document.getElementById('hlAdminLicPanel');
@@ -6468,7 +6531,7 @@ function hlLicAttachAdmin(){
 window.hlLicApprove = function(mid){
   var r = LIC.adminReq[mid];
   if (!r || !FB.db) return;
-  var lic = { email: r.email || '', hs: r.hs || '', lop: r.lop || '', gv: r.gv || '', truong: r.truong || '', at: Date.now(), by: 'admin' };
+  var lic = { role: r.role || 'hs', email: r.email || '', hs: r.hs || '', lop: r.lop || '', gv: r.gv || '', truong: r.truong || '', at: Date.now(), by: 'admin' };
   FB.db.ref('hlv_licenses/' + mid).set(lic).then(function(){
     return FB.db.ref('hlv_requests/' + mid).remove();
   }).then(function(){ showToast('✅ Đã mở khoá Full cho máy ' + mid); }).catch(function(){ showToast('❌ Mở khoá chưa được — thử lại nhé'); });
@@ -6536,7 +6599,7 @@ function hlLicInit(){
       var was = LIC.status;
       LIC.lic = s.val();
       LIC.status = LIC.lic ? 'full' : 'demo';
-      if (LIC.status !== was && LIC.status === 'full') showToast('🎉 Máy của em đã được mở khoá BẢN FULL Thi Online!');
+      if (LIC.status !== was && LIC.status === 'full') showToast('🎉 Máy đã được mở khoá BẢN FULL Thi Online!');
       hlLicRenderBar();
       if (typeof renderExamMenu === 'function') renderExamMenu();
     });
@@ -6571,7 +6634,6 @@ try {
   else hlLicInit();
 } catch(e){}
 })();
-
 </script>
 <div id="presenterScreen" style="display:none;position:fixed;inset:0;z-index:9998;background:#0F172A;color:#fff;overflow:auto;padding:26px">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
