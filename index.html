@@ -1736,6 +1736,7 @@ function renderOtvShelf(){
   }
   list.className = 'frames';
   list.innerHTML = sideFrameHtml('📚', 'Ôn Tập Vip — ' + state.mon + ' • Khối ' + state.khoi, files.length + ' file', inner, 'grow');
+  try { var pb = document.getElementById('paneBody'); if (pb && pb.textContent && pb.textContent.indexOf('Đang xem') >= 0 && pb.textContent.indexOf('Ôn Tập Vip') >= 0) hlOtvViewerHint(); } catch (e) {}
 }
 window.xemOnTapVip = function(i){
   var files = otvFilesOf(state.mon, state.khoi);
