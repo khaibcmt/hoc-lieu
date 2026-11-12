@@ -1572,7 +1572,7 @@ function renderTypeTabs(){
   }).join('');
   w.querySelectorAll('[data-type]').forEach(function(btn){
     btn.addEventListener('click', function(){
-      state.theLoai = btn.getAttribute('data-type'); state.baiSel = 0; renderBrowse(); hlPaneOpenBai(0);
+      state.tnView = false; state.theLoai = btn.getAttribute('data-type'); state.baiSel = 0; renderBrowse(); hlPaneOpenBai(0);
     });
   });
 }
@@ -1611,13 +1611,39 @@ function hlPaneOpenBai(i){
   var slot = baiSlotOf(b, state.theLoai);
   var title = typeLabel(state.theLoai) + ' — Bài ' + b.so + ': ' + b.ten;
   if (slot && docFidOf(slot)){ hlPaneOpenDoc(slot, title); return; }
+  if (state.theLoai === 'phieu'){ hlPaneOpenPhieu(i); return; }
   /* Bài chưa có loại đang chọn: hiện thẻ bài đầy đủ trong khung để chọn ngăn khác */
+  hlPaneOpenCard(i);
+}
+function hlPaneOpenCard(i){
+  var b = RENDERED[i]; if (!b) return;
   var body = document.getElementById('paneBody'); if (!body) return;
   var tEl = document.getElementById('paneTitle'); if (tEl) tEl.textContent = '📄 Bài ' + b.so + ': ' + b.ten;
   var fb = document.getElementById('paneFallback'); if (fb) fb.style.display = 'none';
   body.innerHTML = '<div style="padding:14px">' + baiCardHtml(b, i, '') + '</div>';
   bindCards(body);
   body.querySelectorAll('.bai-card').forEach(function(c){ c.classList.add('open'); }); hlPaneEnsureVisible();
+}
+var PHIEU_ROOT_ID = '1iPEdg7V7qyqNN6JFp2lzNEp_x67qh1cM';
+function hlPaneOpenPhieu(i){
+  var b = RENDERED[i]; if (!b) return;
+  var body = document.getElementById('paneBody'); if (!body) return;
+  var fb = document.getElementById('paneFallback'); if (fb) fb.style.display = 'none';
+  var note = (b.phieu && b.phieu.ghi_chu) ? b.phieu.ghi_chu : '3 bản: HS • HS có đáp án • GV';
+  var url = 'https://drive.google.com/drive/folders/' + PHIEU_ROOT_ID;
+  body.innerHTML = '<div style="padding:18px">'
+    + '<div style="font-size:19px;font-weight:900;color:#e2e8f0">🧾 Phiếu học tập — Bài ' + b.so + ': ' + b.ten + '</div>'
+    + '<p style="color:#94a3b8;margin:8px 0 14px;font-size:15.5px;line-height:1.6">' + note + '. Mỗi bài có 3 bản. Em đang nối mã từng file phiếu để xem ngay trong trang; tạm thời thầy cô mở thư mục Phiếu trên Drive để chọn bản:</p>'
+    + '<a href="' + url + '" target="_blank" rel="noopener" style="display:inline-block;background:#22c55e;color:#fff;font-weight:800;font-size:16px;padding:12px 20px;border-radius:12px;text-decoration:none">📂 Mở thư mục Phiếu học tập trên Drive</a>'
+    + '<p style="color:#94a3b8;margin:12px 0 0;font-size:14px;line-height:1.6">Trong thư mục: chọn bộ (Sinh 10 / 11 / 12, CNNN 10 / 11 / 12) → chọn bản <b>Học sinh</b> / <b>Học sinh có đáp án</b> / <b>Giáo viên</b> → bấm file để xem.</p>'
+    + '<p style="margin:12px 0 0"><button type="button" onclick="hlPaneOpenCard(' + i + ')" style="background:#141e33;color:#e2e8f0;border:1px solid #1e293b;border-radius:10px;padding:9px 14px;font-size:15px;cursor:pointer">← Quay lại thẻ bài</button></p>'
+    + '</div>';
+  hlPaneEnsureVisible();
+}
+function hlTnViewerHint(){
+  var body = document.getElementById('paneBody'); if (!body) return;
+  var fb = document.getElementById('paneFallback'); if (fb) fb.style.display = 'none';
+  body.innerHTML = '<div style="padding:18px;text-align:center;color:#94a3b8;font-size:15.5px;line-height:1.7">🎓 Đang xem <b style="color:#fcd34d">Ôn thi tốt nghiệp</b> — chọn file Tài liệu ôn thi / Đề thi ở danh sách bên trái để xem trong khung riêng của ngăn đó.</div>';
 }
 function specialIndexHtml(bo, nChuDe, nTd, nTa){
   var rows = '';
@@ -1661,12 +1687,12 @@ function renderKhoiTabs(){
   wrap.querySelectorAll('[data-khoi]').forEach(function(btn){
     btn.addEventListener('click', function(){
       state.tnView = false;
-      state.khoi = parseInt(btn.getAttribute('data-khoi'), 10); renderAll();
+      state.khoi = parseInt(btn.getAttribute('data-khoi'), 10); state.baiSel = 0; renderAll(); hlPaneOpenBai(0);
     });
   });
   wrap.querySelectorAll('[data-tn]').forEach(function(btn){
     btn.addEventListener('click', function(){
-      state.tnView = true; renderAll();
+      state.tnView = true; state.baiSel = -1; renderAll(); hlTnViewerHint();
     });
   });
 }
@@ -1717,7 +1743,7 @@ function bindCards(container){
 }
 function hlBankKey(i){ return (RENDERED_BO[i] || '') + ((RENDERED[i] && RENDERED[i].so) || ''); }
 function xemGiaoAn(i){ var b = RENDERED[i]; if (b) openDoc(b.giao_an, 'Giáo án — Bài ' + b.so + ': ' + b.ten); }
-function xemPhieu(i){ var b = RENDERED[i]; if (b) openDoc(b.phieu, 'Phiếu học tập — Bài ' + b.so + ': ' + b.ten); }
+function xemPhieu(i){ var b = RENDERED[i]; if (!b) return; if (docFidOf(b.phieu)){ openDoc(b.phieu, 'Phiếu học tập — Bài ' + b.so + ': ' + b.ten); } else { hlPaneOpenPhieu(i); } }
 function xemVip(i){ var b = RENDERED[i]; if (b) openDoc(b.vip, 'Tài liệu VIP — Bài ' + b.so + ': ' + b.ten); }
 function xemPpt(i){ var b = RENDERED[i]; if (b) openDoc(b.ppt, 'Slide PPT — Bài ' + b.so + ': ' + b.ten); }
 
