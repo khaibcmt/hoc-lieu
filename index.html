@@ -2401,6 +2401,7 @@ function renderAll(){
    Đây là lớp ngăn sao chép/tải lén với người dùng phổ thông;
    muốn tải thật thì liên hệ tác giả. */
 var HL_ADMIN_HASH = 'be7e5cf0fda9a345fc1ef61cb127b0db72fb8c915d72df043468d858d4c5ee3d';
+var HL_ADMIN_HASH2 = '0eb8de755cf51e222ac7049e90f664fd1f4e7be66fe654940992609056aaeee1'; /* cùng một key, bản gõ thiếu dấu gạch — nhận cả hai cho khỏi nhầm */
 function hlIsAdmin(){ try { return (+localStorage.getItem('hl_admin_until') || 0) > Date.now(); } catch(e){ return false; } }
 function hlAdminApply(){
   var on = hlIsAdmin();
@@ -2491,11 +2492,12 @@ async function hlAdminToggle(){
       return;
     }
   }
-  /* Máy lạ: bắt buộc đủ 2 lớp — KEY (mã chủ) + mật khẩu của thầy (thầy chốt 13/11/2026) */
+  /* Máy lạ: mở FORM đăng nhập chung — ô KEY nằm cùng ô mật khẩu của thầy (thầy chốt 13/11/2026) */
+  if (window.hlAdminLoginOpen){ hlAdminLoginOpen(); return; }
   var code = prompt('🔑 Bước 1/2 — Nhập KEY (mã chủ) để vào Admin:');
   if (!code) return;
   var h = await hlSha256(code.trim());
-  if (h !== HL_ADMIN_HASH){ showToast('❌ Sai KEY (mã chủ).'); return; }
+  if (h !== HL_ADMIN_HASH && h !== HL_ADMIN_HASH2){ showToast('❌ Sai KEY (mã chủ).'); return; }
   var pwH = ''; try { pwH = localStorage.getItem('hl_admin_pw_hash') || ''; } catch(e){}
   if (pwH){
     var pw = prompt('🔑 Bước 2/2 — Nhập MẬT KHẨU ADMIN của thầy:');
@@ -6582,6 +6584,62 @@ window.hlLicSetPw = function(){
       hlLicRenderAdmin();
     }).catch(function(){ showToast('❌ Chưa lưu được — thử lại nhé'); });
   });
+};
+/* ---------- Form đăng nhập Admin: KEY + mật khẩu của thầy trong CÙNG một form (thầy chốt 13/11/2026) ---------- */
+function hlAdminEnsureLoginModal(){
+  if (document.getElementById('hlAdminLoginModal')) return;
+  var d = document.createElement('div');
+  d.id = 'hlAdminLoginModal';
+  d.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(15,10,40,.55);z-index:10001;align-items:center;justify-content:center';
+  d.setAttribute('onclick', 'if(event.target===this)hlAdminLoginClose()');
+  d.innerHTML =
+    '<form onsubmit="hlAdminLoginSubmit();return false" style="background:#fff;color:#1c1440;max-width:440px;width:92%;border-radius:16px;padding:22px 24px;box-shadow:0 18px 50px rgba(0,0,0,.35)">' +
+    '<div style="text-align:center;font-size:20px;font-weight:900;color:#b45309;margin:2px 0 4px">👑 VÀO ADMIN</div>' +
+    '<p style="text-align:center;font-size:14px;color:#555;margin:0 0 6px">Máy lạ phải nhập đủ 2 lớp. Máy của thầy đã ghi nhớ thì vào thẳng, không cần form này.</p>' +
+    '<label style="display:block;font-size:14.5px;font-weight:700;margin-top:10px">🔑 KEY (mã chủ)</label>' +
+    '<input id="admKey" type="password" autocomplete="off" placeholder="Nhập KEY" style="width:100%;box-sizing:border-box;padding:11px;border:1.5px solid #bbb;border-radius:9px;font-size:16px">' +
+    '<label style="display:block;font-size:14.5px;font-weight:700;margin-top:10px">🔒 Mật khẩu của thầy</label>' +
+    '<input id="admPw" type="password" autocomplete="off" placeholder="Nhập mật khẩu thầy tự đặt" style="width:100%;box-sizing:border-box;padding:11px;border:1.5px solid #bbb;border-radius:9px;font-size:16px">' +
+    '<p id="admPwNote" style="font-size:13.5px;color:#666;margin:6px 0 0"></p>' +
+    '<button type="submit" style="display:block;width:100%;margin-top:16px;padding:12px;border:0;border-radius:10px;background:#b45309;color:#fff;font-size:16.5px;font-weight:800;cursor:pointer">👑 Vào Admin</button>' +
+    '<button type="button" onclick="hlAdminLoginClose()" style="display:block;width:100%;margin-top:10px;padding:11px;border:0;border-radius:10px;background:#e5e7eb;color:#1c1440;font-size:15.5px;font-weight:700;cursor:pointer">Đóng</button>' +
+    '</form>';
+  document.body.appendChild(d);
+}
+window.hlAdminLoginOpen = function(){
+  hlAdminEnsureLoginModal();
+  var pwH = ''; try { pwH = localStorage.getItem('hl_admin_pw_hash') || ''; } catch(e){}
+  var note = document.getElementById('admPwNote');
+  if (note) note.textContent = pwH ? '' : 'Thầy chưa đặt mật khẩu riêng — tạm bỏ trống ô này, vào bằng KEY rồi đặt mật khẩu trong Panel Quản lý mở khoá (tab Thi Online).';
+  var m = document.getElementById('hlAdminLoginModal');
+  m.style.display = 'flex';
+  var k = document.getElementById('admKey');
+  if (k) setTimeout(function(){ try { k.focus(); } catch(e){} }, 60);
+};
+window.hlAdminLoginClose = function(){
+  var m = document.getElementById('hlAdminLoginModal');
+  if (m) m.style.display = 'none';
+};
+window.hlAdminLoginSubmit = async function(){
+  var kEl = document.getElementById('admKey');
+  var pEl = document.getElementById('admPw');
+  var k = kEl ? kEl.value.trim() : '';
+  if (!k){ showToast('⚠️ Nhập KEY (mã chủ) trước đã thầy'); return; }
+  var h = await hlSha256(k);
+  if (h !== HL_ADMIN_HASH && (typeof HL_ADMIN_HASH2 === 'undefined' || h !== HL_ADMIN_HASH2)){ showToast('❌ Sai KEY (mã chủ).'); return; }
+  var pwH = ''; try { pwH = localStorage.getItem('hl_admin_pw_hash') || ''; } catch(e){}
+  if (pwH){
+    var pw = pEl ? pEl.value.trim() : '';
+    if (!pw){ showToast('⚠️ Máy lạ phải nhập đủ KEY + mật khẩu của thầy.'); return; }
+    var h2 = await hlSha256(pw);
+    if (h2 !== pwH){ showToast('❌ Sai mật khẩu của thầy.'); return; }
+  }
+  try { localStorage.setItem('hl_admin_until', String(Date.now() + 72 * 3600 * 1000)); } catch(e){}
+  hlAdminLoginClose();
+  if (kEl) kEl.value = '';
+  if (pEl) pEl.value = '';
+  hlAdminApply(); showToast('👑 Đã bật chế độ Admin — máy này sẽ được ghi nhớ.');
+  if (window.hlLicOnAdminLogin) hlLicOnAdminLogin();
 };
 /* Kiểm tra máy này có nằm trong danh sách máy Admin đã nhớ không (hỏi thẳng Firebase) */
 window.hlLicCheckTrust = function(){
