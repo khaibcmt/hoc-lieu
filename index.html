@@ -1617,7 +1617,7 @@ function renderChips(){
   });
 }
 function hlInExam(){ var g = document.getElementById('sec-game'); return !!(g && g.style.display !== 'none'); }
-function pickMon(mon){ var inEx = hlInExam(); if (!inEx) hlShowTab('lib'); state.tnView = false;
+function pickMon(mon){ var inEx = hlInExam(); if (!inEx) hlShowTab('lib'); state.tnView = false; state.otvView = false;
   state.mon = mon;
   var ks = khoisOf(mon);
   if (ks.indexOf(state.khoi) < 0) state.khoi = ks[0];
@@ -1626,7 +1626,7 @@ function pickMon(mon){ var inEx = hlInExam(); if (!inEx) hlShowTab('lib'); state
   if (!inEx) hlPaneOpenBai(0);
   if (inEx && window.renderExamMenu) window.renderExamMenu();
 }
-function pickDriveMon(mon){ var inEx = hlInExam(); if (!inEx) hlShowTab('lib'); state.tnView = false;
+function pickDriveMon(mon){ var inEx = hlInExam(); if (!inEx) hlShowTab('lib'); state.tnView = false; state.otvView = false;
   state.mon = mon;
   state.khoi = null;
   state.baiSel = 0;
@@ -1823,11 +1823,13 @@ function renderKhoiTabs(){
   });
   wrap.querySelectorAll('[data-tn]').forEach(function(btn){
     btn.addEventListener('click', function(){
+      if (state.tnView){ state.tnView = false; state.baiSel = 0; renderAll(); hlPaneOpenBai(0); return; }
       state.tnView = true; state.otvView = false; state.baiSel = -1; var libEl2 = document.getElementById('tabLib'); if (libEl2 && libEl2.style.display === 'none' && typeof hlShowTab === 'function') hlShowTab('lib'); renderAll(); hlTnViewerHint();
     });
   });
   wrap.querySelectorAll('[data-otv]').forEach(function(btn){
     btn.addEventListener('click', function(){
+      if (state.otvView){ state.otvView = false; state.baiSel = 0; renderAll(); hlPaneOpenBai(0); return; }
       state.otvView = true; state.tnView = false; state.baiSel = -1; var libEl3 = document.getElementById('tabLib'); if (libEl3 && libEl3.style.display === 'none' && typeof hlShowTab === 'function') hlShowTab('lib'); renderAll(); hlOtvViewerHint();
     });
   });
