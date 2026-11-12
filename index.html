@@ -6271,7 +6271,8 @@ else v8Init();
 /* ===== BẢN QUYỀN THI ONLINE — Demo/Full theo MÃ MÁY CỐ ĐỊNH (thầy chốt 13/11/2026) =====
    - Mã máy: dấu vân tay thiết bị (cấu hình/màn hình/card đồ hoạ) + bộ nhớ đệm tại máy;
      xoá dữ liệu trình duyệt vẫn ra đúng mã cũ.
-   - Demo: chỉ mở Bài 1 + Đề thi 1 + Đề TN 1 của mỗi môn; còn lại khoá.
+   - Demo: mở 5 mục đầu mỗi danh sách (5 bài + 5 đề thi + 5 đề TN mỗi môn); còn lại khoá.
+     (Thầy nâng từ 1 lên 5 lúc 05:57 ngày 13/11/2026 vì có môn không có Bài 1.)
    - Đăng ký TÁCH 2 Ô (thầy chốt thêm 13/11/2026): HỌC SINH (email, họ tên HS, lớp,
      họ tên GV, trường — quyền: Full Thi Online tự thi) / GIÁO VIÊN (email, họ tên GV,
      trường — quyền: Full Thi Online + TẠO PHÒNG THI). Vào phòng thi vẫn tự do cho mọi HS.
@@ -6340,7 +6341,7 @@ window.hlLicMachineId = hlLicMachineId;
 function hlLicIsFull(){ return hlIsAdmin() || LIC.status === 'full'; }
 window.hlLicLocked = function(kind, idx){
   if (hlLicIsFull()) return false;
-  return (idx | 0) > 0;
+  return (idx | 0) > 4;
 };
 window.hlLicCanHost = function(){
   return hlIsAdmin() || (LIC.status === 'full' && LIC.lic && LIC.lic.role === 'gv');
@@ -6367,7 +6368,7 @@ function hlLicRenderBarInner(){
   } else if (LIC.req){
     bar.innerHTML = '<div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #3b82f6;border-radius:12px;padding:10px 14px;font-size:15.5px;color:#1c1440">⏳ <b>Đã gửi đăng ký</b> — đang chờ thầy mở khoá. Mã máy: <b>' + mid + '</b><button type="button" style="' + btnStyle + '" onclick="hlLicOpenPanel()">📋 Xem / cập nhật đăng ký</button></div>';
   } else {
-    bar.innerHTML = '<div style="background:linear-gradient(135deg,#fdf4ff,#fae8ff);border:2px solid #d946ef;border-radius:12px;padding:10px 14px;font-size:15.5px;color:#1c1440">🎁 <b>BẢN DEMO</b> — đang mở sẵn <b>Bài 1</b> và <b>Đề 1</b> của mỗi môn. Mã máy: <b>' + mid + '</b><button type="button" style="' + btnStyle + '" onclick="hlLicOpenPanel()">🔓 Mở khoá Full — 100k/máy</button></div>';
+    bar.innerHTML = '<div style="background:linear-gradient(135deg,#fdf4ff,#fae8ff);border:2px solid #d946ef;border-radius:12px;padding:10px 14px;font-size:15.5px;color:#1c1440">🎁 <b>BẢN DEMO</b> — đang mở sẵn <b>5 bài &amp; 5 đề đầu tiên</b> của mỗi môn. Mã máy: <b>' + mid + '</b><button type="button" style="' + btnStyle + '" onclick="hlLicOpenPanel()">🔓 Mở khoá Full — 100k/máy</button></div>';
   }
   hlLicRenderAdmin();
 }
