@@ -5284,7 +5284,11 @@ window.tnViewerClose = function(){ var v = document.getElementById('tnViewer'); 
 /* ------ TU THI (Hoc Lieu Vip Pro): hoc sinh bam mon -> chon bai / chon de / chon thi tot nghiep -> thi ngay ------ */
 /* Trich text 1 doan <w:p> kem dau *** truoc run dap an (gach chan + to do) de parser nhan ra dap an dung */
 function examParaText(seg){
-  var runs = String(seg || '').split(/<w:r[\s>]/), out = '';
+  /* Giu TAB tach phuong an: de TN tach A/B/C/D bang <w:tab/> trong .docx; bo qua tab
+     thi phuong an don thanh 1 dong, noi dung chua "X." (vd "+ C.", "Nhom mau B.") lam
+     parser truot dap an (Toan Cau 5, Sinh Cau 16 — phat hien 12/11/2026). */
+  seg = String(seg || '').replace(/<w:tab(?:\s[^>]*)?\/>/g, '<w:t>\t</w:t>');
+  var runs = seg.split(/<w:r[\s>]/), out = '';
   for (var i = 1; i < runs.length; i++){
     var r = runs[i], end = r.indexOf('</w:r>');
     if (end >= 0) r = r.slice(0, end);
@@ -5310,7 +5314,7 @@ function examDocxToText(buf){
     for (var i = 1; i < parts.length; i++){
       var seg = parts[i], end = seg.indexOf('</w:p>');
       if (end >= 0) seg = seg.slice(0, end);
-      var line = examParaText(seg).replace(/\s+/g, ' ').trim();
+      var line = examParaText(seg).replace(/[^\S\t]+/g, ' ').replace(/ ?\t ?/g, '\t').trim();
       if (line) out.push(line);
     }
     return out.join('\n');
