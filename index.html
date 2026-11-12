@@ -2567,6 +2567,14 @@ var EduParse = (function(){
       while ((m = re.exec(line)) !== null) marks.push({ letter: m[1], idx: m.index });
       var ok = marks.length >= 2;
       if (ok){ for (var k = 1; k < marks.length; k++){ if ('ABCD'.indexOf(marks[k].letter) !== 'ABCD'.indexOf(marks[k - 1].letter) + 1){ ok = false; break; } } }
+      if (!ok && marks.length >= 2){
+        /* Du phong: phuong an chua "X." trong noi dung (vd "x + C.", "Nhom mau B.") lam vo kiem tra lien tiep.
+           Chi xet cac moc o dau dong hoac sau TAB (cach tach phuong an that cua de TN) roi kiem tra lai. */
+        var tabMarks = marks.filter(function(mk){ return mk.idx === 0 || line[mk.idx - 1] === '\t'; });
+        var ok2 = tabMarks.length >= 2;
+        if (ok2){ for (var k2 = 1; k2 < tabMarks.length; k2++){ if ('ABCD'.indexOf(tabMarks[k2].letter) !== 'ABCD'.indexOf(tabMarks[k2 - 1].letter) + 1){ ok2 = false; break; } } }
+        if (ok2){ marks = tabMarks; ok = true; }
+      }
       if (ok){
         var head = line.slice(0, marks[0].idx).trim();
         if (head) out.push(head);
@@ -2585,9 +2593,9 @@ var EduParse = (function(){
     var qs = [], cur = null, keyMap = {}, tfKeyMap = {}, saKeyMap = {}, inKey = false, usedKey = false, part = 0;
     function pushCur(){ if (cur){ qs.push(cur); cur = null; } }
     function cleanOpt(s){ return String(s || '').replace(/\*\*\*/g, '').trim(); }
-    function scanKeyPairs(s, pt){
+    function scanKeyPairs(s, pt, dup0){
       var re = /(\d+)\s*[.:\-]?\s*([A-D])\b/g, m, found = false;
-      while ((m = re.exec(s)) !== null){ keyMap[pt + ':' + parseInt(m[1], 10)] = LET.indexOf(m[2].toUpperCase()); found = true; }
+      while ((m = re.exec(s)) !== null){ keyMap[pt + ':' + parseInt(m[1], 10)] = LET.indexOf(m[2].toUpperCase()); if (dup0) keyMap['0:' + parseInt(m[1], 10)] = LET.indexOf(m[2].toUpperCase()); found = true; }
       return found;
     }
     /* Bang dap an kieu thi tot nghiep: "Câu 1: a-Đ, b-S, c-S, d-S." (Đúng/Sai) va "Câu 1: 0,4." (tra loi ngan) */
@@ -2595,11 +2603,14 @@ var EduParse = (function(){
       var m = String(s || '').match(/^Câu\s*(\d+)\s*[.:]\s*(.+)$/i);
       if (!m) return false;
       var rest = m[2], no = parseInt(m[1], 10), found = false;
+      /* Chi doc day D/S o DAU dong dap an; phan "Giai thich: ..." / "a) Dung — ..." phia sau khong phai dap an. */
+      var tfHead = String(rest).match(/^([a-d]\s*[-–—]?\s*[ĐS]\s*\.?\s*(?:[,;]\s*)?){1,4}/i);
+      var tfSrc = tfHead ? tfHead[0] : rest;
       var tfRe = /([a-d])\s*[-–—]?\s*([ĐS])/gi, t, arr = []; /* KHONG dung \b sau Đ: Đ khong phai ky tu \w nen \b that bai */
-      while ((t = tfRe.exec(rest)) !== null){ arr.push(t[2].toUpperCase() === 'Đ'); }
-      if (arr.length){ tfKeyMap[pt + ':' + no] = arr; found = true; }
-      var saM = rest.match(/^\s*(-?\d{1,6}(?:[.,]\d{1,4})?)\s*\./);
-      if (saM){ saKeyMap[pt + ':' + no] = saM[1]; found = true; }
+      while ((t = tfRe.exec(tfSrc)) !== null){ arr.push(t[2].toUpperCase() === 'Đ'); }
+      if (arr.length){ tfKeyMap[pt + ':' + no] = arr; tfKeyMap['0:' + no] = arr; found = true; }
+      var saM = rest.match(/^\s*([-−]?\d{1,6}(?:[.,]\d{1,4})?)\s*\./);
+      if (saM){ saKeyMap[pt + ':' + no] = saM[1].replace(/−/g, '-'); saKeyMap['0:' + no] = saM[1].replace(/−/g, '-'); found = true; }
       return found;
     }
     /* Nhận diện một dòng CHỈ gồm các cặp "số + chữ cái đáp án" liên tiếp (bảng đáp án đứng riêng).
@@ -2640,28 +2651,30 @@ var EduParse = (function(){
       var m;
       /* --- dòng đáp án dạng "Câu n: X" (thuộc bảng đáp án, KHÔNG phải câu hỏi mới) --- */
       if ((m = line.match(/^Câu\s*(\d+)\s*[.:]\s*([A-D])\s*\.?\s*$/i))){
-        keyMap[part + ':' + parseInt(m[1], 10)] = LET.indexOf(m[2].toUpperCase()); usedKey = true; inKey = true; return;
+        keyMap[part + ':' + parseInt(m[1], 10)] = LET.indexOf(m[2].toUpperCase()); keyMap['0:' + parseInt(m[1], 10)] = LET.indexOf(m[2].toUpperCase()); usedKey = true; inKey = true; return;
       }
       /* --- tiêu đề PHẦN (I/II/III kiểu thi tốt nghiệp): dòng phân cách, không dính vào câu trước --- */
-      if ((m = line.match(/^\s*PHẦN\s+(I|II|III|IV|V|\d+)\b/i))){ var rn = {I:1,II:2,III:3,IV:4,V:5}; part = rn[m[1].toUpperCase()] || parseInt(m[1], 10) || 0; return; }
+      if ((m = line.match(/^\s*PHẦN\s+(I|II|III|IV|V|\d+)\b/i))){ var rn = {I:1,II:2,III:3,IV:4,V:5}; part = rn[m[1].toUpperCase()] || parseInt(m[1], 10) || 0; var restPh = line.slice(m[0].length).replace(/^\s*[.:—–-]\s*/, ''); if (/^Câu\s*\d+\s*[.:]/i.test(restPh)){ line = restPh; } else return; }
       /* --- đáp án SỐ của câu trả lời ngắn: "Đáp án: 900" / "Đáp án: 2,5" / "Đ/A: -3" ---
          Đây là đáp án của câu hiện tại, KHÔNG phải đầu bảng đáp án (bảng đáp án thật là dãy "1B 2A..." chữ cái).
          Đặt TRƯỚC quy tắc bảng đáp án có chữ số để không bị nuốt vào chế độ bảng đáp án. */
       if (cur && !inKey){
-        var mNum = line.match(/^(?:Đáp\s+án|Đáp\s+số|ĐS|Kết\s+quả)\s*[:=]?\s*(-?\d{1,6}(?:[.,]\d{1,4})?)\s*(?:\([^)]{0,24}\))?\s*\.?\s*$/i) || line.match(/^Đ\/A\s*[:=]?\s*(-?\d{1,6}(?:[.,]\d{1,4})?)\s*(?:\([^)]{0,24}\))?\s*\.?\s*$/i);
-        if (mNum){ cur.ansText = mNum[1]; if (!cur.src) cur.src = 'inline'; return; }
+        var mNum = line.match(/^(?:Đáp\s+án|Đáp\s+số|ĐS|Kết\s+quả)\s*[:=]?\s*([-−]?\d{1,6}(?:[.,]\d{1,4})?)\s*(?:\([^)]{0,24}\))?\s*\.?\s*$/i) || line.match(/^Đ\/A\s*[:=]?\s*([-−]?\d{1,6}(?:[.,]\d{1,4})?)\s*(?:\([^)]{0,24}\))?\s*\.?\s*$/i);
+        if (mNum){ cur.ansText = mNum[1].replace(/−/g, '-'); if (!cur.src) cur.src = 'inline'; return; }
       }
       /* --- dòng đánh dấu ảnh từ đường trích .docx: "[Hình ảnh]" chỉ là chú thích trong văn bản trích,
          KHÔNG dính vào thân câu hay phương án (nếu dính, câu có hình sẽ bị loại khỏi phòng thi oan) --- */
       if (line === '[Hình ảnh]'){ return; }
       /* --- bắt đầu khối bảng đáp án ở cuối --- */
-      if (/^(BẢNG\s+)?ĐÁP\s+ÁN\s*:/i.test(line) && /\d/.test(line)){ pushCur(); inKey = true; if (scanKeyPairs(line, part)) usedKey = true; return; }
+      if (/^(BẢNG\s+)?ĐÁP\s+ÁN\s*:/i.test(line) && /\d/.test(line)){ pushCur(); inKey = true; if (scanKeyPairs(line, part, true)) usedKey = true; return; }
       if ((/^(BẢNG\s+)?ĐÁP\s+ÁN\b/i.test(line) && !/^Đáp\s+án\s*:?\s*([A-D]|-?\d)/i.test(line)) || /^Đ\/A\s*:?\s*$/i.test(line)){ pushCur(); inKey = true; return; } /* "Đáp án: B/32" la dap an noi tuyen, KHONG phai tieu de bang dap an */
       if (inKey){
-        if (/^(Câu\s*\d+\s*[.:]\s*[A-D]\s*\.?\s*([|;,]\s*)?)+$/i.test(line)){ if (scanKeyPairs(line, part)) usedKey = true; return; }
-        if (/^Câu\s*\d+\s*[.:]\s*([a-d]\s*[-–—]?\s*[ĐS]\s*\.?\s*([,;]\s*)?)+$/i.test(line)){ if (scanTfSaKeys(line, part)) usedKey = true; return; }
-        var saK = line.match(/^Câu\s*(\d+)\s*[.:]\s*(-?\d{1,6}(?:[.,]\d{1,4})?)\s*\./);
-        if (saK){ saKeyMap[part + ':' + parseInt(saK[1], 10)] = saK[2]; usedKey = true; return; }
+        if (/^(Câu\s*\d+\s*[.:]\s*[A-D]\s*\.?\s*([|;,]\s*)?)+$/i.test(line)){ if (scanKeyPairs(line, part, true)) usedKey = true; return; }
+        if (/^Câu\s*\d+\s*[.:]\s*([a-d]\s*[-–—]?\s*[ĐS]\s*\.?\s*([,;]\s*)?)+/i.test(line)){ if (scanTfSaKeys(line, part)) usedKey = true; return; }
+        var saPipe = line.match(/^Câu\s*\d+\s*[.:]\s*[-−]?\d{1,6}(?:[.,]\d{1,4})?\s*\.?\s*(?:\|\s*Câu\s*\d+\s*[.:]\s*[-−]?\d{1,6}(?:[.,]\d{1,4})?\s*\.?\s*)+$/);
+        if (saPipe){ var saPr = /Câu\s*(\d+)\s*[.:]\s*([-−]?\d{1,6}(?:[.,]\d{1,4})?)/g, saPm; while ((saPm = saPr.exec(line)) !== null){ saKeyMap[part + ':' + parseInt(saPm[1], 10)] = saPm[2].replace(/−/g, '-'); saKeyMap['0:' + parseInt(saPm[1], 10)] = saPm[2].replace(/−/g, '-'); } usedKey = true; return; }
+        var saK = line.match(/^Câu\s*(\d+)\s*[.:]\s*([-−]?\d{1,6}(?:[.,]\d{1,4})?)\s*\./);
+        if (saK){ saKeyMap[part + ':' + parseInt(saK[1], 10)] = saK[2].replace(/−/g, '-'); saKeyMap['0:' + parseInt(saK[1], 10)] = saK[2].replace(/−/g, '-'); usedKey = true; return; }
         if (/^Câu\s*\d+\s*[.:)]\s+\S/i.test(line)){ inKey = false; /* rơi xuống xử lý câu hỏi mới */ }
         else { if (scanKeyPairs(line, part)) usedKey = true; return; }
       }
@@ -2711,12 +2724,14 @@ var EduParse = (function(){
     pushCur();
     /* --- áp bảng đáp án cho câu chưa có đáp án riêng --- */
     qs.forEach(function(q){
-      var k = keyMap[q.part + ':' + q.no]; if (k === undefined) k = keyMap['0:' + q.no];
-      if (q.ans < 0 && k !== undefined){ q.ans = k; q.src = 'key'; }
-      var tk = tfKeyMap[q.part + ':' + q.no]; if (tk === undefined) tk = tfKeyMap['0:' + q.no];
-      if (tk && q.tfItems){ q.tfItems.forEach(function(it, j){ if (tk[j] !== undefined) it.correct = tk[j]; }); }
-      var sk = saKeyMap[q.part + ':' + q.no]; if (sk === undefined) sk = saKeyMap['0:' + q.no];
-      if ((q.ansText === null || q.ansText === undefined) && sk !== undefined){ q.ansText = sk; if (!q.src) q.src = 'key'; }
+      /* Ap bang dap an THEO DANG CAU (tranh nhiem cheo): dap an chu cai chi cho cau co phuong an A-D;
+         dap an D/S chi cho cau co y a-d; dap an so chi cho cau khong co phuong an/y. De khong co tieu de
+         PHAN o than bai (vd Dia li) co part=0 trong khi bang dap an ghi part=1/2/3 -> cac bang da luu
+         them ban sao duoi khoa '0:' o cac dong dap an da xac nhan, nen tra cuu '0:' van trung. */
+      var hasLetterOpts0 = (q.opts || []).some(function(o){ return o && String(o).trim(); });
+      if (hasLetterOpts0){ var k = keyMap[q.part + ':' + q.no]; if (k === undefined) k = keyMap['0:' + q.no]; if (q.ans < 0 && k !== undefined){ q.ans = k; q.src = 'key'; } }
+      if (q.tfItems){ var tk = tfKeyMap[q.part + ':' + q.no]; if (tk === undefined) tk = tfKeyMap['0:' + q.no]; if (tk){ q.tfItems.forEach(function(it, j){ if (tk[j] !== undefined) it.correct = tk[j]; }); } }
+      if (!hasLetterOpts0 && !q.tfItems){ var sk = saKeyMap[q.part + ':' + q.no]; if (sk === undefined) sk = saKeyMap['0:' + q.no]; if ((q.ansText === null || q.ansText === undefined) && sk !== undefined){ q.ansText = sk; if (!q.src) q.src = 'key'; } }
       for (var k2 = 0; k2 < 4; k2++) if (typeof q.opts[k2] !== 'string') q.opts[k2] = '';
       /* --- chốt dạng câu: tf (có ý Đ/S, không có phương án A–D) / sa (đáp án số, không có phương án) / mc --- */
       var hasLetterOpts = q.opts.some(function(o){ return o && String(o).trim(); });
