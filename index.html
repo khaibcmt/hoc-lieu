@@ -6400,7 +6400,6 @@ function hlLicEnsureModal(){
     '<div id="licHsBox">' +
     licLabel('Họ tên học sinh') + licInput('licFHs', 'vd: Nguyễn Văn A') +
     licLabel('Lớp') + licInput('licFLop', 'vd: 12A1') +
-    licLabel('Họ tên giáo viên') + licInput('licFGv', 'vd: Hồ Tấn Khải') +
     licLabel('Trường') + licInput('licFTruong', 'vd: THPT Mang Thít') +
     '</div>' +
     '<div id="licGvBox" style="display:none">' +
@@ -6448,7 +6447,6 @@ window.hlLicOpenPanel = function(role){
     } else {
       document.getElementById('licFHs').value = LIC.req.hs || '';
       document.getElementById('licFLop').value = LIC.req.lop || '';
-      document.getElementById('licFGv').value = LIC.req.gv || '';
       document.getElementById('licFTruong').value = LIC.req.truong || '';
     }
   } else {
@@ -6471,8 +6469,8 @@ window.hlLicSubmit = function(){
     data = { role: 'gv', email: email, hs: '', lop: '', gv: v('licFGvName'), truong: v('licFTruongG') };
     if (!data.gv || !data.truong){ showToast('⚠️ Thầy cô điền đủ: email, họ tên giáo viên, trường nhé'); return; }
   } else {
-    data = { role: 'hs', email: email, hs: v('licFHs'), lop: v('licFLop'), gv: v('licFGv'), truong: v('licFTruong') };
-    if (!data.hs || !data.lop || !data.gv || !data.truong){ showToast('⚠️ Em điền đủ cả 5 ô đăng ký nhé'); return; }
+    data = { role: 'hs', email: email, hs: v('licFHs'), lop: v('licFLop'), gv: '', truong: v('licFTruong') };
+    if (!data.hs || !data.lop || !data.truong){ showToast('⚠️ Em điền đủ cả 4 ô đăng ký nhé'); return; }
   }
   var mid = hlLicMachineId();
   data.at = Date.now();
@@ -6497,7 +6495,7 @@ function hlLicRowInfo(r){
       '<br><span style="color:#7c3aed;font-weight:700">Quyền: Full Thi Online + Tạo phòng thi</span>';
   }
   return '🎓 <b>HỌC SINH</b> — <b>' + esc((r && r.hs) || '?') + '</b> — Lớp ' + esc((r && r.lop) || '?') + '<br>' +
-    '👩‍🏫 GV: ' + esc((r && r.gv) || '?') + ' • 🏫 ' + esc((r && r.truong) || '?') + '<br>' +
+    '🏫 ' + esc((r && r.truong) || '?') + '<br>' +
     '✉️ ' + esc((r && r.email) || '?') +
     '<br><span style="color:#7c3aed;font-weight:700">Quyền: Full Thi Online (tự thi)</span>';
 }
