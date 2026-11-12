@@ -6283,8 +6283,9 @@ else v8Init();
    - Đăng ký TÁCH 2 Ô (thầy chốt thêm 13/11/2026): HỌC SINH (email, họ tên HS, lớp,
      họ tên GV, trường — quyền: Full Thi Online tự thi) / GIÁO VIÊN (email, họ tên GV,
      trường — quyền: Full Thi Online + TẠO PHÒNG THI). Vào phòng thi vẫn tự do cho mọi HS.
-   - Đăng ký -> Firebase hlv_requests/<mid> (kèm role); thầy bấm Mở khoá ở Panel Admin
-     -> hlv_licenses/<mid>; máy được mở tự nhận quyền theo thời gian thực.
+   - Đăng ký -> Firebase hlv_requests/<mid> (kèm role). TỰ ĐỘNG DUYỆT (thầy bật
+     13/11/2026): vừa gửi đăng ký là web tự ghi hlv_licenses/<mid> (by:'auto') — máy
+     lên Full ngay, khỏi chờ thầy bấm duyệt; thầy vẫn xem danh sách + Khoá lại ở Panel.
    - Admin gắn máy: hlv_admin_machines/<mid> — máy đã nhớ vào Admin không hỏi lại;
      máy lạ nhập mã chủ HOẶC mật khẩu Admin do thầy tự đặt (hlv_admin_cfg/pwHash). */
 (function(){
@@ -6414,7 +6415,7 @@ function hlLicEnsureModal(){
     licLabel('Họ tên giáo viên') + licInput('licFGvName', 'vd: Hồ Tấn Khải') +
     licLabel('Trường') + licInput('licFTruongG', 'vd: THPT Mang Thít') +
     '</div>' +
-    '<button type="button" onclick="hlLicSubmit()" style="display:block;width:100%;margin-top:16px;padding:12px;border:0;border-radius:10px;background:#7c3aed;color:#fff;font-size:16.5px;font-weight:800;cursor:pointer">📨 Gửi đăng ký cho thầy</button>' +
+    '<button type="button" onclick="hlLicSubmit()" style="display:block;width:100%;margin-top:16px;padding:12px;border:0;border-radius:10px;background:#7c3aed;color:#fff;font-size:16.5px;font-weight:800;cursor:pointer">📨 Gửi đăng ký — mở Full ngay</button>' +
     '</div>' +
     '<button type="button" onclick="hlLicClosePanel()" style="display:block;width:100%;margin-top:10px;padding:11px;border:0;border-radius:10px;background:#e5e7eb;color:#1c1440;font-size:15.5px;font-weight:700;cursor:pointer">Đóng</button>' +
     '</div>';
@@ -6468,6 +6469,12 @@ window.hlLicClosePanel = function(){
   var m = document.getElementById('hlLicModal');
   if (m) m.style.display = 'none';
 };
+/* TỰ ĐỘNG DUYỆT: cấp license ngay từ bản ghi đăng ký (giữ nguyên thông tin + role). */
+function hlLicAutoApprove(mid, r){
+  if (!r || !FB.db) return Promise.resolve(false);
+  var lic = { role: r.role || 'hs', email: r.email || '', hs: r.hs || '', lop: r.lop || '', gv: r.gv || '', truong: r.truong || '', at: Date.now(), by: 'auto' };
+  return FB.db.ref('hlv_licenses/' + mid).set(lic).then(function(){ return true; }).catch(function(){ return false; });
+}
 window.hlLicSubmit = function(){
   var v = function(id){ var e = document.getElementById(id); return e ? e.value.trim() : ''; };
   var email = v('licFEmail');
@@ -6488,7 +6495,9 @@ window.hlLicSubmit = function(){
     if (!ok || !FB.db){ showToast('❌ Chưa kết nối được máy chủ — thử lại sau nhé'); return; }
     FB.db.ref('hlv_requests/' + mid).set(data).then(function(){
       LIC.req = data;
-      showToast('✅ Đã gửi đăng ký! Thầy mở khoá là máy tự lên BẢN FULL ngay.');
+      return hlLicAutoApprove(mid, data);
+    }).then(function(){
+      showToast('🎉 Đăng ký xong — máy đã lên BẢN FULL tự động, thi thoải mái nhé!');
       hlLicClosePanel();
       hlLicRenderBar();
       if (typeof renderExamMenu === 'function') renderExamMenu();
@@ -6513,11 +6522,12 @@ window.hlLicRenderAdmin = function(){
   if (!hlIsAdmin()){ box.innerHTML = ''; box.style.display = 'none'; return; }
   box.style.display = '';
   hlLicAttachAdmin();
-  var reqKeys = Object.keys(LIC.adminReq);
+  var reqKeys = Object.keys(LIC.adminReq).filter(function(k){ return !LIC.adminLic[k]; });
   var licKeys = Object.keys(LIC.adminLic);
   var macKeys = Object.keys(LIC.adminMachines);
   var h = '<div style="background:#fff;color:#1c1440;border:2.5px solid #7c3aed;border-radius:14px;padding:16px 18px;margin-top:16px">';
   h += '<div style="font-size:18.5px;font-weight:900;color:#7c3aed">🔑 QUẢN LÝ MỞ KHOÁ THI ONLINE (Admin)</div>';
+  h += '<p style="font-size:14px;color:#b45309;font-weight:700;margin:6px 0 0">⚡ Chế độ TỰ ĐỘNG DUYỆT đang bật: máy gửi đăng ký là lên BẢN FULL ngay, thầy không cần duyệt tay. Muốn thu hồi máy nào thì bấm 🔒 Khoá lại ở danh sách đã mở.</p>';
   h += '<p style="font-size:15px;font-weight:800;margin:12px 0 4px">⏳ Đăng ký chờ mở khoá (' + reqKeys.length + ')</p>';
   h += reqKeys.length ? reqKeys.map(function(mid){
       var r = LIC.adminReq[mid];
@@ -6530,7 +6540,7 @@ window.hlLicRenderAdmin = function(){
   h += licKeys.length ? licKeys.map(function(mid){
       var r = LIC.adminLic[mid];
       return '<div style="border:1.5px solid #bbf7d0;border-radius:10px;padding:9px 12px;margin:6px 0;font-size:14.5px;line-height:1.55">' + hlLicRowInfo(r) +
-        '<br>🖥️ Mã máy: <b>' + mid + '</b> • Mở lúc ' + hlLicFmtTime(r.at) +
+        '<br>🖥️ Mã máy: <b>' + mid + '</b> • Mở lúc ' + hlLicFmtTime(r.at) + (r.by === 'auto' ? ' • ⚡ tự động duyệt' : '') +
         '<br><button type="button" onclick="hlLicRevoke(\'' + mid + '\')" style="margin-top:6px;padding:7px 14px;border:0;border-radius:8px;background:#dc2626;color:#fff;font-weight:800;cursor:pointer">🔒 Khoá lại</button></div>';
     }).join('') : '<p style="font-size:14.5px;color:#666;margin:2px 0">Chưa có máy nào được mở.</p>';
   h += '<p style="font-size:15px;font-weight:800;margin:12px 0 4px">🖥️ Máy Admin đã nhớ (' + macKeys.length + ')</p>';
@@ -6569,7 +6579,12 @@ window.hlLicReject = function(mid){
 window.hlLicRevoke = function(mid){
   if (!FB.db) return;
   if (!confirm('Khoá lại máy ' + mid + '? Máy đó sẽ về BẢN DEMO.')) return;
-  FB.db.ref('hlv_licenses/' + mid).remove().then(function(){ showToast('🔒 Đã khoá lại máy ' + mid); });
+  /* Xoá cả license lẫn bản ghi đăng ký — nếu chỉ xoá license, chế độ tự động duyệt
+     sẽ cấp lại Full ngay cho máy còn đăng ký. */
+  var upd = {};
+  upd['hlv_licenses/' + mid] = null;
+  upd['hlv_requests/' + mid] = null;
+  FB.db.ref().update(upd).then(function(){ showToast('🔒 Đã khoá lại máy ' + mid); });
 };
 window.hlLicUntrust = function(mid){
   if (!FB.db) return;
@@ -6687,13 +6702,17 @@ function hlLicInit(){
     FB.db.ref('hlv_licenses/' + mid).on('value', function(s){
       var was = LIC.status;
       LIC.lic = s.val();
+      LIC.licLoaded = true;
       LIC.status = LIC.lic ? 'full' : 'demo';
+      if (!LIC.lic && LIC.req && !LIC.__autoTried){ LIC.__autoTried = true; hlLicAutoApprove(mid, LIC.req); }
       if (LIC.status !== was && LIC.status === 'full') showToast('🎉 Máy đã được mở khoá BẢN FULL Thi Online!');
       hlLicRenderBar();
       if (typeof renderExamMenu === 'function') renderExamMenu();
     });
     FB.db.ref('hlv_requests/' + mid).on('value', function(s){
       LIC.req = s.val();
+      /* Máy đã đăng ký từ trước mà chưa có license -> tự duyệt luôn (chế độ auto). */
+      if (LIC.req && LIC.licLoaded && !LIC.lic && !LIC.__autoTried){ LIC.__autoTried = true; hlLicAutoApprove(mid, LIC.req); }
       hlLicRenderBar();
     });
     FB.db.ref('hlv_admin_cfg/pwHash').on('value', function(s){
