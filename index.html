@@ -6549,9 +6549,6 @@ window.hlLicRenderAdmin = function(){
       return '<div style="border:1.5px solid #ddd;border-radius:10px;padding:9px 12px;margin:6px 0;font-size:14.5px;line-height:1.55">🖥️ <b>' + mid + '</b>' + (mid === LIC.mid ? ' <span style="color:#2e9e4f;font-weight:800">(máy này)</span>' : '') + ' • Nhớ từ ' + hlLicFmtTime(r.at) +
         '<br><button type="button" onclick="hlLicUntrust(\'' + mid + '\')" style="margin-top:6px;padding:7px 14px;border:0;border-radius:8px;background:#e5e7eb;color:#1c1440;font-weight:700;cursor:pointer">Gỡ máy này</button></div>';
     }).join('') : '<p style="font-size:14.5px;color:#666;margin:2px 0">Chưa có máy nào được nhớ.</p>';
-  if (!LIC.adminMachines[LIC.mid]){
-    h += '<p style="font-size:14.5px;margin:12px 0 0">Máy này <b>chưa</b> được ghi nhớ Admin. <button type="button" onclick="hlLicTrustThisMachine()" style="padding:7px 14px;border:0;border-radius:8px;background:#f59e0b;color:#fff;font-weight:800;cursor:pointer">📌 Nhớ máy này làm máy Admin</button><br><span style="color:#666;font-size:13.5px">Chỉ bấm khi đây là máy của thầy. Máy lạ đăng nhập Admin (đủ KEY + mật khẩu) chỉ dùng được trong phiên đó, không bị ghi nhớ.</span></p>';
-  }
   h += '<p style="font-size:15px;font-weight:800;margin:12px 0 4px">🔑 Mật khẩu Admin của thầy ' + (LIC.pwHash ? '<span style="color:#2e9e4f">(đã đặt)</span>' : '<span style="color:#dc2626">(chưa đặt)</span>') + '</p>' +
     '<input id="licPwNew" type="password" placeholder="Nhập mật khẩu Admin mới" style="box-sizing:border-box;padding:9px;border:1.5px solid #bbb;border-radius:9px;font-size:15px;max-width:320px;width:100%"> ' +
     '<button type="button" onclick="hlLicSetPw()" style="padding:9px 16px;border:0;border-radius:9px;background:#7c3aed;color:#fff;font-weight:800;cursor:pointer">' + (LIC.pwHash ? 'Đổi mật khẩu' : 'Đặt mật khẩu') + '</button>' +
@@ -6679,9 +6676,10 @@ window.hlLicCheckTrust = function(){
     return FB.db.ref('hlv_admin_machines/' + hlLicMachineId()).once('value').then(function(s){ return !!s.val(); });
   }).catch(function(){ return false; });
 };
-/* Khi đăng nhập Admin thành công: nạp panel. Từ 13/11/2026 KHÔNG tự ghi nhớ máy
-   nữa (thầy chốt): máy lạ chỉ được Admin trong phiên, lần sau nhập lại KEY + mật khẩu.
-   Muốn ghi nhớ máy của thầy thì bấm nút 📌 trong Panel (hlLicTrustThisMachine). */
+/* Khi đăng nhập Admin thành công: nạp panel. Từ 13/11/2026 KHÔNG ghi nhớ máy
+   nữa (thầy chốt, kể cả nút Nhớ máy này cũng đã bỏ): máy lạ chỉ được Admin trong
+   phiên, lần sau nhập lại KEY + mật khẩu. Danh sách máy đã nhớ chỉ đổi được khi
+   thầy tự sửa trên Firebase. */
 window.hlLicOnAdminLogin = function(){
   fbEnsure().then(function(ok){
     if (!ok || !FB.db) return;
@@ -6690,20 +6688,6 @@ window.hlLicOnAdminLogin = function(){
     setTimeout(function(){
       if (!LIC.pwHash) showToast('🔑 Thầy đặt thêm Mật khẩu Admin riêng ở Panel Quản lý mở khoá (tab Thi Online) nhé — máy lạ vào Admin sẽ phải nhập mật khẩu này.');
     }, 600);
-  });
-};
-window.hlLicIsTrusted = function(){ return !!LIC.trusted; };
-/* Thầy chủ động ghi nhớ máy của mình — chỉ bấm khi đây là máy của thầy */
-window.hlLicTrustThisMachine = function(){
-  var mid = hlLicMachineId();
-  fbEnsure().then(function(ok){
-    if (!ok || !FB.db){ showToast('❌ Chưa kết nối được máy chủ'); return; }
-    FB.db.ref('hlv_admin_machines/' + mid).set({ at: Date.now(), ua: String(navigator.userAgent || '').slice(0, 140) }).then(function(){
-      LIC.trusted = true;
-      try { localStorage.removeItem('hl_admin_session_only'); } catch(e){}
-      showToast('📌 Đã ghi nhớ máy này — từ nay vào Admin không cần nhập key.');
-      hlLicRenderAdmin();
-    }).catch(function(){ showToast('❌ Ghi nhớ chưa được — thử lại nhé'); });
   });
 };
 /* ---------- Khởi tạo ---------- */
