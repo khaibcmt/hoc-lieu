@@ -851,12 +851,16 @@ header{background:linear-gradient(90deg,#2063ac,#2b7bbb)}
 .tn-file.tn-vip .nm span:last-child{text-shadow:0 1px 6px rgba(0,0,0,.45)}
 @media (prefers-reduced-motion: reduce){.tn-file.tn-vip{animation:none}}
 </style>
+<style id="hlOtvCss">
+.ktab-otv{background:linear-gradient(135deg,#c084fc,#8b5cf6);border:2px solid #e9d5ff;color:#2a1065;font-weight:900;font-size:15.5px;box-shadow:0 4px 18px rgba(168,85,247,.5)}
+.ktab-otv.on{background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff;box-shadow:0 0 0 3px rgba(216,180,254,.65),0 4px 18px rgba(139,92,246,.6)}
+</style>
 </head>
 <body>
 
 <header>
   <div class="head-in">
-    <div class="brand" title="Kho học liệu chuẩn SGK — Giáo án • Đề thi • Phiếu học tập • Tài liệu VIP • Thi online thời gian thực">
+    <div class="brand" title="Kho học liệu chuẩn SGK — Giáo án • Đề thi • Tài liệu VIP • Thi online thời gian thực">
       <svg class="logo" width="36" height="36" viewBox="0 0 64 64" role="img" aria-label="Logo Học Liệu VIP">
         <defs>
           <linearGradient id="lgBrand" x1="0" y1="0" x2="1" y2="1">
@@ -1312,7 +1316,7 @@ function driveMonId(mon, khoi){
 }
 function driveFolderUrl(folderId){ return 'https://drive.google.com/drive/folders/' + folderId; }
 
-var state = { mon: null, khoi: null, tnView: false, theLoai: 'ga', baiSel: -1 };
+var state = { mon: null, khoi: null, tnView: false, otvView: false, theLoai: 'ga', baiSel: -1 };
 
 function esc(s){
   return String(s == null ? '' : s)
@@ -1648,7 +1652,7 @@ function hlTnShelf(){
 }
 
 /* ===== v40: Thể loại + khung hiển thị trong trang (Smart Viewer) ===== */
-var HL_TYPES = [ ['ga', '📗 Giáo án'], ['phieu', '🧾 Phiếu học tập'], ['vip', '💎 Tài liệu VIP'], ['ppt', '📊 Slide PPT'], ['de', '📝 Đề thi • Ôn tập • Kiểm tra'] ];
+var HL_TYPES = [ ['ga', '📗 Giáo án'], ['vip', '💎 Tài liệu VIP'], ['ppt', '📊 Slide PPT'], ['de', '📝 Đề thi • Ôn tập • Kiểm tra'] ];
 function typeLabel(t){ for (var i = 0; i < HL_TYPES.length; i++) if (HL_TYPES[i][0] === t) return HL_TYPES[i][1]; return t; }
 function baiHasType(b, t){
   if (t === 'ga') return !!b.giao_an;
@@ -1696,7 +1700,6 @@ function hlPaneOpenBai(i){
   var slot = baiSlotOf(b, state.theLoai);
   var title = typeLabel(state.theLoai) + ' — Bài ' + b.so + ': ' + b.ten;
   if (slot && docFidOf(slot)){ hlPaneOpenDoc(slot, title); return; }
-  if (state.theLoai === 'phieu'){ hlPaneOpenPhieu(i); return; }
   /* Bài chưa có loại đang chọn: hiện thẻ bài đầy đủ trong khung để chọn ngăn khác */
   hlPaneOpenCard(i);
 }
@@ -1709,22 +1712,36 @@ function hlPaneOpenCard(i){
   bindCards(body);
   body.querySelectorAll('.bai-card').forEach(function(c){ c.classList.add('open'); }); hlPaneEnsureVisible();
 }
-var PHIEU_ROOT_ID = '1iPEdg7V7qyqNN6JFp2lzNEp_x67qh1cM';
-function hlPaneOpenPhieu(i){
-  var b = RENDERED[i]; if (!b) return;
+/* ===== Ôn Tập Vip (thầy chốt 12/11/2026): nút kế bên Ôn thi tốt nghiệp;
+   đề ôn tập theo bài / chương / học kì, theo (môn, khối) đang chọn.
+   Dữ liệu: mảng on_tap_vip trong bộ (môn, khối) của CATALOG. ===== */
+function otvHue(i){ return Math.round(i * 137.508 + 60) % 360; }
+function otvFilesOf(mon, khoi){ var b = boOf(mon, khoi); return (b && b.on_tap_vip) ? b.on_tap_vip : []; }
+function hlOtvViewerHint(){
   var body = document.getElementById('paneBody'); if (!body) return;
   var fb = document.getElementById('paneFallback'); if (fb) fb.style.display = 'none';
-  var note = (b.phieu && b.phieu.ghi_chu) ? b.phieu.ghi_chu : '3 bản: HS • HS có đáp án • GV';
-  var url = 'https://drive.google.com/drive/folders/' + PHIEU_ROOT_ID;
-  body.innerHTML = '<div style="padding:18px">'
-    + '<div style="font-size:19px;font-weight:900;color:#e2e8f0">🧾 Phiếu học tập — Bài ' + b.so + ': ' + b.ten + '</div>'
-    + '<p style="color:#94a3b8;margin:8px 0 14px;font-size:15.5px;line-height:1.6">' + note + '. Mỗi bài có 3 bản. Em đang nối mã từng file phiếu để xem ngay trong trang.</p>'
-    + '<a class="only-admin" href="' + url + '" target="_blank" rel="noopener" style="display:inline-block;background:#22c55e;color:#fff;font-weight:800;font-size:16px;padding:12px 20px;border-radius:12px;text-decoration:none">📂 Mở thư mục Phiếu học tập trên Drive</a>'     + '<p class="only-guest" style="color:#94a3b8;margin:12px 0 0;font-size:14.5px;line-height:1.6">🔒 Phiếu học tập đang được nối mã để xem ngay trong trang. Thầy cô cần file phiếu vui lòng nhắn thầy Khải để được gửi riêng.</p>'
-    + '<p style="color:#94a3b8;margin:12px 0 0;font-size:14px;line-height:1.6">Trong thư mục: chọn bộ (Sinh 10 / 11 / 12, CNNN 10 / 11 / 12) → chọn bản <b>Học sinh</b> / <b>Học sinh có đáp án</b> / <b>Giáo viên</b> → bấm file để xem.</p>'
-    + '<p style="margin:12px 0 0"><button type="button" onclick="hlPaneOpenCard(' + i + ')" style="background:#141e33;color:#e2e8f0;border:1px solid #1e293b;border-radius:10px;padding:9px 14px;font-size:15px;cursor:pointer">← Quay lại thẻ bài</button></p>'
-    + '</div>';
-  hlPaneEnsureVisible();
+  body.innerHTML = '<div style="padding:18px;text-align:center;color:#94a3b8;font-size:15.5px;line-height:1.7">📚 Đang xem <b style="color:#d8b4fe">Ôn Tập Vip</b> — <b>' + esc(state.mon) + ' • Khối ' + state.khoi + '</b>: chọn đề ôn tập ở khung bên trái để xem ngay trong khung lớn này.</div>';
 }
+function renderOtvShelf(){
+  var list = document.getElementById('baiList'); if (!list) return;
+  var files = otvFilesOf(state.mon, state.khoi);
+  var inner = '';
+  if (files.length){
+    inner = files.map(function(d, i){
+      var hue = otvHue(i);
+      return '<div class="tn-file" onclick="xemOnTapVip(' + i + ')" style="background:linear-gradient(180deg,hsl(' + hue + ',52%,34%),hsl(' + hue + ',58%,27%));border-left:7px solid hsl(' + hue + ',85%,62%);border-radius:8px;cursor:pointer"><span class="nm"><span style="display:inline-block;background:hsl(' + hue + ',70%,42%);border-radius:999px;padding:3px 10px;font-size:15px">📚</span> <span style="font-size:17px;font-weight:700;color:#ffffff">' + esc(d.file) + '</span></span></div>';
+    }).join('');
+  } else {
+    inner = '<div style="color:#fcd34d;font-weight:700;font-size:14px;padding:6px 2px">🕐 Đang chờ thầy nạp file</div>';
+  }
+  list.className = 'frames';
+  list.innerHTML = sideFrameHtml('📚', 'Ôn Tập Vip — Khối ' + state.khoi, files.length + ' file', inner, 'grow');
+}
+window.xemOnTapVip = function(i){
+  var files = otvFilesOf(state.mon, state.khoi);
+  if (files[i]) tnPaneOpen(files[i], '📚 Ôn Tập Vip — ' + state.mon + ' Khối ' + state.khoi + ' — ' + files[i].file);
+};
+
 function hlTnViewerHint(){
   var body = document.getElementById('paneBody'); if (!body) return;
   var fb = document.getElementById('paneFallback'); if (fb) fb.style.display = 'none';
@@ -1772,16 +1789,26 @@ function renderKhoiTabs(){
     html += '<button type="button" class="ktab ktab-tn' + (state.tnView ? ' on' : '') +
             '" data-tn="1">🎓 Ôn thi tốt nghiệp</button>';
   }
+  /* Nút Ôn Tập Vip: kế bên nút Ôn thi tốt nghiệp, môn nào cũng có; nội dung
+     theo (môn, khối) đang chọn (thầy chốt 12/11/2026 — đổi ý: theo khối). */
+  html += '<button type="button" class="ktab ktab-otv' + (state.otvView ? ' on' : '') +
+          '" data-otv="1">📚 Ôn Tập Vip</button>';
   wrap.innerHTML = html;
   wrap.querySelectorAll('[data-khoi]').forEach(function(btn){
     btn.addEventListener('click', function(){
+      var wasOtv = state.otvView;
       state.tnView = false;
-      state.khoi = parseInt(btn.getAttribute('data-khoi'), 10); state.baiSel = 0; renderAll(); var libEl = document.getElementById('tabLib'); if (libEl && libEl.style.display === 'none'){ if (window.renderExamMenu) window.renderExamMenu(); } else { hlPaneOpenBai(0); }
+      state.khoi = parseInt(btn.getAttribute('data-khoi'), 10); state.baiSel = 0; renderAll(); var libEl = document.getElementById('tabLib'); if (libEl && libEl.style.display === 'none'){ if (window.renderExamMenu) window.renderExamMenu(); } else if (wasOtv){ hlOtvViewerHint(); } else { hlPaneOpenBai(0); }
     });
   });
   wrap.querySelectorAll('[data-tn]').forEach(function(btn){
     btn.addEventListener('click', function(){
-      state.tnView = true; state.baiSel = -1; var libEl2 = document.getElementById('tabLib'); if (libEl2 && libEl2.style.display === 'none' && typeof hlShowTab === 'function') hlShowTab('lib'); renderAll(); hlTnViewerHint();
+      state.tnView = true; state.otvView = false; state.baiSel = -1; var libEl2 = document.getElementById('tabLib'); if (libEl2 && libEl2.style.display === 'none' && typeof hlShowTab === 'function') hlShowTab('lib'); renderAll(); hlTnViewerHint();
+    });
+  });
+  wrap.querySelectorAll('[data-otv]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      state.otvView = true; state.tnView = false; state.baiSel = -1; var libEl3 = document.getElementById('tabLib'); if (libEl3 && libEl3.style.display === 'none' && typeof hlShowTab === 'function') hlShowTab('lib'); renderAll(); hlOtvViewerHint();
     });
   });
 }
@@ -1807,9 +1834,6 @@ function baiCardHtml(b, idx, boLabel){
   var slots =
     slotHtml('📗', 'Giáo án', ga ? esc(ga.file) : '', 'Đã có sẵn', 'Đang cập nhật', !!ga,
              ga ? 'xemGiaoAn(' + idx + ')' : '') +
-    slotHtml('🧾', 'Phiếu học tập', b.phieu && b.phieu.co ? esc(b.phieu.ghi_chu || '') : '',
-             'Đã có sẵn', 'Đang cập nhật', !!(b.phieu && b.phieu.co),
-             (b.phieu && b.phieu.co) ? 'xemPhieu(' + idx + ')' : '') +
     slotHtml('💎', 'Tài liệu tham khảo VIP', 'Tài liệu chọn lọc dành cho thầy cô', 'Đã có sẵn',
              'Đang cập nhật', !!(b.vip && b.vip.co), 'xemVip(' + idx + ')') +
     slotHtml('📊', 'Slide PPT', 'Bài giảng trình chiếu VIP của thầy', 'Đã có sẵn',
@@ -1832,7 +1856,6 @@ function bindCards(container){
 }
 function hlBankKey(i){ return (RENDERED_BO[i] || '') + ((RENDERED[i] && RENDERED[i].so) || ''); }
 function xemGiaoAn(i){ var b = RENDERED[i]; if (b) openDoc(b.giao_an, 'Giáo án — Bài ' + b.so + ': ' + b.ten); }
-function xemPhieu(i){ var b = RENDERED[i]; if (!b) return; if (docFidOf(b.phieu)){ openDoc(b.phieu, 'Phiếu học tập — Bài ' + b.so + ': ' + b.ten); } else { hlPaneOpenPhieu(i); } }
 function xemVip(i){ var b = RENDERED[i]; if (b) openDoc(b.vip, 'Tài liệu VIP — Bài ' + b.so + ': ' + b.ten); }
 function xemPpt(i){ var b = RENDERED[i]; if (b) openDoc(b.ppt, 'Slide PPT — Bài ' + b.so + ': ' + b.ten); }
 
@@ -1874,7 +1897,15 @@ function bindCdRows(list){
 function renderBrowse(){
   renderKhoiTabs();
   var stT = document.getElementById('sideListTitle');
-  if (stT) stT.textContent = (state.tnView && monHasTn(state.mon)) ? '🎓 Ôn thi tốt nghiệp' : '📖 Danh sách bài';
+  if (stT) stT.textContent = state.otvView ? '📚 Ôn Tập Vip' : ((state.tnView && monHasTn(state.mon)) ? '🎓 Ôn thi tốt nghiệp' : '📖 Danh sách bài');
+  if (state.otvView){
+    var spO = document.getElementById('specialArea'); if (spO) spO.innerHTML = '';
+    document.getElementById('baiList').innerHTML = '';
+    document.getElementById('shelfArea').innerHTML = '';
+    RENDERED = []; RENDERED_BO = [];
+    renderOtvShelf();
+    return;
+  }
   if (state.tnView && monHasTn(state.mon)){
     var spT = document.getElementById('specialArea'); if (spT) spT.innerHTML = '';
     
@@ -1968,7 +1999,6 @@ function cdSectionHtml(bo){
       '<div class="bai-body"><div class="slots">' +
       slotHtml('📗', 'Giáo án', esc(c.file), 'Đã có sẵn', 'Đang cập nhật', true,
                'xemChuyenDe(' + i + ')') +
-      slotHtml('🧾', 'Phiếu học tập', '', 'Đã có sẵn', 'Đang cập nhật', false, '') +
       slotHtml('💎', 'Tài liệu tham khảo VIP', 'Tài liệu chọn lọc dành cho thầy cô', 'Đã có sẵn',
                'Đang cập nhật', false, '') +
       slotHtml('📊', 'Slide PPT', 'Bài giảng trình chiếu VIP của thầy', 'Đã có sẵn',
@@ -5068,6 +5098,7 @@ window.renderTnShelf = function(){
     if (files.length){
       var disp = files.map(function(d, i){ return { d: d, i: i, so: f.kind === 'de' ? tnDeSo(d.file) : 0 }; });
       if (f.kind === 'de') disp.sort(function(a, b){ return (a.so || 999) - (b.so || 999) || a.i - b.i; });
+      if (f.kind === 'tl') disp.sort(function(a, b){ var av = a.d.file.indexOf('VIP-TAI_LIEU') === 0 ? 0 : 1; var bv = b.d.file.indexOf('VIP-TAI_LIEU') === 0 ? 0 : 1; return av - bv || a.i - b.i; });
       inner = disp.map(function(x){
         if (x.so){
           var hue = tnDeHue(x.so);
@@ -5104,6 +5135,7 @@ function tnPaneOpen(file, title){
   }
   return tnViewerOpen(file, title);
 }
+window.tnPaneOpen = tnPaneOpen;
 
 function tnViewerOpen(file, title){ var v = document.getElementById('tnViewer'); var b = document.getElementById('tnViewerBody'); var t = document.getElementById('tnViewerTitle'); var f = document.getElementById('tnViewerFoot'); if (!v || !b){ openDoc(file, title); return false; } var fid = docFidOf(file); if (t) t.textContent = '📄 ' + title; if (f) f.textContent = '📄 ' + file.file + ' • Cuộn xuống để xem hết tài liệu • Bấm ✕ Đóng để về danh sách'; if (fid){ b.innerHTML = '<div class="doc-wrap"><iframe title="Khung xem tài liệu" src="' + drivePreviewUrl(fid) + '" allow="autoplay" allowfullscreen></iframe><div class="doc-corner" aria-hidden="true"></div></div>'; } else { b.innerHTML = '<div class="empty">Chưa nối được file này — thầy cô mở thư mục môn trên Drive để xem.</div>'; } v.style.display = ''; try { var sec = v.closest('section'); if (sec){ var r = sec.getBoundingClientRect(); var vh = window.innerHeight || 800; if (r.top < 235 || r.top > vh * 0.5) sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); } } catch (e){} return true; }
 window.tnViewerClose = function(){ var v = document.getElementById('tnViewer'); if (v) v.style.display = 'none'; var b = document.getElementById('tnViewerBody'); if (b) b.innerHTML = ''; };
