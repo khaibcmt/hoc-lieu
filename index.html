@@ -6338,8 +6338,9 @@ function hlMathy(toks, idx, text){
   var k = hlTokenKind(t);
   if (k === 'math' || k === 'func') return true;
   if (/^[a-z]+$/.test(t) && text){
-    var left = hlNearChar(text, s - 1, -1), right = hlNearChar(text, e, 1);
-    if (HL_GLUE[left] || HL_GLUE[right] || hlIsDigit(right) || hlIsDigit(left)) return true;
+    var leftG = hlNearChar(text, s - 1, -1), rightG = hlNearChar(text, e, 1);
+    var leftD = s > 0 ? text[s - 1] : '', rightD = e < text.length ? text[e] : '';
+    if (HL_GLUE[leftG] || HL_GLUE[rightG] || hlIsDigit(rightD) || hlIsDigit(leftD)) return true;
   }
   return false;
 }
@@ -6564,9 +6565,12 @@ function hlParseSeq(p, stop){
       continue;
     }
     if (c === '/'){
-      var num = null, popped = null, savedBuf = buf;
-      if (buf && /^[A-Za-z0-9π∞]+$/.test(buf) && buf === buf.trim()){ num = hlTexEsc(buf); buf = ''; }
-      else if (!buf && out.length && (out[out.length - 1].indexOf('\\left') === 0 || out[out.length - 1].indexOf('^{') > 0 || out[out.length - 1].indexOf('_{') > 0)){ popped = out.pop(); num = popped; }
+      var num = null, popped = null, savedBuf = buf, numPrefix = '';
+      if (buf){
+        var mTail = /(^|[\s+\-=<>;,(])([A-Za-z0-9π∞]+)$/.exec(buf);
+        if (mTail){ num = hlTexEsc(mTail[2]); numPrefix = buf.slice(0, buf.length - mTail[2].length); buf = ''; }
+      }
+      else if (out.length && (out[out.length - 1].indexOf('\\left') === 0 || out[out.length - 1].indexOf('^{') > 0 || out[out.length - 1].indexOf('_{') > 0)){ popped = out.pop(); num = popped; }
       if (num !== null){
         var save = p.i;
         p.i += 1;
@@ -6574,7 +6578,13 @@ function hlParseSeq(p, stop){
         try {
           var den;
           if (p.peek() && '([{'.indexOf(p.peek()) >= 0) den = hlParseDelim(p);
-          else { var tk = hlReadAtomToken(p); if (!tk) throw new HlPFail(); den = hlMaybeScript(p, tk); }
+          else {
+            var tk = hlReadAtomToken(p); if (!tk) throw new HlPFail();
+            var mDen = /^(\d+)([A-Za-z].*)$/.exec(tk);
+            if (mDen){ den = mDen[1]; p.i -= mDen[2].length; }
+            else den = hlMaybeScript(p, tk);
+          }
+          if (numPrefix) out.push(hlTexEsc(numPrefix));
           out.push('\\frac{' + num + '}{' + den + '}');
           continue;
         } catch(e){ p.i = save; buf = savedBuf; if (popped !== null) out.push(popped); }
@@ -6636,6 +6646,12 @@ function hlLinearToTex(seg){
 function hlMathify(text){
   if (text == null) return '';
   text = String(text);
+  var wholeFrac = /^\s*[-−]?\d+\s*\/\s*\d+\s*$/.test(text);
+  if (wholeFrac){
+    var wfTex = hlLinearToTex(text.trim().replace(/\s+/g, '').replace('−', '-'));
+    if (wfTex !== null) return '\\(' + wfTex + '\\)';
+    return text;
+  }
   if (!/[∫∑∏√^_]/.test(text) && text.indexOf('/') < 0 && !/[⁰-ₜ]/.test(text) && !/[A-Za-z]'/.test(text)) return text;
   // khong dung vao doan da co TeX san ($...$, \(...\))
   var chunks = text.split(/(\$\$[\s\S]*?\$\$|\$[^$]*\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\])/g);
