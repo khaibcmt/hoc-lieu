@@ -908,6 +908,10 @@ header{background:linear-gradient(90deg,#2063ac,#2b7bbb)}
   #viewerModal{padding:0}
   .viewer-box{height:100vh;height:100dvh;border-radius:0}
 }
+
+.hl-qimg{max-width:100%;height:auto;display:block;margin:8px auto;border-radius:10px;background:#fff}
+.hl-qtbl{border-collapse:collapse;margin:8px 0;width:100%;font-size:.92em;background:rgba(255,255,255,.06)}
+.hl-qtbl td{border:1px solid rgba(140,140,140,.5);padding:5px 8px;text-align:left;vertical-align:top}
 </style>
 </head>
 <body>
@@ -5467,12 +5471,14 @@ function examParaText(seg){
     var r = runs[i], end = r.indexOf('</w:r>');
     if (end >= 0) r = r.slice(0, end);
     var txt = EduDocx._paraText(r);
-    if (!txt) continue;
+    var bm = r.match(/<a:blip[^>]*r:embed="([^"]+)"/) || r.match(/<v:imagedata[^>]*r:id="([^"]+)"/);
+    if (!txt && !bm) continue;
     var rPrEnd = r.indexOf('<w:t');
     var rPr = rPrEnd >= 0 ? r.slice(0, rPrEnd) : r;
     var marked = /<w:u[\s>\/]/.test(rPr) && /<w:color[^>]*w:val="(?:DC143C|CC0000|C00000|FF0000|E53935|D32F2F|B91C1C|EF4444|F43F5E|E11D48)"/i.test(rPr);
     if (marked && (/^\s*[A-D][.)]/.test(txt) || /^\s*[A-D]\s*$/.test(txt) || /^\s*(Đúng|Sai)\s*$/i.test(txt))) out += '***' + txt;
     else out += txt;
+    if (bm) out += '%%HLIMG:' + bm[1] + '%%';
   }
   return out;
 }
@@ -5597,24 +5603,127 @@ function hlOmmlLinear(xml){
   return out + xml.slice(pos);
 }
 /* HL_OMML_END */
+/* Ranh giới phần ĐÁP ÁN trong document.xml: vị trí đoạn <w:p> bắt đầu bảng đáp án
+   (chỉ gắn thẻ BẢNG ở thân đề — bảng trong phần đáp án phải giữ nguyên dạng chữ để parser đọc khoá) */
+function hlKeyBoundary(xml){
+  var firstQ = xml.search(/Câu\s*\d+\s*[.:)]|Question\s*\d+\s*[:.]/);
+  var re = /ĐÁP\s+ÁN/g, m;
+  while ((m = re.exec(xml)) !== null){
+    if (firstQ >= 0 && m.index < firstQ) continue;
+    var ps = xml.lastIndexOf('<w:p', m.index), pe = xml.indexOf('</w:p>', m.index);
+    if (ps < 0 || pe < 0) continue;
+    var t = EduDocx._paraText(xml.slice(ps, pe)).replace(/\*\*\*/g, '').trim();
+    if (/^(BẢNG\s+)?ĐÁP\s+ÁN\b/i.test(t)) return ps;
+  }
+  return -1;
+}
+/* Dựng HTML cho 1 bảng <w:tbl>: mỗi ô lấy text qua examParaText (giữ cả thẻ hình bên trong ô) */
+function hlTblHtml(span){
+  function e2(x){ return String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  var rows = [], trRe = /<w:tr[\s>][\s\S]*?<\/w:tr>/g, m;
+  while ((m = trRe.exec(span)) !== null){
+    var cells = [], tcRe = /<w:tc[\s>]([\s\S]*?)<\/w:tc>/g, c;
+    while ((c = tcRe.exec(m[0])) !== null){
+      var segs = c[1].split(/<w:p[\s>]/), texts = [];
+      for (var i = 1; i < segs.length; i++){
+        var sg = segs[i], e = sg.indexOf('</w:p>'); if (e >= 0) sg = sg.slice(0, e);
+        var t = examParaText(sg.replace(/<w:br[^>]*>/g, ' ')).replace(/\*\*\*/g, '').replace(/[^\S\t]+/g, ' ').trim();
+        if (t) texts.push(t);
+      }
+      cells.push(texts.join(' '));
+    }
+    if (cells.length) rows.push(cells);
+  }
+  if (!rows.length) return '';
+  var h = '<table class="hl-qtbl">';
+  rows.forEach(function(r){ h += '<tr>' + r.map(function(cc){ return '<td>' + e2(cc) + '</td>'; }).join('') + '</tr>'; });
+  return h + '</table>';
+}
+/* Thay các bảng TRƯỚC ranh giới đáp án bằng đoạn thẻ %%HLTBLn%% */
+function hlTblTokenize(xml, boundary){
+  var tbl = [], out = '', pos = 0;
+  while (true){
+    var m0 = /<w:tbl[\s>]/.exec(xml.slice(pos));
+    if (!m0) break;
+    var st = pos + m0.index;
+    if (st > boundary) break;
+    var re = /<w:tbl[\s>]|<\/w:tbl>/g; re.lastIndex = st;
+    var depth = 0, mm, end = -1;
+    while ((mm = re.exec(xml)) !== null){
+      if (mm[0].charAt(1) === '/'){ depth--; if (depth === 0){ end = re.lastIndex; break; } }
+      else depth++;
+    }
+    if (end < 0) break;
+    var html = hlTblHtml(xml.slice(st, end));
+    if (html){ out += xml.slice(pos, st) + '<w:p><w:r><w:t>%%HLTBL' + tbl.length + '%%</w:t></w:r></w:p>'; tbl.push(html); pos = end; }
+    else { out += xml.slice(pos, end); pos = end; }
+  }
+  return { xml: out + xml.slice(pos), tbl: tbl };
+}
+/* Từ document.xml + rels -> { text (co the %%HLIMGn%%/%%HLTBLn%%), tbl: [html], imgTargets: [path] } */
+function examXmlBuild(xml, relsXml){
+  xml = String(xml || '');
+  if (typeof hlOmmlLinear === 'function') xml = hlOmmlLinear(xml);
+  var tbl = [];
+  var boundary = hlKeyBoundary(xml);
+  if (boundary > 0){ var tk = hlTblTokenize(xml, boundary); xml = tk.xml; tbl = tk.tbl; }
+  var parts = xml.split(/<w:p[\s>]/), out = [];
+  for (var i = 1; i < parts.length; i++){
+    var seg = parts[i], end = seg.indexOf('</w:p>');
+    if (end >= 0) seg = seg.slice(0, end);
+    var line = examParaText(seg).replace(/[^\S\t]+/g, ' ').replace(/ ?\t ?/g, '\t').trim();
+    if (line) out.push(line);
+  }
+  var text = out.join('\n');
+  var rels = {};
+  if (relsXml){
+    var rm, rre = /<Relationship[^>]*>/g;
+    while ((rm = rre.exec(relsXml)) !== null){
+      var idm = rm[0].match(/Id="([^"]+)"/), tgm = rm[0].match(/Target="([^"]+)"/);
+      if (idm && tgm) rels[idm[1]] = tgm[1];
+    }
+  }
+  var order = [], seen = {};
+  text = text.replace(/%%HLIMG:([\w-]+)%%/g, function(_, rid){
+    if (!(rid in seen)){ seen[rid] = order.length; order.push(rid); }
+    return '%%HLIMG' + seen[rid] + '%%';
+  });
+  /* the bang trong o co the chua the hinh chua danh so -> danh so not theo cung rels */
+  tbl = tbl.map(function(h){
+    return h.replace(/%%HLIMG:([\w-]+)%%/g, function(_, rid){
+      if (!(rid in seen)){ seen[rid] = order.length; order.push(rid); }
+      return '%%HLIMG' + seen[rid] + '%%';
+    });
+  });
+  var targets = order.map(function(rid){
+    var t = rels[rid] || '';
+    if (!t) return '';
+    if (t.charAt(0) === '/') return t.replace(/^\//, '');
+    return 'word/' + t.replace(/^\.\//, '').replace(/^(\.\.\/)+/, '');
+  });
+  return { text: text, tbl: tbl, imgTargets: targets };
+}
 function examDocxToText(buf){
   if (!buf || !buf.byteLength){ var e0 = new Error('empty'); e0.stage = 'tai'; throw e0; }
   return loadJSZip().then(function(){ return JSZip.loadAsync(buf); }).then(function(zip){
     var f = zip.file('word/document.xml');
     if (!f){ var e1 = new Error('no-doc'); e1.stage = 'doc'; throw e1; }
-    return f.async('string');
-  }).then(function(xml){
-    if (typeof hlOmmlLinear === 'function') xml = hlOmmlLinear(xml);
-    var parts = String(xml || '').split(/<w:p[\s>]/), out = [];
-    for (var i = 1; i < parts.length; i++){
-      var seg = parts[i], end = seg.indexOf('</w:p>');
-      if (end >= 0) seg = seg.slice(0, end);
-      var line = examParaText(seg).replace(/[^\S\t]+/g, ' ').replace(/ ?\t ?/g, '\t').trim();
-      if (line) out.push(line);
-    }
-    return out.join('\n');
+    var rf = zip.file('word/_rels/document.xml.rels');
+    return Promise.all([f.async('string'), rf ? rf.async('string') : Promise.resolve('')]).then(function(rr){
+      var built = examXmlBuild(rr[0], rr[1]);
+      var mime = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', bmp: 'image/bmp', svg: 'image/svg+xml', webp: 'image/webp' };
+      return Promise.all(built.imgTargets.map(function(tg){
+        var ext = (tg.split('.').pop() || '').toLowerCase();
+        if (!tg || !mime[ext]) return Promise.resolve('');
+        var mf = zip.file(tg);
+        if (!mf) return Promise.resolve('');
+        return mf.async('arraybuffer').then(function(ab){
+          try { return URL.createObjectURL(new Blob([ab], { type: mime[ext] })); } catch(e){ return ''; }
+        }).catch(function(){ return ''; });
+      })).then(function(urls){ return { text: built.text, img: urls, tbl: built.tbl }; });
+    });
   }).catch(function(err){
-    if (window.mammoth) return mammoth.extractRawText({ arrayBuffer: buf }).then(function(r){ return String((r && r.value) || ''); }).catch(function(){ var e2 = new Error('mammoth-loi'); e2.stage = 'doc'; throw e2; });
+    if (window.mammoth) return mammoth.extractRawText({ arrayBuffer: buf }).then(function(r){ return { text: String((r && r.value) || ''), img: [], tbl: [] }; }).catch(function(){ var e2 = new Error('mammoth-loi'); e2.stage = 'doc'; throw e2; });
     var e3 = err || new Error('no-extract'); e3.stage = e3.stage || 'doc'; throw e3;
   });
 }
@@ -5633,9 +5742,12 @@ function examStartDoc(file, title){
   }).then(function(buf){
     if (typeof hlDecryptDocx === 'function') return hlDecryptDocx(buf);
     return buf;
-  }).then(function(buf){ return examDocxToText(buf); }).then(function(text){
+  }).then(function(buf){ return examDocxToText(buf); }).then(function(r){
     __st = 'phan-tich';
-    var parsed = EduParse.parseQuestionsMulti(text);
+    if (window.__hlMediaUrls) window.__hlMediaUrls.forEach(function(u){ try { URL.revokeObjectURL(u); } catch(e){} });
+    window.__hlMedia = { img: r.img || [], tbl: r.tbl || [] };
+    window.__hlMediaUrls = (r.img || []).filter(Boolean);
+    var parsed = EduParse.parseQuestionsMulti(r.text);
     var res = examBankFromParsed(parsed);
     var n = (res.bank.mc || []).length + (res.bank.sa || []).length + (res.bank.tf ? res.bank.tf.length : 0);
     if (!n){ var eq = new Error('no-q'); eq.stage = 'cau'; throw eq; }
@@ -6874,7 +6986,13 @@ function hlMathify(text){
   });
   return out.join('');
 }
-function escQ(s){ return esc(hlMathify(s == null ? '' : s)); }
+function hlMediaSwap(h){
+  var M = window.__hlMedia || { img: [], tbl: [] };
+  h = h.replace(/%%HLTBL(\d+)%%/g, function(_, i){ return (M.tbl && M.tbl[+i]) || ''; });
+  h = h.replace(/%%HLIMG(\d+)%%/g, function(_, i){ var u = M.img && M.img[+i]; return u ? '<img class="hl-qimg" src="' + u + '" alt="Hình minh họa" loading="lazy">' : ''; });
+  return h;
+}
+function escQ(s){ return hlMediaSwap(esc(hlMathify(s == null ? '' : s))); }
 /* ===== HET PHAN CONG THUC PHANG ===== */
 
 /* ===== CHE DO TAP TRUNG KHI THI ONLINE (hlExamFocus) =====
