@@ -7171,16 +7171,70 @@ function hlDocFxOff(){
    Nút 📖 Đổi cách đọc ở chế độ tự đọc: chuyển về cách đọc Google (dự phòng);
    nút ↻ Tải lại: nạp lại bản tự đọc. */
 var __hlGaNo = {}, __hlGaForceGoogle = {}, __hlGaSeq = -1, __hlGaLast = null;
+function hlGaColorizeDocx(buf){
+  /* Mammoth 1.8 khong doc w:color cua run nen ban tu doc bi ROT MAU CHU
+     (tich hop NLS xanh 0033CC, AI do CC0000, tich hop khac vang cam CC8800
+     thanh chu den). Cach giu mau: quet word/document.xml, run nao co
+     w:color thi gan them w:rStyle "hlc<hex>" + dinh nghia character style
+     tuong ung trong word/styles.xml; mammoth se boc run do thanh
+     span.hlc<hex> qua styleMap, kem <style> mau tra lai dung ma mau goc.
+     Loi o bat ky buoc nao thi roi ve ban goc (doc khong mau) nhu cu. */
+  var fallback = { buf: buf, colors: [] };
+  if (typeof loadJSZip !== 'function') return Promise.resolve(fallback);
+  return loadJSZip().then(function(){
+    if (typeof JSZip === 'undefined') return fallback;
+    return JSZip.loadAsync(buf).then(function(zip){
+      var docFile = zip.file('word/document.xml');
+      var styFile = zip.file('word/styles.xml');
+      if (!docFile || !styFile) return fallback;
+      return Promise.all([docFile.async('string'), styFile.async('string')]).then(function(xs){
+        var xml = xs[0], sty = xs[1];
+        var seen = {}, list = [], m, re = /<w:color w:val="([0-9A-Fa-f]{6})"/g;
+        while ((m = re.exec(xml))){ var hx = m[1].toUpperCase(); if (!seen[hx]){ seen[hx] = 1; list.push(hx); } }
+        if (!list.length || sty.indexOf('</w:styles>') < 0) return fallback;
+        var newXml = xml.replace(/<w:rPr>([\s\S]*?)<\/w:rPr>/g, function(all, inner){
+          if (/<w:rStyle[\s/>]/.test(inner)) return all;
+          var cm = /<w:color w:val="([0-9A-Fa-f]{6})"/.exec(inner);
+          if (!cm) return all;
+          return '<w:rPr><w:rStyle w:val="hlc' + cm[1].toLowerCase() + '"/>' + inner + '</w:rPr>';
+        });
+        var defs = list.map(function(hex){
+          var id = 'hlc' + hex.toLowerCase();
+          return '<w:style w:type="character" w:styleId="' + id + '"><w:name w:val="' + id + '"/><w:rPr><w:color w:val="' + hex + '"/></w:rPr></w:style>';
+        }).join('');
+        zip.file('word/document.xml', newXml);
+        zip.file('word/styles.xml', sty.replace('</w:styles>', defs + '</w:styles>'));
+        return zip.generateAsync({ type: 'arraybuffer', compression: 'STORE' }).then(function(out){
+          return { buf: out, colors: list };
+        });
+      });
+    });
+  }).catch(function(){ return fallback; });
+}
 function hlGaFetchHtml(fid){
   return fetch('ga/' + fid + '.docx').then(function(r){
     if (!r.ok){ __hlGaNo[fid] = 1; throw new Error('no-mirror'); }
     return r.arrayBuffer();
   }).then(function(buf){ return hlDecryptDocx(buf); }).then(function(buf){
+    return hlGaColorizeDocx(buf);
+  }).then(function(prep){
     var opts = { convertImage: mammoth.images.imgElement(function(image){
       return image.read('base64').then(function(b64){ return { src: 'data:' + image.contentType + ';base64,' + b64 }; });
     }) };
-    return mammoth.convertToHtml({ arrayBuffer: buf }, opts);
-  }).then(function(res){ return (res && res.value) || ''; });
+    if (prep.colors.length){
+      opts.styleMap = prep.colors.map(function(hex){
+        return "r[style-name='hlc" + hex.toLowerCase() + "'] => span.hlc" + hex.toLowerCase();
+      });
+    }
+    return mammoth.convertToHtml({ arrayBuffer: prep.buf }, opts).then(function(res){
+      var html = (res && res.value) || '';
+      if (prep.colors.length){
+        var css = prep.colors.map(function(hex){ return '.hlc' + hex.toLowerCase() + '{color:#' + hex + '}'; }).join('');
+        html = '<style>' + css + '</style>' + html;
+      }
+      return html;
+    });
+  });
 }
 function hlGaSetSelf(fid, html){
   var body = document.getElementById('paneBody'); if (!body) return false;
