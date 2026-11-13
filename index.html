@@ -7280,6 +7280,78 @@ window.__hlGaToGoogle = function(frameId){
   return true;
 };
 
+/* ===== CẢNH BÁO NỘP BÀI TỰ LUYỆN (thầy chốt 14/11/2026) =====
+   - Nút Nộp bài giữ nguyên; còn câu chưa làm → HỘP CẢNH BÁO liệt kê các câu chưa làm.
+   - "↩️ Quay lại làm tiếp": đóng hộp, giữ nguyên mọi đáp án đã chọn (không vẽ lại bài).
+   - "📋 Nộp bài sớm": nộp luôn, câu chưa làm tính là chưa trả lời.
+   - Làm hết câu → nộp thẳng như cũ, không hiện cảnh báo.
+   Ghi chú kỹ thuật: máy thi (SP/spPqAnswered/spPracticeFinish) nằm trong IIFE phía trên —
+   module này chỉ dùng bề mặt công khai: nút nộp gốc (giữ lại ở __spSubmitOrig) + trạng thái
+   "đã trả lời" mà máy thi tự vẽ lên dãy số câu (.pq-chip.done). */
+var __spSubmitOrig = (typeof window.spPracticeSubmit === 'function') ? window.spPracticeSubmit : null;
+function spSubmitWarnEl(){
+  var el = document.getElementById('spSubmitWarn');
+  if (el) return el;
+  el = document.createElement('div');
+  el.id = 'spSubmitWarn';
+  el.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(15,10,40,.62);z-index:9995;align-items:center;justify-content:center;padding:16px';
+  document.body.appendChild(el);
+  return el;
+}
+window.spSubmitWarnClose = function(){
+  var el = document.getElementById('spSubmitWarn');
+  if (el) el.style.display = 'none';
+};
+window.spSubmitWarnGoto = function(i){
+  spSubmitWarnClose();
+  var chips = document.querySelectorAll('#spBox .pq-chip');
+  if (chips && chips[i]) chips[i].click();
+};
+window.spSubmitWarnNow = function(){
+  spSubmitWarnClose();
+  if (!__spSubmitOrig) return;
+  /* Nộp sớm = xác nhận thay cho hộp confirm() cũ của nút nộp gốc */
+  var cf = window.confirm;
+  window.confirm = function(){ return true; };
+  try { __spSubmitOrig(); } finally { window.confirm = cf; }
+};
+function spSubmitWarnOpen(miss){
+  var chips = miss.map(function(i){
+    return '<button type="button" onclick="spSubmitWarnGoto(' + i + ')" style="min-width:44px;padding:9px 10px;border-radius:12px;border:2px solid #e8a13a;background:#fff7e8;color:#8a5a12;font-weight:800;font-size:15.5px;cursor:pointer">Câu ' + (i + 1) + '</button>';
+  }).join('');
+  var el = spSubmitWarnEl();
+  el.innerHTML =
+    '<div role="dialog" aria-modal="true" style="background:#fff;color:#17203a;border-radius:18px;max-width:520px;width:100%;max-height:88vh;overflow:auto;padding:20px 18px;box-shadow:0 18px 50px rgba(0,0,0,.35);text-align:center">' +
+      '<div style="font-size:42px;line-height:1">⚠️</div>' +
+      '<h3 style="margin:8px 0 6px;font-size:21px">Em còn ' + miss.length + ' câu chưa làm!</h3>' +
+      '<p style="margin:0 0 10px;font-size:15.5px;line-height:1.55">Bấm vào số câu để quay lại làm tiếp câu đó:</p>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0 0 16px">' + chips + '</div>' +
+      '<div style="display:flex;gap:10px;flex-wrap:wrap">' +
+        '<button type="button" onclick="spSubmitWarnClose()" style="flex:1;min-width:150px;padding:13px 10px;border-radius:14px;border:2px solid #35508f;background:#eef3ff;color:#20386b;font-weight:800;font-size:16.5px;cursor:pointer">↩️ Quay lại làm tiếp</button>' +
+        '<button type="button" onclick="spSubmitWarnNow()" style="flex:1;min-width:150px;padding:13px 10px;border-radius:14px;border:2px solid #b3541e;background:#ff7a1a;color:#fff;font-weight:800;font-size:16.5px;cursor:pointer">📋 Nộp bài sớm</button>' +
+      '</div>' +
+      '<p style="margin:12px 0 0;font-size:14px;color:#5a6478;line-height:1.5">Nếu nộp sớm, các câu chưa làm sẽ tính là chưa trả lời nhé.</p>' +
+    '</div>';
+  el.style.display = 'flex';
+}
+/* Ghi đè nút NỘP BÀI của TỰ LUYỆN (bản gốc trong IIFE dùng confirm()):
+   còn câu chưa làm → hộp cảnh báo; làm hết → chuyển thẳng cho nút gốc nộp như cũ */
+window.spPracticeSubmit = function(){
+  var chips = document.querySelectorAll('#spBox .pq-chip');
+  if (!chips.length){ if (__spSubmitOrig) __spSubmitOrig(); return; }
+  var miss = [];
+  for (var i = 0; i < chips.length; i++) if (!chips[i].classList.contains('done')) miss.push(i);
+  /* Câu trả lời ngắn đang gõ dở: ô nhập là sự thật mới nhất (dãy số câu chưa kịp vẽ lại) */
+  var saInp = document.getElementById('spSaInput');
+  if (saInp && String(saInp.value).trim() !== ''){
+    for (var j = 0; j < chips.length; j++) if (chips[j].classList.contains('cur')){
+      var k = miss.indexOf(j); if (k >= 0) miss.splice(k, 1);
+    }
+  }
+  if (!miss.length){ if (__spSubmitOrig) __spSubmitOrig(); return; }
+  spSubmitWarnOpen(miss);
+};
+
 /* ===== BẢN QUYỀN THI ONLINE — Demo/Full theo MÃ MÁY CỐ ĐỊNH (thầy chốt 13/11/2026) =====
    - Mã máy: dấu vân tay thiết bị (cấu hình/màn hình/card đồ hoạ) + bộ nhớ đệm tại máy;
      xoá dữ liệu trình duyệt vẫn ra đúng mã cũ.
