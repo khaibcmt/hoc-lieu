@@ -3431,11 +3431,12 @@ function soloRenderQ(isBonus){
       '<div id="audOut" style="margin-top:10px"></div>';
   }
   var modeBar = '<div id="soloModeBar">' + soloModeBarHTML() + '</div>';
-  area.innerHTML = modeBar + tag + '<p class="big-q">' + esc(cur.q) + '</p>' + betHTML +
+  area.innerHTML = modeBar + tag + '<p class="big-q">' + escQ(cur.q) + '</p>' + betHTML +
     '<div id="soloOpts">' + cur.disp.map(function(op, j){
-      return '<button class="opt-big" data-pos="' + j + '" onclick="soloPick(' + j + ')">' + LETTERS[j] + '. ' + esc(op) + '</button>';
+      return '<button class="opt-big" data-pos="' + j + '" onclick="soloPick(' + j + ')">' + LETTERS[j] + '. ' + escQ(op) + '</button>';
     }).join('') + '</div>' + llHTML +
     '<div id="soloFb" style="margin-top:12px;font-weight:700;font-size:16px"></div>';
+  hlTex(area);
   soloInfoUpdate();
   soloStartTimer(isBonus);
 }
@@ -3558,8 +3559,8 @@ function soloTcApply(correct, pos){
   var parts = [];
   if (S.timedOut){
     parts.push(mode === 'bell'
-      ? '⏰ Hết giờ — không trả lời nên mất 1 ❤️ (còn ' + S.tc.lives + '). Đáp án đúng: ' + esc(S.cur.correctText)
-      : '⏰ Hết giờ — không trả lời, trừ 1.000 điểm. Đáp án đúng: ' + esc(S.cur.correctText));
+      ? '⏰ Hết giờ — không trả lời nên mất 1 ❤️ (còn ' + S.tc.lives + '). Đáp án đúng: ' + escQ(S.cur.correctText)
+      : '⏰ Hết giờ — không trả lời, trừ 1.000 điểm. Đáp án đúng: ' + escQ(S.cur.correctText));
   } else if (correct){
     var det = ['gốc ' + res.base + 'đ'];
     if (res.speed) det.push('⚡ tốc độ +' + res.speed + 'đ');
@@ -3567,9 +3568,9 @@ function soloTcApply(correct, pos){
     if (res.golden) det.push('🌟 Câu Vàng x2');
     parts.push('✅ Chính xác! +' + res.delta + ' điểm (' + det.join(' • ') + ')');
   } else if (res.shieldUsed){
-    parts.push('🛡️ KHIÊN BẤT TỬ đã đỡ đòn — sai nhưng KHÔNG trừ điểm' + (mode === 'bell' ? ', KHÔNG mất mạng' : '') + '! Đáp án đúng: ' + esc(S.cur.correctText));
+    parts.push('🛡️ KHIÊN BẤT TỬ đã đỡ đòn — sai nhưng KHÔNG trừ điểm' + (mode === 'bell' ? ', KHÔNG mất mạng' : '') + '! Đáp án đúng: ' + escQ(S.cur.correctText));
   } else {
-    parts.push('❌ Chưa đúng — trừ ' + Math.abs(res.delta) + ' điểm (1.000đ × hệ số cược). Đáp án đúng: ' + esc(S.cur.correctText));
+    parts.push('❌ Chưa đúng — trừ ' + Math.abs(res.delta) + ' điểm (1.000đ × hệ số cược). Đáp án đúng: ' + escQ(S.cur.correctText));
   }
   if (mode === 'bell'){
     if (res.lifeBonus) parts.push('🔔 Đúng 3 câu liên tiếp — thưởng +1 ❤️! Đang có ' + S.tc.lives + ' mạng.');
@@ -3583,7 +3584,7 @@ function soloTcApply(correct, pos){
     else if (j === pos) b.classList.add('wrong');
   });
   var fb = document.getElementById('soloFb');
-  fb.innerHTML = parts.join('<br>');
+  fb.innerHTML = parts.join('<br>'); hlTex(fb);
   soloInfoUpdate();
   soloModeBarUpdate();
   if (res.chestUnlock){
@@ -3628,9 +3629,10 @@ function soloReviveOffer(){
   S.cur = soloMakeCur(q); S.cur.isRevive = true; S.answered = false;
   var area = document.getElementById('soloArea');
   area.innerHTML = '<span class="phase-tag green">🌟 CÂU HỎI HỒI SINH — trả lời đúng để quay lại ván với ' + R.reviveScore + ' điểm (lần hồi sinh ' + (S.revives + 1) + '/' + R.reviveMax + ')</span>' +
-    '<p class="big-q">' + esc(S.cur.q) + '</p><div id="soloOpts">' +
-    S.cur.disp.map(function(op, j){ return '<button class="opt-big" onclick="soloRevivePick(' + j + ')">' + LETTERS[j] + '. ' + esc(op) + '</button>'; }).join('') +
+    '<p class="big-q">' + escQ(S.cur.q) + '</p><div id="soloOpts">' +
+    S.cur.disp.map(function(op, j){ return '<button class="opt-big" onclick="soloRevivePick(' + j + ')">' + LETTERS[j] + '. ' + escQ(op) + '</button>'; }).join('') +
     '</div><div id="soloFb" style="margin-top:12px;font-weight:700;font-size:16px"></div>';
+  hlTex(area);
   soloInfoUpdate('Đang làm câu hồi sinh');
 }
 function soloRevivePick(pos){
@@ -4300,17 +4302,17 @@ function rtRenderCurrent(){
   var qText = '...', optsHTML = '', phase = '';
   if (T.meta.status === 'reviving' && T.revive){
     phase = '🌟 CÂU HỎI HỒI SINH';
-    qText = T.revive.q.q;
-    optsHTML = T.revive.q.opts.map(function(op, j){ return '<div class="opt-big" style="cursor:default">' + LETTERS[j] + '. ' + esc(op) + '</div>'; }).join('');
+    qText = hlMathify(T.revive.q.q);
+    optsHTML = T.revive.q.opts.map(function(op, j){ return '<div class="opt-big" style="cursor:default">' + LETTERS[j] + '. ' + escQ(op) + '</div>'; }).join('');
     document.getElementById('rtNextBtn').textContent = '✔️ Đóng câu hồi sinh';
   } else if (T.current){
     var q = T.questions[T.current.idx];
     if (q){
       phase = rtPhaseOf(T.current);
-      qText = q.q;
-      if (q.kind === 'tf') optsHTML = (q.items || []).map(function(it, j){ return '<div class="opt-big" style="cursor:default">' + 'abcd'[j] + ') ' + esc(it) + ' — <b>' + (q.bools[j] ? 'Đúng' : 'Sai') + '</b></div>'; }).join('');
-      else if (q.kind === 'sa') optsHTML = '<div class="opt-big" style="cursor:default">✏️ Trả lời ngắn — đáp án đúng: <b>' + esc(String(q.ansText == null ? '' : q.ansText)) + '</b></div>';
-      else optsHTML = q.opts.map(function(op, j){ return '<div class="opt-big" data-tpos="' + j + '" style="cursor:default">' + LETTERS[j] + '. ' + esc(op) + '</div>'; }).join('');
+      qText = hlMathify(q.q);
+      if (q.kind === 'tf') optsHTML = (q.items || []).map(function(it, j){ return '<div class="opt-big" style="cursor:default">' + 'abcd'[j] + ') ' + escQ(it) + ' — <b>' + (q.bools[j] ? 'Đúng' : 'Sai') + '</b></div>'; }).join('');
+      else if (q.kind === 'sa') optsHTML = '<div class="opt-big" style="cursor:default">✏️ Trả lời ngắn — đáp án đúng: <b>' + escQ(String(q.ansText == null ? '' : q.ansText)) + '</b></div>';
+      else optsHTML = q.opts.map(function(op, j){ return '<div class="opt-big" data-tpos="' + j + '" style="cursor:default">' + LETTERS[j] + '. ' + escQ(op) + '</div>'; }).join('');
     }
     document.getElementById('rtNextBtn').textContent = (T.current.idx >= (T.mainCount || 10) - 1) ? (T.R.bonus && !T.bonusPlayed && T.questions[T.mainCount || 10] ? '🌟 Tới câu Thách đố' : '🏁 Kết thúc & vinh danh') : '⏭️ Câu tiếp theo';
   }
@@ -4759,7 +4761,7 @@ function rsRenderQuestion(){
   var ansHTML;
   if (kind === 'tf'){
     ansHTML = '<div id="rsTf">' + U.cur.items.map(function(it, j){
-      return '<div class="tf-row"><span class="tf-txt"><b>' + 'abcd'[j] + ')</b> ' + esc(it) + '</span>' +
+      return '<div class="tf-row"><span class="tf-txt"><b>' + 'abcd'[j] + ')</b> ' + escQ(it) + '</span>' +
         '<span class="tf-btns"><button type="button" class="tf-btn" id="rsTfD' + j + '" onclick="rsPickTf(' + j + ',true)">Đúng</button>' +
         '<button type="button" class="tf-btn" id="rsTfS' + j + '" onclick="rsPickTf(' + j + ',false)">Sai</button></span></div>';
     }).join('') + '</div>' + '<button type="button" class="sp-bigbtn" onclick="rsSubmitTf()">✅ CHỐT CÂU TRẢ LỜI</button>';
@@ -4768,10 +4770,10 @@ function rsRenderQuestion(){
       '<button type="button" class="sp-bigbtn" onclick="rsSubmitSa()">✅ GỬI ĐÁP ÁN</button>';
   } else {
     ansHTML = '<div id="rsOpts">' + U.cur.disp.map(function(op, j){
-      return '<button class="opt-big" data-pos="' + j + '" onclick="rsPick(' + j + ')"' + (needRoundBet ? ' disabled' : '') + '>' + LETTERS[j] + '. ' + esc(op) + '</button>';
+      return '<button class="opt-big" data-pos="' + j + '" onclick="rsPick(' + j + ')"' + (needRoundBet ? ' disabled' : '') + '>' + LETTERS[j] + '. ' + escQ(op) + '</button>';
     }).join('') + '</div>';
   }
-  area.innerHTML = tag + '<p class="big-q">' + esc(q.q) + '</p>' + rsSkillBarHTML() + betHTML +
+  area.innerHTML = tag + '<p class="big-q">' + escQ(q.q) + '</p>' + rsSkillBarHTML() + betHTML +
     ansHTML + (kind === 'mc' ? llHTML : '') + '<div id="rsFb" style="margin-top:12px;font-weight:700;font-size:16px"></div>';
   hlTex(area);
   if (U.pendingChest) rsShowChestBar();
@@ -4933,7 +4935,7 @@ function rsSubmit(correct, pos, isTimeout){
   });
   var fb = document.getElementById('rsFb');
   if (fb) fb.innerHTML = correct ? '✅ Chính xác! ' + (delta >= 0 ? '+' + delta : delta) + ' điểm — chờ cả lớp trả lời xong / sang câu tiếp theo nhé.' :
-    (isTimeout ? '⏰ Hết giờ! ' : '❌ Chưa đúng. ') + (delta < 0 ? 'Bị trừ ' + Math.abs(delta) + ' điểm. ' : '') + 'Đáp án đúng: ' + esc(U.cur.correctText) + ' — chờ câu tiếp theo nhé.';
+    (isTimeout ? '⏰ Hết giờ! ' : '❌ Chưa đúng. ') + (delta < 0 ? 'Bị trừ ' + Math.abs(delta) + ' điểm. ' : '') + 'Đáp án đúng: ' + escQ(U.cur.correctText) + ' — chờ câu tiếp theo nhé.'; if (fb) hlTex(fb);
 }
 /* Chấm bài phía HS cho 2 chế độ luật trochoi (fast/bell): máy điểm tcScoreAnswer + tranh First Blood bằng transaction */
 function rsTcSubmit(correct, pos, isTimeout){
@@ -4966,8 +4968,8 @@ function rsTcSubmit(correct, pos, isTimeout){
     var fb = document.getElementById('rsFb'), msg;
     if (isTimeout){
       msg = (mode === 'bell')
-        ? '⏰ Hết giờ — mất 1 ❤️ (còn ' + st.lives + ' ❤️). Đáp án đúng: ' + esc(U.cur.correctText)
-        : '⏰ Hết giờ — không trả lời, trừ 1.000 điểm. Đáp án đúng: ' + esc(U.cur.correctText);
+        ? '⏰ Hết giờ — mất 1 ❤️ (còn ' + st.lives + ' ❤️). Đáp án đúng: ' + escQ(U.cur.correctText)
+        : '⏰ Hết giờ — không trả lời, trừ 1.000 điểm. Đáp án đúng: ' + escQ(U.cur.correctText);
     } else if (correct){
       var det = ['gốc ' + res.base + 'đ'];
       if (res.speed) det.push('⚡ tốc độ +' + res.speed + 'đ');
@@ -4977,12 +4979,12 @@ function rsTcSubmit(correct, pos, isTimeout){
       msg = '✅ Chính xác! +' + res.delta + ' điểm (' + det.join(' • ') + ') — chờ câu tiếp theo nhé.';
       if (res.lifeBonus) msg += '<br>🔔 Thưởng +1 ❤️ — đang có ' + st.lives + ' mạng!';
     } else if (res.shieldUsed){
-      msg = '🛡️ KHIÊN BẤT TỬ đã đỡ đòn! Sai nhưng KHÔNG trừ điểm' + (mode === 'bell' ? ', KHÔNG mất mạng' : '') + '. Đáp án đúng: ' + esc(U.cur.correctText);
+      msg = '🛡️ KHIÊN BẤT TỬ đã đỡ đòn! Sai nhưng KHÔNG trừ điểm' + (mode === 'bell' ? ', KHÔNG mất mạng' : '') + '. Đáp án đúng: ' + escQ(U.cur.correctText);
     } else {
-      msg = '❌ Chưa đúng — trừ ' + Math.abs(res.delta) + ' điểm' + (mode === 'bell' ? ', mất 1 ❤️ (còn ' + st.lives + ' ❤️)' : '') + '. Đáp án đúng: ' + esc(U.cur.correctText);
+      msg = '❌ Chưa đúng — trừ ' + Math.abs(res.delta) + ' điểm' + (mode === 'bell' ? ', mất 1 ❤️ (còn ' + st.lives + ' ❤️)' : '') + '. Đáp án đúng: ' + escQ(U.cur.correctText);
     }
     if (res.eliminated) msg += '<br>🔔 Em đã hết mạng — chuyển sang khán giả cổ vũ, chờ thầy/cô CỨU TRỢ hồi sinh nhé.';
-    if (fb) fb.innerHTML = msg;
+    if (fb){ fb.innerHTML = msg; hlTex(fb); }
     if (res.chestUnlock) rsShowChestBar();
     rsRenderHead();
   }
@@ -5586,12 +5588,12 @@ function spRenderPQ(){
   var body = '';
   if (q.kind === 'mc'){
     body = '<div id="spOpts">' + q.opts.map(function(o, j){
-      return '<button type="button" class="opt-huge c' + j + (ans === j ? ' sel' : '') + '" onclick="spPickPqMc(' + j + ')"><span class="ol">' + LET4[j] + '</span><span>' + esc(o) + '</span></button>';
+      return '<button type="button" class="opt-huge c' + j + (ans === j ? ' sel' : '') + '" onclick="spPickPqMc(' + j + ')"><span class="ol">' + LET4[j] + '</span><span>' + escQ(o) + '</span></button>';
     }).join('') + '</div>';
   } else if (q.kind === 'tf'){
     var sel = ans || [null, null, null, null];
     body = '<div id="spTf">' + q.items.map(function(it, j){
-      return '<div class="tf-row"><span class="tf-txt"><b>' + 'abcd'[j] + ')</b> ' + esc(it) + '</span>' +
+      return '<div class="tf-row"><span class="tf-txt"><b>' + 'abcd'[j] + ')</b> ' + escQ(it) + '</span>' +
         '<span class="tf-btns"><button type="button" class="tf-btn' + (sel[j] === true ? ' sel-d' : '') + '" onclick="spPickPqTf(' + j + ',true)">Đúng</button>' +
         '<button type="button" class="tf-btn' + (sel[j] === false ? ' sel-s' : '') + '" onclick="spPickPqTf(' + j + ',false)">Sai</button></span></div>';
     }).join('') + '</div>';
@@ -5606,7 +5608,7 @@ function spRenderPQ(){
   spBox().innerHTML =
     '<div class="stu-card"><span class="avatar">🎓</span><span>' + esc(SP.name) + '</span><span>✍️ Đã trả lời ' + done + ' / ' + total + ' câu</span></div>' +
     '<div class="qcard"><div class="qmeta"><span>CÂU ' + (SP.idx + 1) + ' / ' + total + ' • ' + kindLabel + '</span><span>🎓 TỰ LUYỆN</span></div>' +
-    '<p class="qstem">' + esc(q.stem) + '</p>' + body + chips +
+    '<p class="qstem">' + escQ(q.stem) + '</p>' + body + chips +
     '<div class="pq-nav">' +
       '<button type="button" class="btn alt" onclick="spGotoPq(' + (SP.idx - 1) + ')"' + (SP.idx === 0 ? ' disabled' : '') + '>⬅ Câu trước</button>' +
       '<button type="button" class="btn alt" onclick="spGotoPq(' + (SP.idx + 1) + ')"' + (SP.idx >= total - 1 ? ' disabled' : '') + '>Câu tiếp ➡</button>' +
@@ -5658,7 +5660,7 @@ function spPracticeFinish(){
       corr = q.ans;
       okQ = (a !== null && a !== undefined && String(a).trim() !== '' && spSaMatch(a, q.ans));
     }
-    return '<div class="pq-det"><p style="margin:0"><b>Câu ' + (i + 1) + '.</b> ' + (okQ ? '✅' : '❌') + ' ' + esc(q.stem) + '</p>' +
+    return '<div class="pq-det"><p style="margin:0"><b>Câu ' + (i + 1) + '.</b> ' + (okQ ? '✅' : '❌') + ' ' + escQ(q.stem) + '</p>' +
       '<p class="note" style="margin:2px 0 0">Em trả lời: <b>' + (q.kind === 'tf' ? yours : esc(yours)) + '</b><br>Đáp án đúng: <b>' + esc(corr) + '</b></p></div>';
   }).join('');
   spBox().innerHTML =
@@ -5672,6 +5674,7 @@ function spPracticeFinish(){
       '<button type="button" class="btn" onclick="spRetry()">🔁 Làm lại</button>' +
       '<button type="button" class="btn alt" onclick="spExit()">📚 Chọn bài khác</button>' +
     '</div>';
+  hlTex(spBox());
 }
 function spHeadHtml(){
   return '<div class="stu-card"><span class="avatar">🎓</span><span>' + esc(SP.name) + '</span>' +
@@ -5712,11 +5715,11 @@ function spRenderQ(){
   if (q.kind === 'mc'){
     SP.disp = shuffle(q.opts.map(function(o, i){ return i; }));
     body = '<div id="spOpts">' + SP.disp.map(function(oi, j){
-      return '<button type="button" class="opt-huge c' + j + '" onclick="spPickMc(' + j + ')"><span class="ol">' + LET4[j] + '</span><span>' + esc(q.opts[oi]) + '</span></button>';
+      return '<button type="button" class="opt-huge c' + j + '" onclick="spPickMc(' + j + ')"><span class="ol">' + LET4[j] + '</span><span>' + escQ(q.opts[oi]) + '</span></button>';
     }).join('') + '</div>';
   } else if (q.kind === 'tf'){
     body = '<div id="spTf">' + q.items.map(function(it, j){
-      return '<div class="tf-row"><span class="tf-txt"><b>' + 'abcd'[j] + ')</b> ' + esc(it) + '</span>' +
+      return '<div class="tf-row"><span class="tf-txt"><b>' + 'abcd'[j] + ')</b> ' + escQ(it) + '</span>' +
         '<span class="tf-btns"><button type="button" class="tf-btn" id="spTfD' + j + '" onclick="spPickTf(' + j + ',true)">Đúng</button>' +
         '<button type="button" class="tf-btn" id="spTfS' + j + '" onclick="spPickTf(' + j + ',false)">Sai</button></span></div>';
     }).join('') + '</div>' +
@@ -5727,7 +5730,7 @@ function spRenderQ(){
   }
   spBox().innerHTML = spHeadHtml() +
     '<div class="qcard"><div class="qmeta"><span>CÂU ' + (SP.idx + 1) + ' / ' + total + ' • ' + kindLabel + (golden ? ' • 🌟 CÂU HỎI VÀNG x2' : '') + '</span><span class="tc-clock" id="spClock">⏱ ' + SP.perQ + 's</span></div>' +
-    '<p class="qstem">' + esc(q.stem) + '</p>' + spWagerHtml() + body +
+    '<p class="qstem">' + escQ(q.stem) + '</p>' + spWagerHtml() + body +
     '<div id="spFb" style="margin-top:10px;font-weight:700;font-size:16.5px"></div></div>';
   hlTex(spBox());
   spStartTimer();
@@ -5816,11 +5819,11 @@ function spApply(correct, timeout, pos){
     parts.push('✅ Chính xác! +' + res.delta + ' điểm (' + det.join(' • ') + ')');
   } else if (res.shieldUsed) parts.push('🛡️ KHIÊN BẤT TỬ đã đỡ đòn — sai nhưng KHÔNG trừ điểm!');
   else parts.push('❌ Chưa đúng — trừ ' + Math.abs(res.delta) + ' điểm (1.000đ × hệ số cược).');
-  if (q.kind === 'mc') parts.push('Đáp án đúng: <b>' + LET4[q.ans] + '. ' + esc(q.opts[q.ans]) + '</b>');
+  if (q.kind === 'mc') parts.push('Đáp án đúng: <b>' + LET4[q.ans] + '. ' + escQ(q.opts[q.ans]) + '</b>');
   if (q.kind === 'tf') parts.push('Đáp án: ' + q.bools.map(function(v, j){ return 'abcd'[j] + ') ' + (v ? 'Đúng' : 'Sai'); }).join(' • '));
   if (q.kind === 'sa') parts.push('Đáp án đúng: <b>' + esc(q.ans) + '</b>');
   if (res.chestUnlock) parts.push('🎁 Đúng 5 câu liên tiếp — RƯƠNG BÍ ẨN đã mở! Hãy chọn 1 rương:');
-  fb.innerHTML = parts.join('<br>');
+  fb.innerHTML = parts.join('<br>'); hlTex(fb);
   var head = spBox().querySelector('.stu-card'); if (head) head.outerHTML = spHeadHtml();
   if (res.chestUnlock){
     var cd = document.createElement('div'); cd.style.marginTop = '10px';
@@ -5938,8 +5941,9 @@ window.mixRenderList = function(){
     var on = !!MIX_SEL[x.id];
     return '<label style="display:flex;gap:8px;align-items:flex-start;padding:6px 4px;border-bottom:1px dashed #e8e2f5;cursor:pointer">' +
       '<input type="checkbox" ' + (on ? 'checked' : '') + ' onchange="mixToggle(\'' + x.id + '\',this.checked)" style="margin-top:3px">' +
-      '<span><b>' + esc(x.stem) + '</b><br><span class="note">' + x.opts.map(function(o, j){ return LET4[j] + '. ' + esc(o) + (j === x.ans ? ' ✅' : ''); }).join(' &nbsp; ') + '<br>📌 Nguồn: ' + esc(x.src) + '</span></span></label>';
+      '<span><b>' + escQ(x.stem) + '</b><br><span class="note">' + x.opts.map(function(o, j){ return LET4[j] + '. ' + escQ(o) + (j === x.ans ? ' ✅' : ''); }).join(' &nbsp; ') + '<br>📌 Nguồn: ' + esc(x.src) + '</span></span></label>';
   }).join('');
+  hlTex(box);
 };
 window.mixToggle = function(id, on){
   if (!on){ delete MIX_SEL[id]; mixUpdateCount(); return; }
@@ -6278,6 +6282,376 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 else v8Init();
 })();
 
+
+/* ===== CONG THUC PHANG -> LaTeX (KaTeX) =====
+   Nhan dien cac doan cong thuc go phang trong noi dung cau hoi (∫a^b f(x)dx,
+   e^x, (a+b)/(c+d), √(x+1)...) va boc thanh \(...\) de KaTeX dung hinh.
+   Doan nao parse khong chac chan thi GIU NGUYEN van ban - khong lam mat noi dung.
+   Ap dung cho moi mon co cong thuc (Toan, Vat li, Hoa hoc...). */
+var HL_SUBCH = {'₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9','ᵢ':'i','ⱼ':'j','ₙ':'n','ₘ':'m','ₖ':'k','ₐ':'a','ₑ':'e','ₒ':'o','ₓ':'x','ₕ':'h','ₗ':'l','ₚ':'p','ₛ':'s','ₜ':'t'};
+var HL_SUPCH = {'⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9','ⁿ':'n','ᵏ':'k','ˣ':'x','ᵃ':'a','ᵇ':'b','ᶜ':'c','ᵈ':'d','ᵉ':'e','ⁱ':'i','ʰ':'h','ᵐ':'m','ᵒ':'o','ʳ':'r','ˢ':'s','ᵗ':'t','ᵘ':'u','ᵛ':'v','ʷ':'w','ʸ':'y','ᶻ':'z','⁺':'+','⁻':'-'};
+var HL_FUNCS = {'sin':1,'cos':1,'tan':1,'cot':1,'lim':1,'log':1,'ln':1,'max':1,'min':1,'dx':1,'dy':1,'dt':1,'dz':1,'du':1,'dv':1,'ds':1,'arcsin':1,'arccos':1,'arctan':1};
+var HL_MSYM = {};
+'∫∑∏√π∞αβγδθλμσφωΔΩ∈∉⊂⊃∪∩⇒⇔→←↔≤≥≠±·×÷−'.split('').forEach(function(c){ HL_MSYM[c] = 1; });
+function hlInSubSup(ch){ return HL_SUBCH[ch] !== undefined || HL_SUPCH[ch] !== undefined; }
+function hlIsLetter(ch){ return /^\p{L}$/u.test(ch); }
+function hlIsDigit(ch){ return ch >= '0' && ch <= '9'; }
+/* --- token hoa --- */
+function hlTokenize(text){
+  var toks = [], i = 0, n = text.length;
+  while (i < n){
+    var ch = text[i];
+    if (/\s/.test(ch)){ var j = i; while (j < n && /\s/.test(text[j])) j++; toks.push([i, j, text.slice(i, j)]); i = j; }
+    else if (hlInSubSup(ch) || HL_MSYM[ch]){ toks.push([i, i + 1, ch]); i += 1; }
+    else if (hlIsDigit(ch)){ var j2 = i; while (j2 < n && (hlIsDigit(text[j2]) || ((text[j2] === '.' || text[j2] === ',') && j2 + 1 < n && hlIsDigit(text[j2 + 1])))) j2++; toks.push([i, j2, text.slice(i, j2)]); i = j2; }
+    else if (hlIsLetter(ch)){ var j3 = i; while (j3 < n && hlIsLetter(text[j3]) && !HL_MSYM[text[j3]] && !hlInSubSup(text[j3])) j3++; toks.push([i, j3, text.slice(i, j3)]); i = j3; }
+    else { toks.push([i, i + 1, ch]); i += 1; }
+  }
+  return toks;
+}
+function hlTokenKind(tok){
+  if (!tok) return null;
+  if (hlIsDigit(tok[0])) return 'math';
+  if (HL_FUNCS[tok]) return 'func';
+  if (tok.length === 1){
+    if (HL_MSYM[tok]) return 'math';
+    if (/^[A-Za-z]$/.test(tok)) return 'math';
+    var o = tok.codePointAt(0);
+    if (o >= 0x370 && o <= 0x3FF) return 'math';
+    return null;
+  }
+  if (/^[A-Z][A-Za-z0-9]*$/.test(tok) && /^[\x00-\x7F]*$/.test(tok)) return 'math';
+  return null;
+}
+function hlIsMathCharTok(t){ return t.length === 1 && (HL_MSYM[t] === 1 || '+-=<>()[]{}^_/.,;:|*'.indexOf(t) >= 0 || hlInSubSup(t)); }
+var HL_GLUE = {}; '([{^_/=+-<>'.split('').forEach(function(c){ HL_GLUE[c] = 1; });
+function hlNearChar(text, pos, dir){
+  var j = pos;
+  while (j >= 0 && j < text.length && /\s/.test(text[j])) j += dir;
+  return (j >= 0 && j < text.length) ? text[j] : '';
+}
+function hlMathy(toks, idx, text){
+  if (idx < 0 || idx >= toks.length) return false;
+  var s = toks[idx][0], e = toks[idx][1], t = toks[idx][2];
+  if (/^\s+$/.test(t)) return false;
+  if (t.length === 1 && hlIsMathCharTok(t)) return true;
+  var k = hlTokenKind(t);
+  if (k === 'math' || k === 'func') return true;
+  if (/^[a-z]+$/.test(t) && text){
+    var left = hlNearChar(text, s - 1, -1), right = hlNearChar(text, e, 1);
+    if (HL_GLUE[left] || HL_GLUE[right] || hlIsDigit(right) || hlIsDigit(left)) return true;
+  }
+  return false;
+}
+function hlExpand(toks, ti, text){
+  var n = toks.length, l = ti, r = ti;
+  while (true){ var j = l - 1; if (j >= 0 && /^\s+$/.test(toks[j][2])) j -= 1; if (j >= 0 && hlMathy(toks, j, text)) l = j; else break; }
+  while (true){ var j2 = r + 1; if (j2 < n && /^\s+$/.test(toks[j2][2])) j2 += 1; if (j2 < n && hlMathy(toks, j2, text)) r = j2; else break; }
+  return [toks[l][0], toks[r][1]];
+}
+function hlHasViet(s){ for (var i = 0; i < s.length; i++){ var c = s[i]; if (c.codePointAt(0) > 127 && !HL_MSYM[c] && !hlInSubSup(c)) return true; } return false; }
+function hlSplitTop(seg, ch){
+  var depth = 0, parts = [], last = 0;
+  for (var k = 0; k < seg.length; k++){ var c = seg[k];
+    if ('([{'.indexOf(c) >= 0) depth++;
+    else if (')]}'.indexOf(c) >= 0) depth--;
+    else if (c === ch && depth === 0){ parts.push([last, k]); last = k + 1; } }
+  parts.push([last, seg.length]);
+  return parts;
+}
+function hlTrySpan(text, l, r, out){
+  var seg = text.slice(l, r);
+  var trim = seg.replace(/\s+$/, '');
+  while (trim && '.,;:'.indexOf(trim[trim.length - 1]) >= 0){
+    if (trim[trim.length - 1] === '.' && trim.length >= 2 && hlIsDigit(trim[trim.length - 2])) break;
+    trim = trim.slice(0, -1).replace(/\s+$/, '');
+  }
+  if (trim.length < seg.length){ r = l + trim.length; seg = trim; }
+  if (!seg) return;
+  var lm = /^[A-Da-d][.)]\s+/.exec(seg);
+  if (lm){ l += lm[0].length; seg = seg.slice(lm[0].length); if (!seg) return; }
+  var hasTrig = /[∫∑∏√^_\/]/.test(seg) || seg.split('').some(hlInSubSup) || seg.indexOf("'") >= 0;
+  if (!hasTrig) return;
+  if (/^[\d\s\/.,]+$/.test(seg)) return;
+  while (seg && ')]};,: '.indexOf(seg[0]) >= 0){ seg = seg.slice(1); l += 1; }
+  var depth = 0, unclosed = -1;
+  for (var k = 0; k < seg.length; k++){ var ch = seg[k];
+    if ('([{'.indexOf(ch) >= 0){ if (depth === 0) unclosed = k; depth++; }
+    else if (')]}'.indexOf(ch) >= 0) depth--; }
+  if (depth > 0 && unclosed >= 0){ r = l + unclosed; seg = seg.slice(0, unclosed).replace(/\s+$/, ''); if (!seg) return; }
+  var tex = hlLinearToTex(seg);
+  if (tex !== null){ out.push([l, r, tex]); return; }
+  var parts = hlSplitTop(seg, ';');
+  if (parts.length > 1){ parts.forEach(function(pr){ var a = pr[0], b = pr[1]; while (a < b && seg[a] === ' ') a++; if (b - a >= 2) hlTrySpan(text, l + a, l + b, out); }); return; }
+  depth = 0; var openIdx = -1;
+  for (var k2 = 0; k2 < seg.length; k2++){ var c2 = seg[k2];
+    if ('([{'.indexOf(c2) >= 0){ if (depth === 0) openIdx = k2; depth++; }
+    else if (')]}'.indexOf(c2) >= 0){ depth--; if (depth === 0 && openIdx >= 0){ if (hlHasViet(seg.slice(openIdx, k2 + 1))){ hlTrySpan(text, l, l + openIdx, out); hlTrySpan(text, l + k2 + 1, r, out); return; } openIdx = -1; } } }
+  parts = hlSplitTop(seg, ',');
+  if (parts.length > 1){ parts.forEach(function(pr){ var a = pr[0], b = pr[1]; while (a < b && seg[a] === ' ') a++; if (b - a >= 2) hlTrySpan(text, l + a, l + b, out); }); }
+}
+function hlFindTexSpans(text){
+  var toks = hlTokenize(text);
+  if (!toks.length) return [];
+  var triggers = [];
+  for (var idx = 0; idx < toks.length; idx++){
+    var t = toks[idx][2];
+    if (t.length === 1 && '∫∑∏√'.indexOf(t) >= 0) triggers.push(idx);
+    else if (t === '^' || t === '_') triggers.push(idx);
+    else if (t.length === 1 && hlInSubSup(t)) triggers.push(idx);
+    else if (t === '/'){
+      var prevOk = idx > 0 && (toks[idx - 1][2] === ')' || toks[idx - 1][2] === ']' || hlTokenKind(toks[idx - 1][2]) === 'math' || hlTokenKind(toks[idx - 1][2]) === 'func');
+      var nxt = idx + 1; if (nxt < toks.length && /^\s+$/.test(toks[nxt][2])) nxt += 1;
+      var nextOk = nxt < toks.length && (toks[nxt][2] === '(' || toks[nxt][2] === '[' || hlTokenKind(toks[nxt][2]) === 'math' || hlTokenKind(toks[nxt][2]) === 'func');
+      if (prevOk && nextOk) triggers.push(idx);
+    }
+    else if (t === 'lim') triggers.push(idx);
+    else if (t === "'" && idx > 0 && hlTokenKind(toks[idx - 1][2]) === 'math') triggers.push(idx);
+  }
+  if (!triggers.length) return [];
+  var raw = triggers.map(function(ti){ return hlExpand(toks, ti, text); });
+  raw.sort(function(a, b){ return a[0] - b[0]; });
+  var merged = [raw[0].slice()];
+  raw.slice(1).forEach(function(pr){ if (pr[0] <= merged[merged.length - 1][1]) merged[merged.length - 1][1] = Math.max(merged[merged.length - 1][1], pr[1]); else merged.push(pr.slice()); });
+  var spans = [];
+  merged.forEach(function(pr){ hlTrySpan(text, pr[0], pr[1], spans); });
+  spans.sort(function(a, b){ return a[0] - b[0]; });
+  var clean = [];
+  spans.forEach(function(sp){ if (clean.length && sp[0] < clean[clean.length - 1][1]) return; clean.push(sp); });
+  return clean;
+}
+/* --- parser linear -> LaTeX --- */
+function hlTexEsc(s){
+  return s.replace(/\\/g, '\\textbackslash{}').replace(/%/g, '\\%').replace(/#/g, '\\#').replace(/&/g, '\\&').replace(/∫/g, '\\int ').replace(/∑/g, '\\sum ').replace(/∏/g, '\\prod ').replace(/√/g, '\\sqrt ').replace(/π/g, '\\pi ').replace(/∞/g, '\\infty ').replace(/∈/g, '\\in ').replace(/∉/g, '\\notin ').replace(/≤/g, '\\le ').replace(/≥/g, '\\ge ').replace(/≠/g, '\\ne ').replace(/⇒/g, '\\Rightarrow ').replace(/⇔/g, '\\Leftrightarrow ').replace(/→/g, '\\to ').replace(/←/g, '\\leftarrow ').replace(/↔/g, '\\leftrightarrow ').replace(/±/g, '\\pm ').replace(/·/g, '\\cdot ').replace(/×/g, '\\times ').replace(/÷/g, '\\div ').replace(/⊂/g, '\\subset ').replace(/⊃/g, '\\supset ').replace(/∪/g, '\\cup ').replace(/∩/g, '\\cap ').replace(/α/g, '\\alpha ').replace(/β/g, '\\beta ').replace(/γ/g, '\\gamma ').replace(/δ/g, '\\delta ').replace(/θ/g, '\\theta ').replace(/λ/g, '\\lambda ').replace(/μ/g, '\\mu ').replace(/σ/g, '\\sigma ').replace(/φ/g, '\\varphi ').replace(/ω/g, '\\omega ').replace(/Δ/g, '\\Delta ').replace(/Ω/g, '\\Omega ');
+}
+function HlPFail(){}
+function HlP(s){ this.s = s; this.i = 0; this.n = s.length; }
+HlP.prototype.peek = function(k){ var j = this.i + (k || 0); return j < this.n ? this.s[j] : ''; };
+HlP.prototype.eat = function(ch){ if (this.peek() === ch){ this.i += 1; return true; } return false; };
+HlP.prototype.fail = function(){ throw new HlPFail(); };
+var HL_BINOPS = {}; '+-=<>≤≥≠±·×÷*→←↔⇒⇔∈∉⊂⊃∪∩,:;−'.split('').forEach(function(c){ HL_BINOPS[c] = 1; });
+var HL_BASE_TAIL = /(arcsin|arccos|arctan|sin|cos|tan|cot|lim|log|ln|max|min|[A-Za-z]\d*|\d+)$/;
+function hlSplitBase(buf){ var m = HL_BASE_TAIL.exec(buf); if (!m) return [buf, '']; return [buf.slice(0, m.index), m[1]]; }
+function hlWrapScript(baseTex, kind, valTex){
+  if (kind === 'sup') return baseTex + '^{' + valTex + '}';
+  return baseTex + '_{' + valTex + '}';
+}
+function hlParseScriptArg(p){
+  var c = p.peek();
+  if (c && '([{'.indexOf(c) >= 0){
+    var close = {'(' : ')', '[': ']', '{': '}'}[c];
+    p.i += 1;
+    var inner = hlParseSeq(p, close);
+    if (!p.eat(close)) p.fail();
+    return inner;
+  }
+  if (!c) p.fail();
+  var start = p.i;
+  if (p.peek() === '+' || p.peek() === '-') p.i += 1;
+  while (p.i < p.n && (/[A-Za-z0-9]/.test(p.peek()) || p.peek() === 'π' || p.peek() === '∞')) p.i += 1;
+  if (p.i === start || (p.i === start + 1 && '+-'.indexOf(p.s[start]) >= 0)){
+    if (p.i < p.n && ' ^_)]}'.indexOf(p.s[p.i]) < 0) p.i += 1; else p.fail();
+  }
+  return hlTexEsc(p.s.slice(start, p.i));
+}
+function hlParseScriptTail(p, baseTex){
+  var c = p.peek();
+  if (c !== '^' && c !== '_') return '';
+  var first = c; p.i += 1;
+  var v1 = hlParseScriptArg(p);
+  var other = first === '^' ? '_' : '^';
+  if (p.peek() === other){
+    p.i += 1;
+    var v2 = hlParseScriptArg(p);
+    var sub = first === '_' ? v1 : v2, sup = first === '_' ? v2 : v1;
+    return baseTex + '_{' + sub + '}^{' + sup + '}';
+  }
+  return hlWrapScript(baseTex, first === '^' ? 'sup' : 'sub', v1);
+}
+function hlReadAtomToken(p){
+  var start = p.i;
+  while (p.i < p.n && (/[A-Za-z0-9]/.test(p.peek()) || p.peek() === 'π' || p.peek() === '∞')) p.i += 1;
+  return p.i === start ? '' : p.s.slice(start, p.i);
+}
+function hlMaybeScript(p, txt){
+  var save = p.i;
+  try { var tail = hlParseScriptTail(p, hlTexEsc(txt)); if (tail) return tail; } catch(e){ p.i = save; }
+  return hlTexEsc(txt);
+}
+function hlParseDelim(p){
+  var openC = p.peek();
+  var closeC = {'(' : ')', '[': ']', '{': '}'}[openC];
+  p.i += 1;
+  var inner = hlParseSeq(p, closeC);
+  if (!p.eat(closeC)) p.fail();
+  var save = p.i;
+  if (p.peek() === '/'){
+    var qi = p.i + 1;
+    var q = new HlP(p.s); q.i = qi;
+    try {
+      var den = null;
+      if (q.peek() && '([{'.indexOf(q.peek()) >= 0) den = hlParseDelim(q);
+      else { var dt = hlReadAtomToken(q); if (dt) den = hlMaybeScript(q, dt); }
+      if (den){ p.i = q.i; return '\\frac{' + hlWrapDelim(openC, inner) + '}{' + den + '}'; }
+    } catch(e){}
+    p.i = save;
+  }
+  return hlWrapDelim(openC, inner);
+}
+function hlWrapDelim(openC, innerTex){
+  var closeC = {'(' : ')', '[': ']', '{': '}'}[openC];
+  var lo = openC === '(' ? '\\left(' : (openC === '[' ? '\\left[' : '\\left\\{');
+  var ro = closeC === ')' ? '\\right)' : (closeC === ']' ? '\\right]' : '\\right\\}');
+  return lo + innerTex + ro;
+}
+var HL_DIFFRE = /d[xyztuvs](?![a-z])/g;
+function hlParseIntegrand(p){
+  var start = p.i, rest = p.s.slice(start);
+  HL_DIFFRE.lastIndex = 0;
+  var m;
+  while ((m = HL_DIFFRE.exec(rest)) !== null){
+    var after = m.index + m[0].length < rest.length ? rest[m.index + m[0].length] : '';
+    if (' ;,)=.'.indexOf(after) < 0 && after !== '') continue;
+    var seg = rest.slice(0, m.index + m[0].length);
+    var q = new HlP(seg);
+    try { var body = hlParseSeq(q, ''); if (q.i < seg.length) continue; p.i = start + m.index + m[0].length; return body; } catch(e){ continue; }
+  }
+  p.fail();
+}
+function hlParseNary(p, ch){
+  p.i += 1;
+  var sub = '', sup = '';
+  if (p.peek() === '_'){ p.i += 1; sub = hlParseScriptArg(p); }
+  if (!sub && p.peek() && p.peek() !== '^' && p.peek() !== ' '){
+    var save = p.i;
+    var tok = hlReadAtomToken(p);
+    if (tok && p.peek() === '^') sub = hlTexEsc(tok); else p.i = save;
+  }
+  if (p.peek() === '^'){ p.i += 1; sup = hlParseScriptArg(p); }
+  var body = hlParseIntegrand(p);
+  var sym = ch === '∫' ? '\\int' : (ch === '∑' ? '\\sum' : '\\prod');
+  return sym + (sub ? '_{' + sub + '}' : '') + (sup ? '^{' + sup + '}' : '') + ' ' + body;
+}
+function hlParseRad(p){
+  p.i += 1;
+  if (p.peek() && '([{'.indexOf(p.peek()) >= 0){
+    var inner = hlParseDelim(p);
+    return '\\sqrt{' + inner + '}';
+  }
+  var tok = hlReadAtomToken(p);
+  if (!tok) p.fail();
+  return '\\sqrt{' + hlMaybeScript(p, tok) + '}';
+}
+function hlParseSeq(p, stop){
+  var out = [], buf = '';
+  function flush(){ if (buf){ out.push(hlTexEsc(buf)); buf = ''; } }
+  while (p.i < p.n){
+    var c = p.peek();
+    if (stop && stop.indexOf(c) >= 0) break;
+    if ('([{'.indexOf(c) >= 0){
+      flush();
+      var d = hlParseDelim(p);
+      var tailD = hlParseScriptTail(p, d);
+      out.push(tailD || d);
+      continue;
+    }
+    if (c === '∫' || c === '∑' || c === '∏'){ flush(); out.push(hlParseNary(p, c)); continue; }
+    if (c === '√'){
+      flush();
+      var rd = hlParseRad(p);
+      var tailR = hlParseScriptTail(p, rd);
+      out.push(tailR || rd);
+      continue;
+    }
+    if (c === '/'){
+      var num = null, popped = null, savedBuf = buf;
+      if (buf && /^[A-Za-z0-9π∞]+$/.test(buf) && buf === buf.trim()){ num = hlTexEsc(buf); buf = ''; }
+      else if (!buf && out.length && (out[out.length - 1].indexOf('\\left') === 0 || out[out.length - 1].indexOf('^{') > 0 || out[out.length - 1].indexOf('_{') > 0)){ popped = out.pop(); num = popped; }
+      if (num !== null){
+        var save = p.i;
+        p.i += 1;
+        while (p.peek() === ' ') p.i += 1;
+        try {
+          var den;
+          if (p.peek() && '([{'.indexOf(p.peek()) >= 0) den = hlParseDelim(p);
+          else { var tk = hlReadAtomToken(p); if (!tk) throw new HlPFail(); den = hlMaybeScript(p, tk); }
+          out.push('\\frac{' + num + '}{' + den + '}');
+          continue;
+        } catch(e){ p.i = save; buf = savedBuf; if (popped !== null) out.push(popped); }
+      }
+      buf += c; p.i += 1;
+      continue;
+    }
+    if (c === '^' || c === '_'){
+      var sp = hlSplitBase(buf);
+      if (!sp[1]) p.fail();
+      buf = sp[0];
+      flush();
+      var tail = hlParseScriptTail(p, hlTexEsc(sp[1]));
+      if (!tail) p.fail();
+      out.push(tail);
+      continue;
+    }
+    if (hlInSubSup(c)){
+      if (!buf) p.fail();
+      var base = buf[buf.length - 1]; buf = buf.slice(0, -1);
+      var kind = HL_SUBCH[c] !== undefined ? 'sub' : 'sup';
+      var table = kind === 'sub' ? HL_SUBCH : HL_SUPCH;
+      var val = '';
+      while (p.i < p.n && table[p.peek()] !== undefined){ val += table[p.peek()]; p.i += 1; }
+      flush();
+      out.push(hlWrapScript(hlTexEsc(base), kind, hlTexEsc(val)));
+      continue;
+    }
+    if (/[A-Za-z0-9]/.test(c) || 'π∞αβγδθλμσφωΔΩ'.indexOf(c) >= 0){
+      buf += c; p.i += 1;
+      if (p.peek() === '^' || p.peek() === '_'){
+        var sp2 = hlSplitBase(buf);
+        if (sp2[1]){
+          var tail2 = hlParseScriptTail(p, hlTexEsc(sp2[1]));
+          if (tail2){ if (sp2[0]) out.push(hlTexEsc(sp2[0])); buf = ''; out.push(tail2); }
+        }
+      }
+      continue;
+    }
+    if (HL_BINOPS[c] || c === ' ' || c === "'" || c === '|'){ buf += c; p.i += 1; continue; }
+    if (c === '.'){ buf += c; p.i += 1; continue; }
+    break;
+  }
+  flush();
+  return out.join('');
+}
+function hlLinearToTex(seg){
+  var p = new HlP(seg);
+  try {
+    var body = hlParseSeq(p, '');
+    if (seg.slice(p.i).trim() !== '') return null;
+    if (!/\\(int|sum|prod|frac|sqrt|left)|[\^_]/.test(body) && body.indexOf('_{') < 0 && body.indexOf('^{') < 0) {
+      if (!/\\(int|frac|sqrt)/.test(body)) return null;
+    }
+    return body;
+  } catch(e){ return null; }
+}
+/* --- ham chinh: boc cong thuc phang thanh \(...\) --- */
+function hlMathify(text){
+  if (text == null) return '';
+  text = String(text);
+  if (!/[∫∑∏√^_]/.test(text) && text.indexOf('/') < 0 && !/[⁰-ₜ]/.test(text) && !/[A-Za-z]'/.test(text)) return text;
+  // khong dung vao doan da co TeX san ($...$, \(...\))
+  var chunks = text.split(/(\$\$[\s\S]*?\$\$|\$[^$]*\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\])/g);
+  var out = chunks.map(function(chunk, ci){
+    if (ci % 2 === 1) return chunk;
+    var spans = hlFindTexSpans(chunk);
+    if (!spans.length) return chunk;
+    var res = '', pos = 0;
+    spans.forEach(function(sp){ if (sp[0] > pos) res += chunk.slice(pos, sp[0]); res += '\\(' + sp[2] + '\\)'; pos = sp[1]; });
+    if (pos < chunk.length) res += chunk.slice(pos);
+    return res;
+  });
+  return out.join('');
+}
+function escQ(s){ return esc(hlMathify(s == null ? '' : s)); }
+/* ===== HET PHAN CONG THUC PHANG ===== */
 
 /* ===== BẢN QUYỀN THI ONLINE — Demo/Full theo MÃ MÁY CỐ ĐỊNH (thầy chốt 13/11/2026) =====
    - Mã máy: dấu vân tay thiết bị (cấu hình/màn hình/card đồ hoạ) + bộ nhớ đệm tại máy;
