@@ -2891,6 +2891,12 @@ var EduParse = (function(){
         if (saPipe){ var saPr = /Câu\s*(\d+)\s*[.:]\s*([-−]?\d{1,6}(?:[.,]\d{1,4})?)/g, saPm; while ((saPm = saPr.exec(line)) !== null){ saKeyMap[part + ':' + parseInt(saPm[1], 10)] = saPm[2].replace(/−/g, '-'); saKeyMap['0:' + parseInt(saPm[1], 10)] = saPm[2].replace(/−/g, '-'); } usedKey = true; return; }
         var saSemi = line.match(/^(?:Câu\s*\d+\s*[.:]\s*[-−]?\d{1,6}(?:[.,]\d{1,4})?\s*[.;]?\s*)+$/);
         if (saSemi){ var saRe3 = /Câu\s*(\d+)\s*[.:]\s*([-−]?\d{1,6}(?:[.,]\d{1,4})?)/g, saM3; while ((saM3 = saRe3.exec(line)) !== null){ saKeyMap[part + ':' + parseInt(saM3[1], 10)] = saM3[2].replace(/−/g, '-'); saKeyMap['0:' + parseInt(saM3[1], 10)] = saM3[2].replace(/−/g, '-'); } usedKey = true; return; }
+        /* Khoa tra loi ngan kem loi giai sau dau gach ngang: "Câu 1: 45,5 — 70 × 65% = 45,5 kg."
+           (de On Tap Vip Sinh): dap an la SO dung truoc dau gach, phan sau gach la loi giai.
+           Chi nhan trong khoi bang dap an va chi khi dang dong dung mau nay — cac dinh dang khoa
+           khac (chu cai A-D, day D/S) khong bao gio bat dau bang so nen khong dung cham. */
+        var saDash = line.match(/^Câu\s*(\d+)\s*[.:]\s*([-−]?\d{1,6}(?:[.,]\d{1,4})?)\s*[\u2014\u2013-]\s*\S/);
+        if (saDash){ saKeyMap[part + ':' + parseInt(saDash[1], 10)] = saDash[2].replace(/\u2212/g, '-'); saKeyMap['0:' + parseInt(saDash[1], 10)] = saDash[2].replace(/\u2212/g, '-'); usedKey = true; return; }
         var saK = line.match(/^Câu\s*(\d+)\s*[.:]\s*([-−]?\d{1,6}(?:[.,]\d{1,4})?)\s*\./);
         if (saK){ saKeyMap[part + ':' + parseInt(saK[1], 10)] = saK[2].replace(/−/g, '-'); saKeyMap['0:' + parseInt(saK[1], 10)] = saK[2].replace(/−/g, '-'); usedKey = true; return; }
         if (/^Câu\s*\d+\s*[.:)]\s+\S/i.test(line)){ inKey = false; /* rơi xuống xử lý câu hỏi mới */ }
