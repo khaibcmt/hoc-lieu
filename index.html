@@ -2810,8 +2810,27 @@ var EduParse = (function(){
       if (inKey){
         if (/^(Câu\s*\d+\s*[.:]\s*[A-D]\s*\.?\s*([|;,]\s*)?)+$/i.test(line)){ if (scanKeyPairs(line, part, true)) usedKey = true; return; }
         if (/^Câu\s*\d+\s*[.:]\s*([a-d]\s*[-–—]?\s*[ĐS]\s*\.?\s*([,;]\s*)?)+/i.test(line)){ if (scanTfSaKeys(line, part)) usedKey = true; return; }
+        if (/^Câu\s*\d+\s*[.:]\s*[a-d]\s*\)\s*(Đúng|Sai)/i.test(line)){
+          var tfwRe = /Câu\s*(\d+)\s*[.:]\s*((?:[a-d]\s*\)\s*(?:Đúng|Sai)\s*[.,;]?\s*)+)/gi, tfwM, tfwRest = line, tfwGot = false;
+          while ((tfwM = tfwRe.exec(line)) !== null){
+            var tfwWords = tfwM[2].match(/Đúng|Sai/gi) || [];
+            if (tfwWords.length >= 1 && tfwWords.length <= 4){
+              var tfwArr = tfwWords.map(function(w){ return /^đ/i.test(w); });
+              tfKeyMap[part + ':' + parseInt(tfwM[1], 10)] = tfwArr; tfKeyMap['0:' + parseInt(tfwM[1], 10)] = tfwArr; tfwGot = true;
+            }
+            tfwRest = tfwRest.replace(tfwM[0], ' ');
+          }
+          if (tfwGot && /^[\s,;.]*$/.test(tfwRest)){ usedKey = true; return; }
+        }
+        if ((m = line.match(/^Câu\s*(\d+)\s*[.:]\s*ý\s+đúng\s+là\s+([a-d](?:\s*,\s*[a-d]){0,3})\b/i))){
+          var ydArr = [false, false, false, false];
+          m[2].split(',').forEach(function(ch){ var ci = 'abcd'.indexOf(ch.trim().toLowerCase()); if (ci >= 0) ydArr[ci] = true; });
+          tfKeyMap[part + ':' + parseInt(m[1], 10)] = ydArr; tfKeyMap['0:' + parseInt(m[1], 10)] = ydArr; usedKey = true; return;
+        }
         var saPipe = line.match(/^Câu\s*\d+\s*[.:]\s*[-−]?\d{1,6}(?:[.,]\d{1,4})?\s*\.?\s*(?:\|\s*Câu\s*\d+\s*[.:]\s*[-−]?\d{1,6}(?:[.,]\d{1,4})?\s*\.?\s*)+$/);
         if (saPipe){ var saPr = /Câu\s*(\d+)\s*[.:]\s*([-−]?\d{1,6}(?:[.,]\d{1,4})?)/g, saPm; while ((saPm = saPr.exec(line)) !== null){ saKeyMap[part + ':' + parseInt(saPm[1], 10)] = saPm[2].replace(/−/g, '-'); saKeyMap['0:' + parseInt(saPm[1], 10)] = saPm[2].replace(/−/g, '-'); } usedKey = true; return; }
+        var saSemi = line.match(/^(?:Câu\s*\d+\s*[.:]\s*[-−]?\d{1,6}(?:[.,]\d{1,4})?\s*[.;]?\s*)+$/);
+        if (saSemi){ var saRe3 = /Câu\s*(\d+)\s*[.:]\s*([-−]?\d{1,6}(?:[.,]\d{1,4})?)/g, saM3; while ((saM3 = saRe3.exec(line)) !== null){ saKeyMap[part + ':' + parseInt(saM3[1], 10)] = saM3[2].replace(/−/g, '-'); saKeyMap['0:' + parseInt(saM3[1], 10)] = saM3[2].replace(/−/g, '-'); } usedKey = true; return; }
         var saK = line.match(/^Câu\s*(\d+)\s*[.:]\s*([-−]?\d{1,6}(?:[.,]\d{1,4})?)\s*\./);
         if (saK){ saKeyMap[part + ':' + parseInt(saK[1], 10)] = saK[2].replace(/−/g, '-'); saKeyMap['0:' + parseInt(saK[1], 10)] = saK[2].replace(/−/g, '-'); usedKey = true; return; }
         if (/^Câu\s*\d+\s*[.:)]\s+\S/i.test(line)){ inKey = false; /* rơi xuống xử lý câu hỏi mới */ }
@@ -2821,7 +2840,7 @@ var EduParse = (function(){
       if (cur && (m = line.match(/^Đáp\s+án\s*:?\s*([A-D])\s*\.?\s*$/i))){ cur.ans = LET.indexOf(m[1].toUpperCase()); cur.src = 'inline'; return; }
       if (cur && (m = line.match(/^Đ\/A\s*:\s*([A-D])\s*\.?\s*$/i))){ cur.ans = LET.indexOf(m[1].toUpperCase()); cur.src = 'inline'; return; }
       /* --- bắt đầu câu hỏi mới --- */
-      if ((m = line.match(/^Câu\s*(\d+)\s*[.:)]\s*(.*)$/i))){
+      if ((m = line.match(/^(?:Câu|Question)\s*(\d+)\s*[.:)]\s*(.*)$/i))){
         pushCur();
         cur = { no: parseInt(m[1], 10), q: (m[2] || '').trim(), opts: [], ans: -1, src: null, kind: 'mc', tfItems: null, ansText: null, part: part };
         return;
@@ -2851,6 +2870,13 @@ var EduParse = (function(){
         }
         var hasOpts = cur.opts.some(function(o){ return o && String(o).trim(); });
         if (!hasOpts){ if (!cur.tfItems) cur.tfItems = []; cur.tfItems.push({ t: m[2].trim(), correct: null }); return; }
+      }
+      /* --- ranh giới đoạn đọc Tiếng Anh: dòng chỉ dẫn nhóm ("Read the following..." /
+         "Mark the letter...") kết thúc câu trước; đoạn văn theo sau (cur = null) tự bị bỏ,
+         không dính vào phương án D của câu cuối nhóm trước --- */
+      if (/^(Read the following|Mark the letter)\b/i.test(line)){
+        var hasOptB = cur && (cur.opts || []).some(function(o){ return o && String(o).trim(); });
+        if (hasOptB){ pushCur(); return; }
       }
       /* --- dòng tiếp nối: nối vào thân câu (chưa có phương án) hoặc vào phương án cuối --- */
       if (cur){
