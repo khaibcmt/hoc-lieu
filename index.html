@@ -5477,6 +5477,126 @@ function examParaText(seg){
   return out;
 }
 /* Doc .docx tu Drive: dung JSZip de giu dau dap an; neu JSZip loi thi dung mammoth (mat dau, chi con dap an o bang dap an) */
+/* HL_OMML_START */
+/* hlOmmlLinear: chuyển mọi khối công thức OMML (<m:oMath>/<m:oMathPara>) trong
+   document.xml của .docx thành một run chữ thường chứa dạng tuyến tính
+   (vd (a+b)/(c+d), x^2, √(x+1), ∫_0^1) để đường trích text của web đọc được;
+   hlMathify sẽ dựng lại thành công thức đẹp khi hiển thị.
+   Hàm thuần chuỗi, không DOM — dùng được cả trên web lẫn khi kiểm chứng bằng node. */
+function hlOmmlLinear(xml){
+  xml = String(xml || '');
+  if (xml.indexOf('<m:oMath') < 0) return xml;
+  function esc(s){ return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  /* --- tách cây nút tối giản cho 1 span OMML --- */
+  function parseTree(s){
+    var re = /<(\/?)([a-zA-Z][\w:.-]*)((?:\s+[\w:.-]+="[^"]*")*)\s*(\/?)>|([^<]+)/g, m;
+    var root = { tag: '#root', attrs: '', children: [] }, stack = [root];
+    while ((m = re.exec(s)) !== null){
+      if (m[5] !== undefined){ stack[stack.length - 1].children.push({ tag: '#text', text: m[5] }); continue; }
+      var tag = m[2], local = tag.split(':').pop();
+      if (m[1] === '/'){ /* thẻ đóng: rút ngăn xếp tới thẻ khớp */
+        for (var i = stack.length - 1; i > 0; i--){ if (stack[i].tag === tag){ stack.length = i; break; } }
+        continue;
+      }
+      var node = { tag: tag, local: local, attrs: m[3] || '', children: [] };
+      stack[stack.length - 1].children.push(node);
+      if (m[4] !== '/') stack.push(node);
+    }
+    return root;
+  }
+  function attrOf(node, name){
+    var m = String(node.attrs || '').match(new RegExp(name.replace(':', '\\:') + '="([^"]*)"'));
+    return m ? m[1] : '';
+  }
+  function child(node, local){
+    for (var i = 0; i < node.children.length; i++) if (node.children[i].local === local) return node.children[i];
+    return null;
+  }
+  function children(node, local){
+    return node.children.filter(function(c){ return c.local === local; });
+  }
+  function wrapExp(s){ /* mũ/chỉ số phức tạp thì bọc ngoặc cho rõ */
+    s = String(s || '').trim();
+    if (!s) return s;
+    if (/^[0-9a-zA-Z\u0391-\u03C9\u0391-\u03A9\u03C0+\-]$/.test(s)) return s;
+    if (/^\([\s\S]*\)$/.test(s) || /^\[[\s\S]*\]$/.test(s)) return s;
+    return '(' + s + ')';
+  }
+  function lin(node){
+    if (!node) return '';
+    if (node.tag === '#text') return node.text; /* giữ nguyên dạng đã escape trong XML */
+    var L = node.local;
+    if (L === 't') return node.children.map(lin).join('');
+    if (/Pr$/.test(L) || L === 'ctrlPr' || L === 'phant') return '';
+    function all(){ return node.children.map(lin).join(''); }
+    function e1(name){ var c = child(node, name); return c ? lin(c) : ''; }
+    switch (L){
+      case 'f': {
+        var num = e1('num'), den = e1('den');
+        return '(' + num + ')/(' + den + ')';
+      }
+      case 'sSup': return e1('e') + '^' + wrapExp(e1('sup'));
+      case 'sSub': return e1('e') + '_' + wrapExp(e1('sub'));
+      case 'sSubSup': return e1('e') + '_' + wrapExp(e1('sub')) + '^' + wrapExp(e1('sup'));
+      case 'sPre': return '_' + wrapExp(e1('sub')) + '^' + wrapExp(e1('sup')) + e1('e');
+      case 'rad': {
+        var deg = e1('deg');
+        return (deg && deg !== '2' ? '√[' + deg + ']' : '√') + '(' + e1('e') + ')';
+      }
+      case 'nary': {
+        var pr = child(node, 'naryPr'), chr = pr ? attrOf(child(pr, 'chr') || { attrs: '' }, 'm:val') : '';
+        if (!chr) chr = '∫';
+        var sub = e1('sub'), sup = e1('sup');
+        return chr + (sub ? '_' + wrapExp(sub) : '') + (sup ? '^' + wrapExp(sup) : '') + ' ' + e1('e');
+      }
+      case 'd': {
+        var dpr = child(node, 'dPr'), beg = '(', end = ')', sep = ',';
+        if (dpr){
+          beg = attrOf(child(dpr, 'begChr') || { attrs: '' }, 'm:val') || '(';
+          end = attrOf(child(dpr, 'endChr') || { attrs: '' }, 'm:val') || ')';
+          sep = attrOf(child(dpr, 'sepChr') || { attrs: '' }, 'm:val') || ',';
+        }
+        return beg + children(node, 'e').map(lin).join(sep) + end;
+      }
+      case 'acc': {
+        var apr = child(node, 'accPr'), achr = apr ? attrOf(child(apr, 'chr') || { attrs: '' }, 'm:val') : '';
+        return e1('e') + (achr || '');
+      }
+      case 'bar': return e1('e') + '̅';
+      case 'groupChr': {
+        var gpr = child(node, 'groupChrPr'), gchr = gpr ? attrOf(child(gpr, 'chr') || { attrs: '' }, 'm:val') : '';
+        return e1('e') + (gchr || '');
+      }
+      case 'limLow': return e1('e') + '_(' + e1('lim') + ')';
+      case 'limUpp': return e1('e') + '^(' + e1('lim') + ')';
+      case 'func': return e1('fName') + ' ' + e1('e');
+      case 'm': return '[' + children(node, 'mr').map(function(r){ return children(r, 'e').map(lin).join(', '); }).join('; ') + ']';
+      case 'eqArr': return children(node, 'e').map(lin).join(', ');
+      default: return all();
+    }
+  }
+  /* --- tìm từng span oMath/oMathPara (không lồng nhau) và thay bằng run chữ --- */
+  var out = '', pos = 0;
+  while (true){
+    var iPara = xml.indexOf('<m:oMathPara', pos), iMath = xml.indexOf('<m:oMath>', pos);
+    var start = -1, closeTag = '';
+    if (iPara >= 0 && (iMath < 0 || iPara < iMath)){ start = iPara; closeTag = '</m:oMathPara>'; }
+    else if (iMath >= 0){ start = iMath; closeTag = '</m:oMath>'; }
+    if (start < 0) break;
+    var end = xml.indexOf(closeTag, start);
+    if (end < 0) break;
+    end += closeTag.length;
+    var tree = parseTree(xml.slice(start, end));
+    var linear = '';
+    (function walk(n){ if (n.local === 'oMath'){ linear += lin(n); return; } (n.children || []).forEach(walk); })(tree);
+    linear = linear.replace(/&#x([0-9a-fA-F]+);/g, function(_, h){ return String.fromCharCode(parseInt(h, 16)); })
+                   .replace(/&#(\d+);/g, function(_, d){ return String.fromCharCode(parseInt(d, 10)); });
+    out += xml.slice(pos, start) + '<w:r><w:t xml:space="preserve">' + esc(linear.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')) + '</w:t></w:r>';
+    pos = end;
+  }
+  return out + xml.slice(pos);
+}
+/* HL_OMML_END */
 function examDocxToText(buf){
   if (!buf || !buf.byteLength){ var e0 = new Error('empty'); e0.stage = 'tai'; throw e0; }
   return loadJSZip().then(function(){ return JSZip.loadAsync(buf); }).then(function(zip){
@@ -5484,6 +5604,7 @@ function examDocxToText(buf){
     if (!f){ var e1 = new Error('no-doc'); e1.stage = 'doc'; throw e1; }
     return f.async('string');
   }).then(function(xml){
+    if (typeof hlOmmlLinear === 'function') xml = hlOmmlLinear(xml);
     var parts = String(xml || '').split(/<w:p[\s>]/), out = [];
     for (var i = 1; i < parts.length; i++){
       var seg = parts[i], end = seg.indexOf('</w:p>');
