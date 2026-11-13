@@ -2752,6 +2752,19 @@ var EduParse = (function(){
       var tfRe = /([a-d])\s*[-–—]?\s*([ĐS])/gi, t, arr = []; /* KHONG dung \b sau Đ: Đ khong phai ky tu \w nen \b that bai */
       while ((t = tfRe.exec(tfSrc)) !== null){ arr.push(t[2].toUpperCase() === 'Đ'); }
       if (arr.length){ tfKeyMap[pt + ':' + no] = arr; tfKeyMap['0:' + no] = arr; found = true; }
+      /* De VIP CNNN: khoa ghi day du kem giai thich - "a) Dung; b) Sai - <giai thich>; c) Dung ..."
+         hoac "a - Dung; b - Dung ...": quet lan luot a->d, moi chu lay lan xuat hien dau tien dung mau. */
+      if (arr.length < 3){
+        var fw = [], posF = 0, okF = true, LTS = ['a', 'b', 'c', 'd'];
+        for (var li = 0; li < 4; li++){
+          var rxF = new RegExp('(^|[\\s;,(])' + LTS[li] + '\\s*[).:\\-–—.]\\s*(Đúng|Sai|Đ|S)(?![a-zà-ỹ])', 'i');
+          var mmF = rxF.exec(rest.slice(posF));
+          if (!mmF){ if (li >= 3) break; okF = false; break; }
+          fw.push(/^(đ|Đ)/.test(mmF[2]));
+          posF += mmF.index + mmF[0].length;
+        }
+        if (okF && fw.length >= 3){ tfKeyMap[pt + ':' + no] = fw; tfKeyMap['0:' + no] = fw; found = true; }
+      }
       var saM = rest.match(/^\s*([-−]?\d{1,6}(?:[.,]\d{1,4})?)\s*\./);
       if (saM){ saKeyMap[pt + ':' + no] = saM[1].replace(/−/g, '-'); saKeyMap['0:' + no] = saM[1].replace(/−/g, '-'); found = true; }
       return found;
@@ -2825,6 +2838,18 @@ var EduParse = (function(){
             tfwRest = tfwRest.replace(tfwM[0], ' ');
           }
           if (tfwGot && /^[\s,;.]*$/.test(tfwRest)){ usedKey = true; return; }
+        }
+        /* Khoa Dung/Sai kem giai thich dai (de VIP CNNN): quet tuan tu a->d tren dong khoa, bo qua phan giai thich xen giua */
+        if (/^Câu\s*\d+\s*[.:]\s*[a-d]\s*[).:\-–—.]\s*(Đúng|Sai)/i.test(line)){
+          var scM = line.match(/^Câu\s*(\d+)\s*[.:]\s*(.+)$/i), scRest = scM[2], scVals = [], scPos = 0, scOk = true, scL = ['a', 'b', 'c', 'd'];
+          for (var si = 0; si < 4; si++){
+            var scRx = new RegExp('(^|[\\s;,(])' + scL[si] + '\\s*[).:\\-–—.]\\s*(Đúng|Sai|Đ|S)(?![a-zà-ỹ])', 'i');
+            var scMm = scRx.exec(scRest.slice(scPos));
+            if (!scMm){ if (si >= 3) break; scOk = false; break; }
+            scVals.push(/^(đ|Đ)/.test(scMm[2]));
+            scPos += scMm.index + scMm[0].length;
+          }
+          if (scOk && scVals.length >= 3){ var scNo = parseInt(scM[1], 10); tfKeyMap[part + ':' + scNo] = scVals; tfKeyMap['0:' + scNo] = scVals; usedKey = true; return; }
         }
         if ((m = line.match(/^Câu\s*(\d+)\s*[.:]\s*ý\s+đúng\s+là\s+([a-d](?:\s*,\s*[a-d]){0,3})\b/i))){
           var ydArr = [false, false, false, false];
