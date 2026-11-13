@@ -872,6 +872,42 @@ header{background:linear-gradient(90deg,#2063ac,#2b7bbb)}
 <style id="hlOtvCss">
 .ktab-otv{background:linear-gradient(135deg,#c084fc,#8b5cf6);border:2px solid #e9d5ff;color:#2a1065;font-weight:900;font-size:15.5px;box-shadow:0 4px 18px rgba(168,85,247,.5)}
 .ktab-otv.on{background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff;box-shadow:0 0 0 3px rgba(216,180,254,.65),0 4px 18px rgba(139,92,246,.6)}
+
+/* ===== NANG CAP DIEN THOAI 13/11/2026: menu co nho + doc tai lieu toan man hinh ===== */
+.doc-bar{display:none}
+@media (max-width:900px){
+  .head-in{padding:6px 10px;gap:8px}
+  .brand .logo{width:30px;height:30px}
+  .site-name{font-size:18px!important}
+  .search-wrap{min-width:130px}
+  #searchInput{font-size:14px;padding:7px 11px}
+  header .main-tabs{padding:0 10px 6px;gap:6px}
+  header .mtab{padding:7px 10px;font-size:14.5px}
+  .chips-row{top:44px;padding:4px 0 6px;gap:6px}
+  .chips{gap:6px}
+  #subjectChips .chip{font-size:13px;padding:5px 9px;min-height:30px}
+  .chip{font-size:13.5px;padding:6px 10px;min-height:31px}
+  .bai-row{font-size:14px;padding:7px 9px;margin-bottom:5px}
+  .side-list{max-height:38vh}
+  .gtab{font-size:14px;padding:8px 10px}
+  footer{padding:14px 10px;font-size:14px;line-height:1.55}
+  .foot-lock{padding:6px 8px;gap:6px}
+  main{padding:10px 10px 96px}
+  .doc-bar{align-items:center;gap:8px;background:linear-gradient(90deg,#2063ac,#2b7bbb);color:#fff;padding:7px 10px}
+  .doc-bar .doc-bar-t{flex:1;font-weight:800;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .doc-bar button{background:#ffd94d;color:#4a2500;border:0;font-weight:800;font-size:13.5px;border-radius:8px;padding:7px 11px;cursor:pointer;white-space:nowrap}
+  .doc-bar button.alt{background:rgba(255,255,255,.18);color:#fff;border:1.5px solid rgba(255,255,255,.6)}
+  body.hl-docfx .doc-bar{display:flex}
+  body.hl-docfx #paneViewer{position:fixed;inset:0;z-index:400;background:#eceaf4;display:flex;flex-direction:column}
+  body.hl-docfx #paneBody{flex:1;min-height:0;display:flex;flex-direction:column}
+  body.hl-docfx #paneBody .doc-wrap{flex:1;height:auto!important;min-height:0}
+  body.hl-docfx #paneBody iframe{height:100%!important;min-height:0!important}
+  body.hl-docfx .foot-lock{display:none}
+}
+@media (max-width:640px){
+  #viewerModal{padding:0}
+  .viewer-box{height:100vh;height:100dvh;border-radius:0}
+}
 </style>
 </head>
 <body>
@@ -956,6 +992,7 @@ header{background:linear-gradient(90deg,#2063ac,#2b7bbb)}
         
         <div id="tnShelfArea"></div>
         <div id="paneViewer">
+          <div class="doc-bar" id="paneDocBar"><span class="doc-bar-t" id="paneDocBarT">📄 Tài liệu</span><button type="button" class="alt" onclick="hlDocToggleRead('paneFrame', this)">📖 Đổi cách đọc</button><button type="button" onclick="hlDocFxOff()">✖ Đóng</button></div>
           
           <div id="panePptBar"></div><div id="paneBody"></div>
           <div id="paneFallback" style="display:none">
@@ -1257,6 +1294,7 @@ header{background:linear-gradient(90deg,#2063ac,#2b7bbb)}
     <div class="viewer-head">
       <span class="t" id="viewerTitle">Xem tài liệu</span>
       <a class="viewer-drive-btn only-admin" id="viewerDriveBtn" href="#" target="_blank" rel="noopener" style="display:none">📂 Mở trong Drive</a>
+      <button type="button" class="viewer-drive-btn" id="viewerAltBtn" style="display:none;cursor:pointer" onclick="hlDocToggleRead('viewerFrame', this)">📖 Đổi cách đọc</button>
       <button id="viewerClose" type="button">✖ Đóng</button>
     </div>
     <div class="viewer-file" id="viewerFile" style="display:none"></div>
@@ -1532,7 +1570,10 @@ function viewerOpenFile(slot, title){
   var db = document.getElementById('viewerDriveBtn'); if (db) db.style.display = 'inline-flex';
   var fr = viewerAttachFrame();
   viewerArmLoadWatch();
-  if (fr) fr.src = drivePreviewUrl(fid);
+  if (fr){ fr.setAttribute('data-fid', fid); fr.setAttribute('data-alt', '0'); fr.src = drivePreviewUrl(fid); }
+  var ab = document.getElementById('viewerAltBtn'); if (ab){ ab.style.display = 'inline-flex'; ab.textContent = '📖 Đổi cách đọc'; }
+  var vh = document.getElementById('viewerHint');
+  if (vh && window.innerWidth <= 900){ vh.innerHTML = '📱 Trên điện thoại: vuốt lên trong khung để xem tiếp các trang sau. Nếu chỉ thấy trang 1, bấm <b>📖 Đổi cách đọc</b> ở phía trên nhé!'; vh.style.display = ''; }
   m.classList.add('show');
   return true;
 }
@@ -1587,6 +1628,7 @@ function closeViewer(){
   document.getElementById('viewerFoot').style.display = 'none';
   viewerSetFileLine('');
   var db = document.getElementById('viewerDriveBtn'); if (db) db.style.display = 'none';
+  var ab2 = document.getElementById('viewerAltBtn'); if (ab2) ab2.style.display = 'none';
 }
 document.getElementById('viewerClose').addEventListener('click', closeViewer);
 document.getElementById('viewerModal').addEventListener('click', function(e){
@@ -1715,7 +1757,9 @@ function hlPaneLoad(slot, title){
   var fb = document.getElementById('paneFallback'); if (fb) fb.style.display = 'none';
   var pbar = document.getElementById('panePptBar'); if (pbar) pbar.innerHTML = '';
   var body = document.getElementById('paneBody'); if (!body) return false;
-  body.innerHTML = '<div class="doc-wrap"><iframe id="paneFrame" title="Khung xem tài liệu" src="' + drivePreviewUrl(fid) + '" allow="autoplay" allowfullscreen></iframe><div class="doc-corner" aria-hidden="true"></div></div>';
+  body.innerHTML = '<div class="doc-wrap"><iframe id="paneFrame" title="Khung xem tài liệu" data-fid="' + fid + '" data-alt="0" src="' + drivePreviewUrl(fid) + '" allow="autoplay" allowfullscreen></iframe><div class="doc-corner" aria-hidden="true"></div></div>';
+  var __dbt = document.getElementById('paneDocBarT'); if (__dbt) __dbt.textContent = '📄 ' + (title || 'Tài liệu');
+  if (typeof hlDocFxOn === 'function') hlDocFxOn();
   var fr = document.getElementById('paneFrame');
   if (fr) fr.addEventListener('load', function(){ if (seq === __paneSeq) __paneLoaded = true; });
   setTimeout(function(){
@@ -6704,6 +6748,32 @@ function hlExamFocusOff(){
     document.body.classList.remove('hl-fx', 'hl-fx-sp', 'hl-fx-rs', 'hl-fx-solo');
     if (document.fullscreenElement && document.exitFullscreen){ var p2 = document.exitFullscreen(); if (p2 && p2.catch) p2.catch(function(){}); }
   }catch(e){}
+}
+
+/* ===== DOC TAI LIEU TREN DIEN THOAI (13/11/2026) =====
+   - hlDocFxOn: tren man hinh nho, khung doc chiem tron man hinh (het bi ket trang 1 vi khung qua thap).
+   - hlDocToggleRead: doi giua cach doc thuong (Drive preview) va cach doc 2 (Google Viewer)
+     cho truong hop dien thoai ket o trang 1. */
+function hlDocReadUrl(fid, alt){
+  if (alt) return 'https://docs.google.com/viewer?url=' + encodeURIComponent('https://drive.' + 'usercontent' + '.google.com/download?id=' + fid + '&export=download') + '&embedded=true';
+  return drivePreviewUrl(fid);
+}
+function hlDocToggleRead(frameId, btn){
+  try{
+    var fr = document.getElementById(frameId); if (!fr) return;
+    var fid = fr.getAttribute('data-fid') || ''; if (!fid) return;
+    var alt = fr.getAttribute('data-alt') !== '1';
+    fr.setAttribute('data-alt', alt ? '1' : '0');
+    fr.src = hlDocReadUrl(fid, alt);
+    if (btn) btn.textContent = alt ? '↩️ Cách đọc 1' : '📖 Đổi cách đọc';
+    if (typeof showToast === 'function') showToast(alt ? '📖 Cách đọc 2: vuốt trong khung để xem hết các trang nhé!' : '📖 Đã quay lại cách đọc thường');
+  }catch(e){}
+}
+function hlDocFxOn(){
+  try{ if (window.innerWidth <= 900) document.body.classList.add('hl-docfx'); }catch(e){}
+}
+function hlDocFxOff(){
+  try{ document.body.classList.remove('hl-docfx'); }catch(e){}
 }
 
 /* ===== BẢN QUYỀN THI ONLINE — Demo/Full theo MÃ MÁY CỐ ĐỊNH (thầy chốt 13/11/2026) =====
