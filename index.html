@@ -5414,12 +5414,16 @@ function examStartDoc(file, title){
   if (!fid){ showToast('⚠️ Chưa nối được file này'); return; }
   showToast('⏳ Đang tải đề — chờ em chút...');
   var __st = 'tai';
-  /* Ưu tiên bản sao đề nằm CÙNG web (de/<fid>.docx) — fetch sang Drive bị Google chặn 403
-     vì cross-site; Drive chỉ còn là dự phòng (thầy chốt cách sửa, hoàn tất 12/11/2026). */
-  var __driveUrl = 'https://drive.usercontent.google.com/download?id=' + fid + '&export=download&confirm=t';
-  fetch('de/' + fid + '.docx').then(function(r){ if (!r.ok) throw new Error('no-mirror'); return r; }).catch(function(){ return fetch(__driveUrl); }).then(function(r){
+  /* Chỉ tải bản sao CÙNG web và bản sao đã MÃ HOÁ (thầy chốt bảo mật 13/11/2026):
+     tải trực tiếp file về chỉ nhận được dữ liệu đã mã hoá, không mở được bằng Word;
+     web tự giải mã ngay trong trình duyệt. ĐÃ BỎ hẳn đường tải qua Drive — nếu tải
+     lỗi thì rơi về mở xem trước (chỉ xem) ở bước catch. */
+  fetch('de/' + fid + '.docx').then(function(r){
     if (!r.ok){ var eh = new Error('HTTP ' + r.status); eh.stage = 'tai'; throw eh; }
     return r.arrayBuffer();
+  }).then(function(buf){
+    if (typeof hlDecryptDocx === 'function') return hlDecryptDocx(buf);
+    return buf;
   }).then(function(buf){ return examDocxToText(buf); }).then(function(text){
     __st = 'phan-tich';
     var parsed = EduParse.parseQuestionsMulti(text);
@@ -6290,6 +6294,7 @@ else v8Init();
      máy lạ nhập mã chủ HOẶC mật khẩu Admin do thầy tự đặt (hlv_admin_cfg/pwHash). */
 (function(){
 'use strict';
+var HL_KB = '001cee6c2f75e25bf4581601ae5ca71d';
 var LIC = { mid: '', status: 'demo', req: null, lic: null, pwHash: '', roleSel: 'hs',
             adminAttached: false, adminReq: {}, adminLic: {}, adminMachines: {} };
 function cyrb53(str, seed){
@@ -6753,6 +6758,156 @@ function hlLicInit(){
     });
   });
 }
+/* ===== GIẢI MÃ ĐỀ THI (bản sao đề trên web đã mã hoá ChaCha20 — thầy chốt 13/11/2026) =====
+   File de/<fid>.docx trên web chỉ còn là dữ liệu đã mã hoá (đầu 'HLENC1' + nonce 12B):
+   tải trực tiếp về cũng không mở được bằng Word. Web tự giải mã trong trình duyệt
+   ngay trước khi tách câu hỏi. File không có đầu mã hoá thì giữ nguyên (dự phòng). */
+var HL_KA = 'b102da37ba9727cf97e5c378b215dc4b';
+function hlHexBytes(hex){
+  var a = new Uint8Array(Math.floor(hex.length / 2));
+  for (var i = 0; i < a.length; i++) a[i] = parseInt(hex.substr(i * 2, 2), 16);
+  return a;
+}
+function hlU32le(b, o){ return (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0; }
+function hlRotl(v, c){ return ((v << c) | (v >>> (32 - c))) >>> 0; }
+function hlChaChaBlock(key, counter, nonce){
+  var st = new Uint32Array(16);
+  st[0] = 0x61707865; st[1] = 0x3320646e; st[2] = 0x79622d32; st[3] = 0x6b206574;
+  for (var i = 0; i < 8; i++) st[4 + i] = hlU32le(key, i * 4);
+  st[12] = counter >>> 0;
+  for (var j = 0; j < 3; j++) st[13 + j] = hlU32le(nonce, j * 4);
+  var w = new Uint32Array(st);
+  function qr(a, b, c, d){
+    w[a] = (w[a] + w[b]) >>> 0; w[d] = hlRotl(w[d] ^ w[a], 16);
+    w[c] = (w[c] + w[d]) >>> 0; w[b] = hlRotl(w[b] ^ w[c], 12);
+    w[a] = (w[a] + w[b]) >>> 0; w[d] = hlRotl(w[d] ^ w[a], 8);
+    w[c] = (w[c] + w[d]) >>> 0; w[b] = hlRotl(w[b] ^ w[c], 7);
+  }
+  for (var r = 0; r < 10; r++){
+    qr(0,4,8,12); qr(1,5,9,13); qr(2,6,10,14); qr(3,7,11,15);
+    qr(0,5,10,15); qr(1,6,11,12); qr(2,7,8,13); qr(3,4,9,14);
+  }
+  var out = new Uint8Array(64);
+  for (var k = 0; k < 16; k++){
+    var v = (w[k] + st[k]) >>> 0;
+    out[k * 4] = v & 255; out[k * 4 + 1] = (v >>> 8) & 255; out[k * 4 + 2] = (v >>> 16) & 255; out[k * 4 + 3] = (v >>> 24) & 255;
+  }
+  return out;
+}
+function hlChaChaXor(key, nonce, data){
+  var out = new Uint8Array(data.length);
+  var counter = 0;
+  for (var off = 0; off < data.length; off += 64){
+    var block = hlChaChaBlock(key, counter, nonce); counter++;
+    var n = Math.min(64, data.length - off);
+    for (var i = 0; i < n; i++) out[off + i] = data[off + i] ^ block[i];
+  }
+  return out;
+}
+window.hlDecryptDocx = function(buf){
+  return new Promise(function(resolve){
+    try {
+      var u = new Uint8Array(buf);
+      var magic = (u.length >= 6) ? String.fromCharCode(u[0], u[1], u[2], u[3], u[4], u[5]) : '';
+      if (magic !== 'HLENC1'){ resolve(buf); return; }
+      var key = hlHexBytes(HL_KA + HL_KB);
+      var nonce = u.slice(6, 18);
+      var plain = hlChaChaXor(key, nonce, u.slice(18));
+      resolve(plain.buffer);
+    } catch(e){ resolve(buf); }
+  });
+};
+
+/* ===== BẢO MẬT TÀI LIỆU: PHÁT HIỆN SAO CHÉP/TẢI -> DỪNG PHIÊN + THÔNG BÁO =====
+   Thầy chốt 13/11/2026: áp cho MỌI nguồn (kho tài liệu + Thi Online). Phát hiện
+   chuột phải / sao chép / cắt / phím tắt xem nguồn-in-lưu / mở DevTools / in ấn
+   ở phía khách -> dừng phiên ngay (thoát Admin nếu có, đóng trình xem + phiên thi),
+   hiện thông báo khoá trang, ghi nhận lên Firebase cho thầy. Admin được miễn. */
+var HL_SEC = { fired: false };
+function hlSecOverlay(){
+  var ov = document.getElementById('hlSecBlock');
+  if (ov) return ov;
+  ov = document.createElement('div');
+  ov.id = 'hlSecBlock';
+  ov.style.cssText = 'display:none;position:fixed;inset:0;z-index:999999;background:rgba(24,4,10,.97);color:#fff;align-items:center;justify-content:center;text-align:center;padding:24px';
+  ov.innerHTML = '<div style="max-width:560px">' +
+    '<div style="font-size:46px">🚫</div>' +
+    '<div style="font-size:23px;font-weight:900;margin:10px 0">PHIÊN LÀM VIỆC ĐÃ BỊ DỪNG</div>' +
+    '<div style="font-size:16.5px;line-height:1.65;opacity:.92">Hệ thống phát hiện hành vi <b>sao chép / tải tài liệu trái phép</b> (<span id="hlSecKind"></span>).<br>' +
+    'Tài liệu trên <b>Học Liệu Vip Pro</b> chỉ để <b>XEM trực tuyến</b> — không sao chép, không tải về dưới bất cứ hình thức nào.<br>' +
+    'Phiên đăng nhập của bạn đã bị dừng. Mã máy: <b id="hlSecMid"></b><br>' +
+    'Muốn tải tài liệu, vui lòng liên hệ thầy <b>Hồ Tấn Khải</b> — Zalo 0939580982.</div>' +
+    '<button type="button" onclick="location.reload()" style="margin-top:18px;background:#ffd94d;color:#241543;border:0;border-radius:999px;padding:12px 24px;font-size:16.5px;font-weight:800;cursor:pointer">🔄 Tải lại trang</button> ' +
+    '<button type="button" onclick="hlSecAdminEscape()" style="margin-top:18px;background:#374151;color:#fff;border:0;border-radius:999px;padding:12px 24px;font-size:16.5px;font-weight:800;cursor:pointer">🔑 Tôi là Admin</button></div>';
+  document.body.appendChild(ov);
+  return ov;
+}
+window.hlSecAdminEscape = function(){
+  var ov = document.getElementById('hlSecBlock');
+  if (ov) ov.style.display = 'none';
+  if (typeof hlAdminToggle === 'function') hlAdminToggle();
+};
+window.hlSecViolation = function(kind){
+  if (HL_SEC.fired) return;
+  if (typeof hlIsAdmin === 'function' && hlIsAdmin()) return;
+  HL_SEC.fired = true;
+  try { localStorage.removeItem('hl_admin_until'); } catch(e){}
+  try { if (typeof hlAdminApply === 'function') hlAdminApply(); } catch(e){}
+  try { if (typeof closeViewer === 'function') closeViewer(); } catch(e){}
+  try { var vm = document.getElementById('viewerModal'); if (vm) vm.style.display = 'none'; } catch(e){}
+  try { if (typeof spExit === 'function') spExit(); } catch(e){}
+  try { if (typeof rtLeave === 'function') rtLeave(); } catch(e){}
+  try {
+    if (typeof fbEnsure === 'function'){
+      fbEnsure().then(function(ok){
+        if (ok && FB.db) FB.db.ref('hlv_security/' + hlLicMachineId()).set({ at: Date.now(), kind: String(kind || ''), ua: String(navigator.userAgent || '').slice(0, 140) });
+      }).catch(function(){});
+    }
+  } catch(e){}
+  var ov = hlSecOverlay();
+  var kEl = document.getElementById('hlSecKind'); if (kEl) kEl.textContent = String(kind || 'hành vi bị cấm');
+  var mEl = document.getElementById('hlSecMid'); if (mEl) mEl.textContent = hlLicMachineId();
+  if (ov) ov.style.display = 'flex';
+};
+function hlSecInit(){
+  var inField = function(t){
+    if (typeof shieldInField === 'function'){ try { return shieldInField(t); } catch(e){} }
+    return !!(t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA'));
+  };
+  var active = function(){ return (typeof shieldActive === 'function') ? shieldActive() : !(typeof hlIsAdmin === 'function' && hlIsAdmin()); };
+  document.addEventListener('contextmenu', function(e){ if (active() && !inField(e.target)) hlSecViolation('chuột phải'); }, true);
+  document.addEventListener('copy', function(e){ if (active() && !inField(e.target)) hlSecViolation('sao chép (copy)'); }, true);
+  document.addEventListener('cut', function(e){ if (active() && !inField(e.target)) hlSecViolation('cắt (cut)'); }, true);
+  document.addEventListener('keydown', function(e){
+    if (!active()) return;
+    var k = String(e.key || '');
+    var combo = e.ctrlKey || e.metaKey;
+    if (k === 'F12'){ hlSecViolation('mở công cụ kiểm tra trang (F12)'); return; }
+    if (combo && e.shiftKey && ['I', 'J', 'C', 'K'].indexOf(k.toUpperCase()) >= 0){ hlSecViolation('mở công cụ kiểm tra trang'); return; }
+    if (inField(e.target)) return;
+    if (combo && ['u', 's', 'p'].indexOf(k.toLowerCase()) >= 0){ hlSecViolation('phím tắt bị cấm (xem nguồn / lưu / in)'); }
+  }, true);
+  window.addEventListener('beforeprint', function(){ if (active()) hlSecViolation('in tài liệu'); });
+  setInterval(function(){
+    if (typeof hlIsAdmin === 'function' && hlIsAdmin()){
+      if (HL_SEC.fired){ HL_SEC.fired = false; var ov = document.getElementById('hlSecBlock'); if (ov) ov.style.display = 'none'; }
+      return;
+    }
+    if (HL_SEC.fired){
+      var lm = document.getElementById('hlAdminLoginModal');
+      var loginOpen = lm && lm.style.display !== 'none' && lm.style.display !== '';
+      var ov2 = document.getElementById('hlSecBlock');
+      if (ov2 && !loginOpen) ov2.style.display = 'flex';
+      return;
+    }
+    var nt = document.getElementById('devtoolsNotice');
+    if (nt && nt.style.display === 'flex') hlSecViolation('mở công cụ kiểm tra trang');
+  }, 2000);
+}
+try {
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hlSecInit);
+  else hlSecInit();
+} catch(e){}
 try {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hlLicInit);
   else hlLicInit();
