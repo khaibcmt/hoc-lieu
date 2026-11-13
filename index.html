@@ -785,6 +785,20 @@ header{background:linear-gradient(90deg,#0c2350,#14335f);}
 .guide-panel-head{display:flex;align-items:center;justify-content:space-between;font-weight:900;font-size:18px;color:#0f172a;margin-bottom:4px;}
 .guide-close{background:#f43f5e;color:#fff;border:none;font-weight:800;font-size:14.5px;padding:8px 14px;border-radius:10px;cursor:pointer;font-family:inherit;}
 @media (max-width:900px){ .controls-row{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;} .controls-row .khoi-tabs{flex-wrap:nowrap;} }
+
+/* ===== CHE DO TAP TRUNG KHI THI ONLINE: chi hien cau hoi + dap an ===== */
+body.hl-fx header, body.hl-fx footer{display:none!important}
+body.hl-fx main{padding-top:0!important;margin-top:0!important}
+body.hl-fx-sp #libMain, body.hl-fx-sp #sec-game{display:none!important}
+body.hl-fx-sp #sec-practice{display:block!important}
+body.hl-fx-rs #libMain, body.hl-fx-rs #sec-practice, body.hl-fx-rs #examMenu, body.hl-fx-rs #hlAdminLicPanel, body.hl-fx-rs .gtabs, body.hl-fx-rs #gSoloPane{display:none!important}
+body.hl-fx-rs #sec-game{display:block!important}
+body.hl-fx-rs #gRoomPane{display:block!important}
+body.hl-fx-rs #gRoomPane>*:not(#rsScreen){display:none!important}
+body.hl-fx-rs #rsScreen{display:block!important}
+body.hl-fx-solo #libMain, body.hl-fx-solo #sec-practice, body.hl-fx-solo #examMenu, body.hl-fx-solo #hlAdminLicPanel, body.hl-fx-solo .gtabs, body.hl-fx-solo #gRoomPane{display:none!important}
+body.hl-fx-solo #sec-game{display:block!important}
+body.hl-fx-solo #gSoloPane{display:block!important}
 </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
@@ -3345,6 +3359,7 @@ function soloStart(){
   var bl = document.getElementById('s-botLevel');
   S.botP = bl ? (parseFloat(bl.value) || 0.6) : 0.6;
   document.getElementById('soloArea').innerHTML = '';
+  hlExamFocus('solo');
   soloNext();
 }
 function soloIsAccel(){ return S.R.accel && S.idx >= 3 && S.idx <= 5; }
@@ -3691,7 +3706,7 @@ function audienceHTML(cur){
 }
 function soloEnd(skipMsg){
   if (!S) return;
-  S.over = true; stopSoloTimer();
+  S.over = true; stopSoloTimer(); hlExamFocusOff();
   document.getElementById('soloInfo').textContent = 'Kết thúc game';
   var bd = badgeOf(S.score);
   var modeTxt = '';
@@ -4594,6 +4609,7 @@ function rsJoin(){
         if (U.R.mode === 'tug') pushEvent(code, (rec.team === 'red' ? '🔴 ' : '🔵 ') + name + ' vào đội ' + (rec.team === 'red' ? 'ĐỎ' : 'XANH') + ' (Kéo co)!', 'info');
         document.getElementById('roomEntry').style.display = 'none';
         document.getElementById('rsScreen').style.display = 'block';
+        hlExamFocus('rs');
         document.getElementById('rsRulesInfo').innerHTML = rulesSummaryHTML(U.R);
         rsAttach();
         msg.innerHTML = '';
@@ -5140,7 +5156,7 @@ function rsLeave(){
   roomRef(code).child('players/' + pid).remove();
   U = null;
   if (window._rsTick){ clearInterval(window._rsTick); window._rsTick = null; }
-  document.getElementById('rsScreen').style.display = 'none';
+  document.getElementById('rsScreen').style.display = 'none'; hlExamFocusOff();
   document.getElementById('roomEntry').style.display = 'block';
 }
 
@@ -5535,6 +5551,7 @@ function spStartSession(cfg){
     tc: tcNewState('fast'), wager: 1, answered: false, locked: false,
     qStartAt: 0, disp: null, curKind: '', tfSel: [null, null, null, null], name: spStudentName() };
   spRenderName();
+  hlExamFocus('sp');
   spShow();
   var sec = document.getElementById('sec-practice'); if (sec) sec.scrollIntoView({ behavior: 'smooth' });
 }
@@ -5893,7 +5910,7 @@ window.spRetry = function(){
   else spRenderQ();
 };
 window.spExit = function(){
-  spStopTimer(); SP = null;
+  spStopTimer(); SP = null; hlExamFocusOff();
   var s = document.getElementById('sec-practice'); if (s) s.style.display = 'none';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
@@ -6668,6 +6685,26 @@ function hlMathify(text){
 }
 function escQ(s){ return esc(hlMathify(s == null ? '' : s)); }
 /* ===== HET PHAN CONG THUC PHANG ===== */
+
+/* ===== CHE DO TAP TRUNG KHI THI ONLINE (hlExamFocus) =====
+   Khi hoc sinh dang lam bai (tu luyen / bai giao link / phong thi / choi don):
+   an toan bo khung trang (dau trang, chan trang, danh sach bai, menu thi) —
+   man hinh chi con cau hoi + dap an. Thoat bai thi tra lai giao dien cu. */
+function hlExamFocus(kind){
+  try{
+    document.body.classList.remove('hl-fx-sp', 'hl-fx-rs', 'hl-fx-solo');
+    document.body.classList.add('hl-fx', 'hl-fx-' + kind);
+    window.scrollTo(0, 0);
+    var de = document.documentElement;
+    if (de && de.requestFullscreen){ var p = de.requestFullscreen(); if (p && p.catch) p.catch(function(){}); }
+  }catch(e){}
+}
+function hlExamFocusOff(){
+  try{
+    document.body.classList.remove('hl-fx', 'hl-fx-sp', 'hl-fx-rs', 'hl-fx-solo');
+    if (document.fullscreenElement && document.exitFullscreen){ var p2 = document.exitFullscreen(); if (p2 && p2.catch) p2.catch(function(){}); }
+  }catch(e){}
+}
 
 /* ===== BẢN QUYỀN THI ONLINE — Demo/Full theo MÃ MÁY CỐ ĐỊNH (thầy chốt 13/11/2026) =====
    - Mã máy: dấu vân tay thiết bị (cấu hình/màn hình/card đồ hoạ) + bộ nhớ đệm tại máy;
