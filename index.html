@@ -917,16 +917,26 @@ header{background:linear-gradient(90deg,#2063ac,#2b7bbb)}
 .doc-help{flex:none;background:#fff7d6;color:#5b4a00;font-size:13.5px;line-height:1.45;padding:8px 12px;border-bottom:1.5px dashed #d9b23a;text-align:center}
 @media (max-width:900px){
   .chips-row{flex-direction:column;align-items:stretch;gap:6px}
-  #subjectChips{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%}
-  #subjectChips .chip{width:100%;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12.5px;line-height:1.15;padding:6px 2px;min-height:34px;white-space:normal}
+  #subjectChips{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;width:100%}
+  #subjectChips .chip{width:100%;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;line-height:1.12;padding:5px 1px;min-height:38px;white-space:normal}
   .chips-tools{display:grid;grid-template-columns:1fr 1fr;gap:6px}
   .chips-tools .chip{width:100%;display:flex;align-items:center;justify-content:center;min-height:36px;font-size:14px}
   .controls-row{align-items:center;gap:8px}
-  #khoiTabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;flex:1}
-  .controls-row .ktab{width:100%;text-align:center;justify-content:center;white-space:normal;font-size:14.5px;padding:8px 4px}
+  #khoiTabs{display:flex;flex-wrap:nowrap;gap:5px;flex:1;min-width:0}
+  .controls-row .ktab{flex:1 1 0;min-width:0;text-align:center;justify-content:center;white-space:normal;font-size:13px;line-height:1.15;padding:8px 2px}
   .doc-bar{flex-wrap:wrap}
   .doc-bar .doc-bar-t{flex:1 1 100%;margin-bottom:2px}
   footer .foot-lock{font-size:13.5px}
+}
+
+/* ===== THANH TREN 2 HANG - THANH DUOI 1 HANG (thay chot 13/11/2026) ===== */
+.doc-foot{display:none}
+@media (max-width:900px){
+  body.hl-docfx #paneViewer{height:100dvh}
+  body.hl-docfx .doc-bar button{flex:1 1 0}
+  body.hl-docfx .doc-foot{display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,#2063ac,#2b7bbb);color:#fff;padding:7px 10px;flex:none}
+  .doc-foot .doc-foot-t{flex:1;font-size:13px;line-height:1.3}
+  .doc-foot button{background:#ffd94d;color:#4a2500;border:0;font-weight:800;font-size:13.5px;border-radius:8px;padding:7px 11px;cursor:pointer;white-space:nowrap}
 }
 </style>
 </head>
@@ -1021,6 +1031,7 @@ header{background:linear-gradient(90deg,#2063ac,#2b7bbb)}
             <a id="paneOpenBtn" class="pf-btn only-admin" href="#" target="_blank" rel="noopener">📖 MỞ TÀI LIỆU XEM NGAY</a>
             <div id="paneQR" class="only-admin"></div><p class="only-guest" style="color:#94a3b8;margin:10px 0 0;line-height:1.6">🔒 Tài liệu chỉ xem ngay tại trang này. Thầy cô cần file gốc vui lòng nhắn thầy Khải để được gửi riêng.</p>
           </div>
+          <div class="doc-foot" id="paneDocFoot"><span class="doc-foot-t">Vuốt trong khung để đọc hết các trang 📄</span><button type="button" onclick="hlDocReload('paneFrame')">↻ Tải lại</button><button type="button" onclick="hlDocFxOff()">✖ Đóng</button></div>
         </div>
         <div id="hlDlModal" style="display:none;position:fixed;inset:0;background:rgba(15,10,40,.55);z-index:9999;align-items:center;justify-content:center" onclick="if(event.target===this)hlHideDlNotice()"><div style="background:#fff;color:#1c1440;max-width:560px;width:92%;border-radius:16px;padding:22px 24px;box-shadow:0 18px 50px rgba(0,0,0,.35);max-height:86vh;overflow:auto"><div style="text-align:center;font-size:22px;font-weight:900;color:#b91c1c;margin:2px 0 12px">📢 VUI LÒNG LIÊN HỆ</div><p style="text-align:center;font-size:16.5px;line-height:1.75;margin:0">Thầy cô và các em học sinh cần file để phục vụ giảng dạy, học tập,<br>vui lòng liên hệ trực tiếp:<br><span style="font-size:18.5px;font-weight:900;color:#1d4ed8">📞 Zalo: 0939580982</span><br><span style="font-size:16.5px;font-weight:800;color:#b91c1c">✉️ khaibcmt@gmail.com</span></p><p style="font-size:16px;line-height:1.8;margin:14px 0 0;background:linear-gradient(135deg,#fff7ed,#ffedd5);border:2px solid #f59e0b;border-radius:12px;padding:12px 16px">💰 <b>Full mỗi môn:</b> <b style="color:#dc2626;font-size:19px">300k</b><br>📄 <b>Tải từng mục:</b> <b style="color:#dc2626;font-size:19px">100k</b><br>🎁 <b>Quyền lợi:</b><br>- Được tải bản mới khi có cập nhật.<br>- Tặng 2 công cụ <b>Trộn Đề</b> và <b>Trò Chơi Online Siêu Vip</b></p><p style="font-size:16px;line-height:1.8;margin:10px 0 0;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #22c55e;border-radius:12px;padding:12px 16px">📝 <b>Nhận soạn giáo án</b> tích hợp <b>NLS – AI – Lồng ghép</b>...<br>Theo đúng mã phụ lục và PPCT: <b style="color:#15803d;font-size:19px">100k/khối</b></p><button type="button" onclick="hlHideDlNotice()" style="display:block;width:100%;margin-top:16px;padding:12px;border:0;border-radius:10px;background:#2e9e4f;color:#fff;font-size:16.5px;font-weight:800;cursor:pointer">✔️ Đã hiểu</button></div></div><div id="specialArea"></div>
         <div id="shelfArea"></div>
