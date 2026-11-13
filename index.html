@@ -912,6 +912,22 @@ header{background:linear-gradient(90deg,#2063ac,#2b7bbb)}
 .hl-qimg{max-width:100%;height:auto;display:block;margin:8px auto;border-radius:10px;background:#fff}
 .hl-qtbl{border-collapse:collapse;margin:8px 0;width:100%;font-size:.92em;background:rgba(255,255,255,.06)}
 .hl-qtbl td{border:1px solid rgba(140,140,140,.5);padding:5px 8px;text-align:left;vertical-align:top}
+
+/* ===== LAM DEP MAN HINH DIEN THOAI (13/11/2026 — theo anh thay gui) ===== */
+.doc-help{flex:none;background:#fff7d6;color:#5b4a00;font-size:13.5px;line-height:1.45;padding:8px 12px;border-bottom:1.5px dashed #d9b23a;text-align:center}
+@media (max-width:900px){
+  .chips-row{flex-direction:column;align-items:stretch;gap:6px}
+  #subjectChips{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%}
+  #subjectChips .chip{width:100%;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12.5px;line-height:1.15;padding:6px 2px;min-height:34px;white-space:normal}
+  .chips-tools{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .chips-tools .chip{width:100%;display:flex;align-items:center;justify-content:center;min-height:36px;font-size:14px}
+  .controls-row{align-items:center;gap:8px}
+  #khoiTabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;flex:1}
+  .controls-row .ktab{width:100%;text-align:center;justify-content:center;white-space:normal;font-size:14.5px;padding:8px 4px}
+  .doc-bar{flex-wrap:wrap}
+  .doc-bar .doc-bar-t{flex:1 1 100%;margin-bottom:2px}
+  footer .foot-lock{font-size:13.5px}
+}
 </style>
 </head>
 <body>
@@ -996,7 +1012,7 @@ header{background:linear-gradient(90deg,#2063ac,#2b7bbb)}
         
         <div id="tnShelfArea"></div>
         <div id="paneViewer">
-          <div class="doc-bar" id="paneDocBar"><span class="doc-bar-t" id="paneDocBarT">📄 Tài liệu</span><button type="button" class="alt" onclick="hlDocToggleRead('paneFrame', this)">📖 Đổi cách đọc</button><button type="button" onclick="hlDocFxOff()">✖ Đóng</button></div>
+          <div class="doc-bar" id="paneDocBar"><span class="doc-bar-t" id="paneDocBarT">📄 Tài liệu</span><button type="button" class="alt" onclick="hlDocReload('paneFrame')">↻ Tải lại</button><button type="button" class="alt" onclick="hlDocToggleRead('paneFrame', this)">📖 Đổi cách đọc</button><button type="button" onclick="hlDocFxOff()">✖ Đóng</button></div>
           
           <div id="panePptBar"></div><div id="paneBody"></div>
           <div id="paneFallback" style="display:none">
@@ -1298,7 +1314,7 @@ header{background:linear-gradient(90deg,#2063ac,#2b7bbb)}
     <div class="viewer-head">
       <span class="t" id="viewerTitle">Xem tài liệu</span>
       <a class="viewer-drive-btn only-admin" id="viewerDriveBtn" href="#" target="_blank" rel="noopener" style="display:none">📂 Mở trong Drive</a>
-      <button type="button" class="viewer-drive-btn" id="viewerAltBtn" style="display:none;cursor:pointer" onclick="hlDocToggleRead('viewerFrame', this)">📖 Đổi cách đọc</button>
+      <button type="button" class="viewer-drive-btn" id="viewerReloadBtn" style="display:none;cursor:pointer" onclick="hlDocReload('viewerFrame')">↻ Tải lại</button><button type="button" class="viewer-drive-btn" id="viewerAltBtn" style="display:none;cursor:pointer" onclick="hlDocToggleRead('viewerFrame', this)">📖 Đổi cách đọc</button>
       <button id="viewerClose" type="button">✖ Đóng</button>
     </div>
     <div class="viewer-file" id="viewerFile" style="display:none"></div>
@@ -1576,8 +1592,9 @@ function viewerOpenFile(slot, title){
   viewerArmLoadWatch();
   if (fr){ fr.setAttribute('data-fid', fid); fr.setAttribute('data-alt', '0'); fr.src = drivePreviewUrl(fid); }
   var ab = document.getElementById('viewerAltBtn'); if (ab){ ab.style.display = 'inline-flex'; ab.textContent = '📖 Đổi cách đọc'; }
+  var rb = document.getElementById('viewerReloadBtn'); if (rb) rb.style.display = 'inline-flex';
   var vh = document.getElementById('viewerHint');
-  if (vh && window.innerWidth <= 900){ vh.innerHTML = '📱 Trên điện thoại: vuốt lên trong khung để xem tiếp các trang sau. Nếu chỉ thấy trang 1, bấm <b>📖 Đổi cách đọc</b> ở phía trên nhé!'; vh.style.display = ''; }
+  if (vh && window.innerWidth <= 900){ vh.innerHTML = '📱 Trên điện thoại: vuốt lên trong khung để xem tiếp các trang sau. Nếu khung báo lỗi hoặc chỉ thấy trang 1: bấm <b>↻ Tải lại</b> hoặc <b>📖 Đổi cách đọc</b> ở phía trên nhé!'; vh.style.display = ''; }
   m.classList.add('show');
   return true;
 }
@@ -1761,7 +1778,9 @@ function hlPaneLoad(slot, title){
   var fb = document.getElementById('paneFallback'); if (fb) fb.style.display = 'none';
   var pbar = document.getElementById('panePptBar'); if (pbar) pbar.innerHTML = '';
   var body = document.getElementById('paneBody'); if (!body) return false;
-  body.innerHTML = '<div class="doc-wrap"><iframe id="paneFrame" title="Khung xem tài liệu" data-fid="' + fid + '" data-alt="0" src="' + drivePreviewUrl(fid) + '" allow="autoplay" allowfullscreen></iframe><div class="doc-corner" aria-hidden="true"></div></div>';
+  var __help = '';
+  try{ if (window.innerWidth <= 900) __help = '<div class="doc-help">📱 Nếu khung báo lỗi hoặc chỉ hiện trang 1: bấm <b>↻ Tải lại</b> ở thanh trên, hoặc bấm <b>📖 Đổi cách đọc</b> nhé!</div>'; }catch(e){}
+  body.innerHTML = __help + '<div class="doc-wrap"><iframe id="paneFrame" title="Khung xem tài liệu" data-fid="' + fid + '" data-alt="0" src="' + drivePreviewUrl(fid) + '" allow="autoplay" allowfullscreen></iframe><div class="doc-corner" aria-hidden="true"></div></div>';
   var __dbt = document.getElementById('paneDocBarT'); if (__dbt) __dbt.textContent = '📄 ' + (title || 'Tài liệu');
   if (typeof hlDocFxOn === 'function') hlDocFxOn();
   var fr = document.getElementById('paneFrame');
@@ -2899,6 +2918,13 @@ var EduParse = (function(){
         }
         var hasOpts = cur.opts.some(function(o){ return o && String(o).trim(); });
         if (!hasOpts){ if (!cur.tfItems) cur.tfItems = []; cur.tfItems.push({ t: m[2].trim(), correct: null }); return; }
+      }
+      /* --- dong huong dan dau Phan II/III ("Thi sinh tra loi tu cau 1 den cau 4..." / "Trong moi y a), ...")
+         la chi dan chung cua phan, KHONG phai noi dung phuong an D cua cau cuoi Phan I hay than cau cuoi
+         Phan II (loi that: de Ly 10 cau 18 va KTPL 10 cau 24 bi dinh ca dong huong dan vao dap an D) --- */
+      if (/^Thí sinh trả lời từ câu \d+ đến câu \d+/i.test(line) || /^Trong mỗi ý [a-d]\)/i.test(line)){
+        if (cur){ pushCur(); }
+        return;
       }
       /* --- ranh giới đoạn đọc Tiếng Anh: dòng chỉ dẫn nhóm ("Read the following..." /
          "Mark the letter...") kết thúc câu trước; đoạn văn theo sau (cur = null) tự bị bỏ,
@@ -7057,6 +7083,17 @@ function hlDocToggleRead(frameId, btn){
     fr.src = hlDocReadUrl(fid, alt);
     if (btn) btn.textContent = alt ? '↩️ Cách đọc 1' : '📖 Đổi cách đọc';
     if (typeof showToast === 'function') showToast(alt ? '📖 Cách đọc 2: vuốt trong khung để xem hết các trang nhé!' : '📖 Đã quay lại cách đọc thường');
+  }catch(e){}
+}
+function hlDocReload(frameId){
+  try{
+    var fr = document.getElementById(frameId); if (!fr) return;
+    var fid = fr.getAttribute('data-fid') || ''; if (!fid) return;
+    var alt = fr.getAttribute('data-alt') === '1';
+    var url = hlDocReadUrl(fid, alt);
+    fr.src = 'about:blank';
+    setTimeout(function(){ try{ fr.src = url; }catch(e){} }, 80);
+    if (typeof showToast === 'function') showToast('↻ Đang tải lại khung đọc — chờ em chút...');
   }catch(e){}
 }
 function hlDocFxOn(){
