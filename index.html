@@ -4238,6 +4238,7 @@ function rtExamQuestions(){
     else if (q.kind === 'sa') out.push({ q: q.q, kind: 'sa', ansText: q.ansText, opts: [], ans: -1 });
     else out.push({ q: q.q, opts: q.opts.slice(0, 4).map(function(o){ return String(o); }), ans: q.ans });
   });
+  if (out.length) out.media = st.media || null;
   return out.length ? out : null;
 }
 function rtCreateRoom(){
@@ -4261,6 +4262,7 @@ function rtCreateRoom(){
       for (var i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
     }
     var examQs = rtExamQuestions();
+    var roomMedia = (examQs && examQs.media) || null;
     var examName = examQs ? (document.getElementById('rtExamName').value || '').trim() : '';
     var qs, revivePool, mainCount;
     if (examQs){
@@ -4282,10 +4284,11 @@ function rtCreateRoom(){
     T = { code: code, R: R, questions: qs, mainCount: mainCount, examName: examName, players: {}, meta: {}, current: null, answers: {}, reviveAns: {}, revive: null, bonusPlayed: false, ended: false, sessionStart: Date.now(), tug: 0, boss: null };
     roomRef(code).set({
       meta: { status: 'lobby', qIndex: -1, rules: R, mode: R.mode, winner: '', examName: examName, qCount: mainCount, createdAt: firebase.database.ServerValue.TIMESTAMP },
-      questions: qs, revivePool: revivePool,
+      questions: qs, revivePool: revivePool, media: roomMedia,
       tug: 0,
       boss: (R.mode === 'boss' ? { hp: R.bossHp, max: R.bossHp } : null)
     }).then(function(){
+      if (typeof window.hlApplyMedia === 'function') window.hlApplyMedia(roomMedia);
       document.getElementById('roomEntry').style.display = 'none';
       document.getElementById('rtScreen').style.display = 'block';
       document.getElementById('rtLobby').style.display = 'block';
@@ -4738,6 +4741,7 @@ function rsJoin(){
       U = { code: code, pid: pid, name: name, R: (room.meta && room.meta.rules) || {}, meta: room.meta || {}, players: {}, me: null,
         current: null, revive: null, questions: room.questions || [], renderedKey: '', answered: false, bet: 0, roundBet: 0,
         cur: null, reviveAnswered: false, sessionStart: Date.now(), ended: false, tug: room.tug || 0, boss: room.boss || null };
+      if (typeof window.hlApplyMedia === 'function') window.hlApplyMedia(room.media || null);
       var isTcJoin = tcIsMode(U.R.mode);
       var rec = { name: name, score: isTcJoin ? 0 : START_SCORE, streak: 0, wrongStreak: 0, out: '', revives: 0,
         ll: { f: 0, s: 0, a: 0 }, mirrorReady: false, joinedAt: firebase.database.ServerValue.TIMESTAMP };
@@ -4818,7 +4822,7 @@ function rsRender(){
     if (U.questions && U.questions.length){
       lockPanel = '<div class="qcard" style="margin:12px auto;max-width:640px;text-align:left">' +
         '<div class="qmeta"><span>CÂU 1 • SẮP BẮT ĐẦU</span><span>⏱ chờ</span></div>' +
-        '<p class="qstem">' + esc(U.questions[0].q) + '</p>' +
+        '<p class="qstem">' + escQ(U.questions[0].q) + '</p>' +
         '<div class="lockpanel">🔒 <b>ĐÁP ÁN ĐANG ĐƯỢC CHE VÀ KHÓA LẠI</b><br>Thầy/Cô chưa bấm nút BẮT ĐẦU TRẬN ĐẤU…<br>Ngay khi Thầy/Cô bấm Bắt đầu, toàn bộ đáp án sẽ tự động mở đồng loạt!</div></div>';
     }
     area.innerHTML = '<p class="wait-big">✅ Đã vào phòng ' + U.code + '!<br><span class="note">Chờ giáo viên bấm "Bắt đầu thi"... Hiện có ' + Object.keys(U.players).length + ' bạn trong phòng.</span>' + examLine + '</p>' + rsSkillBarHTML() + lockPanel +
@@ -5917,6 +5921,7 @@ window.spOpen = function(idx){
 };
 function spStartSession(cfg){
   spStopTimer();
+  if (cfg.bank && (cfg.bank.img || cfg.bank.tbl) && typeof window.hlApplyMedia === 'function') window.hlApplyMedia({ img: cfg.bank.img, tbl: cfg.bank.tbl });
   SP = { mode: cfg.mode, key: cfg.key || '', title: cfg.title || 'Tự luyện', boLabel: cfg.boLabel || '',
     taskId: cfg.taskId || '', perQ: cfg.perQ || 30,
     qs: spBuildQuestions(cfg.bank), idx: 0, score: 0, correctCount: 0,
@@ -6298,7 +6303,7 @@ function mixAllQuestions(){
     Object.keys(BANKS).forEach(function(k){
       var bnk = BANKS[k];
       (bnk.mc || []).forEach(function(m, i){
-        out.push({ id: 'bai|' + k + '|' + i, src: k, stem: m[0], opts: m[1], ans: m[2] });
+        out.push({ id: 'bai|' + k + '|' + i, src: k, stem: m[0], opts: m[1], ans: m[2], img: bnk.img || null, tbl: bnk.tbl || null });
       });
     });
   }
@@ -6328,6 +6333,7 @@ window.mixRenderList = function(){
     return;
   }
   box.innerHTML = list.map(function(x){
+    if (typeof window.hlApplyMedia === 'function') window.hlApplyMedia((x.img || x.tbl) ? { img: x.img, tbl: x.tbl } : null);
     var on = !!MIX_SEL[x.id];
     return '<label style="display:flex;gap:8px;align-items:flex-start;padding:6px 4px;border-bottom:1px dashed #e8e2f5;cursor:pointer">' +
       '<input type="checkbox" ' + (on ? 'checked' : '') + ' onchange="mixToggle(\'' + x.id + '\',this.checked)" style="margin-top:3px">' +
@@ -6339,7 +6345,7 @@ window.mixToggle = function(id, on){
   if (!on){ delete MIX_SEL[id]; mixUpdateCount(); return; }
   var found = null;
   mixAll().forEach(function(x){ if (x.id === id) found = x; });
-  if (found) MIX_SEL[id] = { q: found.stem, opts: found.opts.slice(), ans: found.ans };
+  if (found) MIX_SEL[id] = { q: found.stem, opts: found.opts.slice(), ans: found.ans, img: found.img || null, tbl: found.tbl || null };
   mixUpdateCount();
 };
 function mixUpdateCount(){
@@ -6356,17 +6362,24 @@ function mixUpdateCount(){
   }
 }
 window.mixSelectAll = function(){
-  mixCurrentList().forEach(function(x){ MIX_SEL[x.id] = { q: x.stem, opts: x.opts.slice(), ans: x.ans }; });
+  mixCurrentList().forEach(function(x){ MIX_SEL[x.id] = { q: x.stem, opts: x.opts.slice(), ans: x.ans, img: x.img || null, tbl: x.tbl || null }; });
   mixUpdateCount(); mixRenderList();
 };
 window.mixClearSel = function(){ MIX_SEL = {}; mixUpdateCount(); mixRenderList(); };
-function mixQs(){ return Object.keys(MIX_SEL).map(function(id){ return MIX_SEL[id]; }); }
+function mixQs(){
+  var raw = Object.keys(MIX_SEL).map(function(id){ var x = MIX_SEL[id]; return { q: x.q, opts: (x.opts || []).slice(), ans: x.ans, img: x.img || null, tbl: x.tbl || null }; });
+  if (typeof window.hlPackQs === 'function') return window.hlPackQs(raw);
+  var qs = raw.map(function(x){ return { q: x.q, opts: x.opts, ans: x.ans }; });
+  qs.media = { img: [], tbl: [] };
+  return qs;
+}
 function mixMsg(t){ var m = document.getElementById('mixMsg'); if (m) m.innerHTML = t ? '<p class="note" style="margin:0">' + t + '</p>' : ''; }
 window.mixUseRoom = function(){
   var qs = mixQs();
   if (!qs.length){ showToast('⚠️ Thầy chưa chọn câu nào để tổ hợp'); return; }
   MIX_LAST = { name: (document.getElementById('mixName').value || '').trim() || 'Bộ tổng hợp', qs: qs };
   _qcStates.room = { qs: qs.map(function(x){ return { q: x.q, opts: x.opts.slice(), ans: x.ans }; }),
+    media: qs.media || { img: [], tbl: [] },
     used: qs.map(function(){ return true; }), srcText: '__mix__' };
   var ta = document.getElementById('rtExamText'); if (ta) ta.value = '__mix__';
   var nm = document.getElementById('rtExamName'); if (nm && !nm.value) nm.value = MIX_LAST.name;
@@ -6379,7 +6392,7 @@ window.mixUsePractice = function(){
   if (!qs.length){ showToast('⚠️ Thầy chưa chọn câu nào để tổ hợp'); return; }
   var name = (document.getElementById('mixName').value || '').trim() || 'Bộ tổng hợp';
   MIX_LAST = { name: name, qs: qs };
-  spStartSession({ mode: 'practice', key: 'mix|' + name, bank: { mc: qs.map(function(x){ return [x.q, x.opts, x.ans]; }), tf: null, sa: [] },
+  spStartSession({ mode: 'practice', key: 'mix|' + name, bank: { mc: qs.map(function(x){ return [x.q, x.opts, x.ans]; }), tf: null, sa: [], img: (qs.media && qs.media.img) || null, tbl: (qs.media && qs.media.tbl) || null },
     title: '🧩 ' + name, boLabel: 'Bộ câu hỏi tổng hợp (' + qs.length + ' câu)', perQ: 30 });
 };
 window.mixSave = function(){
@@ -6388,7 +6401,7 @@ window.mixSave = function(){
   if (!name){ showToast('⚠️ Thầy đặt tên cho bộ trước khi lưu nhé'); return; }
   if (!qs.length){ showToast('⚠️ Chưa chọn câu nào — bộ rỗng không lưu được'); return; }
   var all = lsGet(LS_MIX, {});
-  all[name] = { name: name, qs: qs, savedAt: Date.now() };
+  all[name] = { name: name, qs: qs, media: qs.media || null, savedAt: Date.now() };
   lsSet(LS_MIX, all);
   MIX_LAST = { name: name, qs: qs };
   mixFillSavedSel();
@@ -6406,8 +6419,10 @@ window.mixLoadSaved = function(){
   var all = lsGet(LS_MIX, {});
   var b = all[sel.value]; if (!b) return;
   MIX_SEL = {};
-  b.qs.forEach(function(x, i){ MIX_SEL['saved|' + i] = { q: x.q, opts: x.opts.slice(), ans: x.ans }; });
-  MIX_LAST = { name: b.name, qs: b.qs };
+  b.qs.forEach(function(x, i){ MIX_SEL['saved|' + i] = { q: x.q, opts: x.opts.slice(), ans: x.ans, img: b.media ? (b.media.img || null) : null, tbl: b.media ? (b.media.tbl || null) : null }; });
+  var savedQs = b.qs.slice();
+  savedQs.media = b.media || { img: [], tbl: [] };
+  MIX_LAST = { name: b.name, qs: savedQs };
   var nm = document.getElementById('mixName'); if (nm) nm.value = b.name;
   mixUpdateCount();
   mixMsg('📂 Đã mở bộ <b>' + esc(b.name) + '</b> (' + b.qs.length + ' câu) — thầy làm tiếp: thêm/bớt câu rồi Lưu lại, hoặc dùng ngay cho phòng / tự luyện / giao link.');
@@ -6463,8 +6478,10 @@ function taskGetQuestions(src){
     var bank = (typeof BANKS !== 'undefined' && key) ? BANKS[key] : null;
     if (!bank) return [];
     window.__hlMedia = { img: bank.img || [], tbl: bank.tbl || [] };
-    return spBuildQuestions(bank).filter(function(x){ return x.kind === 'mc'; })
+    var baiQs = spBuildQuestions(bank).filter(function(x){ return x.kind === 'mc'; })
       .map(function(x){ return { q: x.stem, opts: x.opts, ans: x.ans }; });
+    baiQs.media = { img: bank.img || [], tbl: bank.tbl || [] };
+    return baiQs;
   }
   return [];
 }
@@ -6485,7 +6502,7 @@ window.taskCreate = function(){
   if (!openAt || !closeAt || closeAt <= openAt){ out.innerHTML = '<p class="warnbox" style="display:block">⚠️ Thầy đặt giờ MỞ và giờ ĐÓNG hợp lệ (giờ đóng phải sau giờ mở) nhé.</p>'; return; }
   var perQ = Math.max(5, Math.min(300, parseInt(document.getElementById('taskPerQ').value, 10) || 30));
   var id = taskIdGen();
-  var rec = { title: title, qs: qs, openAt: openAt, closeAt: closeAt, perQSec: perQ, createdAt: Date.now() };
+  var rec = { title: title, qs: qs, media: (qs && qs.media) || null, openAt: openAt, closeAt: closeAt, perQSec: perQ, createdAt: Date.now() };
   out.innerHTML = '<p class="note">⏳ Đang tạo link...</p>';
   fbEnsure().then(function(ok){
     if (ok && FB.db){
@@ -6640,7 +6657,7 @@ function taskOpenForStudent(id){
         '<p class="wait-big">⛔ Đã hết hạn nộp — bài đã đóng lúc <b>' + spFmtTime(rec.closeAt) + '</b>.<br><span class="note">Em liên hệ thầy nếu cần gia hạn nhé.</span></p>');
       return;
     }
-    var bank = { mc: (rec.qs || []).map(function(q){ return [q.q, q.opts, q.ans]; }), tf: null, sa: [] };
+    var bank = { mc: (rec.qs || []).map(function(q){ return [q.q, q.opts, q.ans]; }), tf: null, sa: [], img: (rec.media && rec.media.img) || null, tbl: (rec.media && rec.media.tbl) || null };
     spStartSession({ mode: 'task', taskId: id, bank: bank, title: rec.title, perQ: rec.perQSec || 30 });
   }
   var local = lsGet(LS_TASK_LOCAL, {});
@@ -7352,6 +7369,38 @@ window.spPracticeSubmit = function(){
   }
   if (!miss.length){ if (__spSubmitOrig) __spSubmitOrig(); return; }
   spSubmitWarnOpen(miss);
+};
+
+/* ===== MEDIA ĐI CÙNG BỘ CÂU HỎI — khép kín câu có hình/bảng của BANKS ở MỌI luồng (thầy chốt 14/11/2026) =====
+   - hlPackQs(list): mỗi câu vào mang media NGUỒN của bài gốc (trường img/tbl; chỉ số thẻ
+     %%HLIMGn%%/%%HLTBLn%% trong thân câu tính theo media của bài đó). Hàm gộp media của cả bộ
+     (khử trùng theo URL/chuỗi bảng), viết lại chỉ số thẻ trong thân câu + phương án + ý Đ/S
+     theo media bộ, và gắn media bộ vào mảng kết quả (.media) để đi cùng payload giao link/phòng.
+   - hlApplyMedia(m): nạp media của bộ vào window.__hlMedia — escQ/hlMediaSwap sẽ thay thẻ
+     đúng ở BẤT KỲ máy nào mở bộ câu hỏi, không phụ thuộc máy của giáo viên. */
+window.hlPackQs = function(list){
+  var img = [], tbl = [], imgIdx = Object.create(null), tblIdx = Object.create(null);
+  function regI(u){ if (imgIdx[u] === undefined){ imgIdx[u] = img.length; img.push(u); } return imgIdx[u]; }
+  function regT(t){ if (tblIdx[t] === undefined){ tblIdx[t] = tbl.length; tbl.push(t); } return tblIdx[t]; }
+  function remap(s, q){
+    if (s === null || s === undefined || (!q.img && !q.tbl)) return s;
+    return String(s)
+      .replace(/%%HLTBL(\d+)%%/g, function(_, n){ var t = (q.tbl || [])[+n]; return (t !== undefined && t !== null && t !== '') ? '%%HLTBL' + regT(t) + '%%' : ''; })
+      .replace(/%%HLIMG(\d+)%%/g, function(_, n){ var u = (q.img || [])[+n]; return u ? '%%HLIMG' + regI(u) + '%%' : ''; });
+  }
+  var qs = (list || []).map(function(q){
+    var o = { q: remap(q.q !== undefined ? q.q : q.stem, q), opts: (q.opts || []).map(function(op){ return remap(op, q); }), ans: q.ans };
+    if (q.kind) o.kind = q.kind;
+    if (q.items) o.items = q.items.map(function(it){ return remap(it, q); });
+    if (q.bools) o.bools = q.bools.slice();
+    if (q.ansText !== undefined) o.ansText = q.ansText;
+    return o;
+  });
+  qs.media = { img: img, tbl: tbl };
+  return qs;
+};
+window.hlApplyMedia = function(m){
+  window.__hlMedia = { img: (m && m.img) || [], tbl: (m && m.tbl) || [] };
 };
 
 /* ===== BẢN QUYỀN THI ONLINE — Demo/Full theo MÃ MÁY CỐ ĐỊNH (thầy chốt 13/11/2026) =====
